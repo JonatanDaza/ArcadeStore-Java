@@ -1,4 +1,4 @@
-package com.Scrum3.ArcadeStore.controller;
+package com.Scrum3.controller;
 import org.springframework.web.bind.annotation.*;
 
 
