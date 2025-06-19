@@ -1,0 +1,22 @@
+{
+  "name": "arcadestore-java",
+  "version": "1.0.0",
+  "description": "ArcadeStore-Java is a project that aims to provide a comprehensive platform for arcade game management and interaction. This project consists of a frontend application that serves as the user interface for interacting with the arcade games.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "cd frontend && npm run dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JonatanDaza/ArcadeStore-Java.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/JonatanDaza/ArcadeStore-Java/issues"
+  },
+  "homepage": "https://github.com/JonatanDaza/ArcadeStore-Java#readme"
+}
