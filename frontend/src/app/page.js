@@ -1,12 +1,10 @@
 'use client';
 
-
 import { useState } from "react";
 import React from "react";
 import Header from "./components/header";
 import Footer from "./components/footer";
 import CarouselClientes from "./components/carouselClients";
-
 
 function limitText(text, max) {
   return text.length > max ? text.slice(0, max) + "..." : text;
@@ -20,7 +18,7 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
   const userId = 123;
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Header
         isAuthenticated={isAuthenticated}
         userRole={userRole}
@@ -29,7 +27,7 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
         userId={userId}
       />
       <main
-        className="min-h-screen font-poppins text-white"
+        className="flex-1 font-poppins text-white flex flex-col"
         style={{
           backgroundImage:
             "linear-gradient(135deg, #000 20%, #06174d 90%, #000 -50%)",
@@ -86,7 +84,7 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
         </section>
 
         {/* Juegos Recientes */}
-        <div className="py-16">
+        <div className="py-16 flex-1">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-3xl font-bold text-center text-[#3a6aff] fw-blod mb-10">
               Juegos Recientes
@@ -123,7 +121,7 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
         </div>
 
         {/* Service Section */}
-        <section className="py-16">
+        <section className="py-16 flex-1">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold fw-blod text-[#fff] mb-10">
               NUEVOS{" "}
@@ -179,7 +177,7 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
         </section>
 
         {/* Buy Section */}
-        <section className="text-white py-16">
+        <section className="text-white py-16 flex-1">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-2xl font-bold mb-4">
               ¡TE INVITAMOS A CONOCER MÁS JUEGOS!
@@ -191,12 +189,9 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
               exclusivos. ¡No te pierdas esta oportunidad de ampliar tu colección
               y disfrutar de los mejores juegos a precios increíbles!
             </p>
-            <div className="d-flex justify-content-center"></div>
           </div>
-        </section>
-
-        {/* Client Section */}
-        <section className="text-white py-16">
+          <br/>
+          <br/>
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-2xl font-bold mb-4">
               NUESTROS CLIENTES ESTAN FELICES...
@@ -208,13 +203,14 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
               oportunidad para ampliar tu colección y disfrutar de grandes
               aventuras.
             </p>
+          <br/>
             {/* Carousel de clientes */}
             <CarouselClientes />
           </div>
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 };
 
