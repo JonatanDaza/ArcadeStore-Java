@@ -18,7 +18,7 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
   const userId = 123;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen bg-[#06174d]">
       <Header
         isAuthenticated={isAuthenticated}
         userRole={userRole}

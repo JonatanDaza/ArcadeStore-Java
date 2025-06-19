@@ -50,7 +50,7 @@ export default function Header() {
             <ul className="flex flex-row gap-x-1 ml-4">
               <li>
                 <Link
-                  href="/home"
+                  href="/"
                   className="block py-2 px-4 text-white text-center uppercase no-underline hover:text-yellow-400 transition"
                 >
                   Inicio
