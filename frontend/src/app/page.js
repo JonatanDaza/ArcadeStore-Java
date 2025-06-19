@@ -1,10 +1,10 @@
 'use client';
 
-
 import { useState } from "react";
 import React from "react";
 import Header from "./components/header";
 import Footer from "./components/footer";
+import CarouselClientes from "./components/carouselClients";
 
 function limitText(text, max) {
   return text.length > max ? text.slice(0, max) + "..." : text;
@@ -18,7 +18,7 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
   const userId = 123;
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Header
         isAuthenticated={isAuthenticated}
         userRole={userRole}
@@ -26,7 +26,14 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
         userNick={userNick}
         userId={userId}
       />
-      <main className="min-h-screen">
+      <main
+        className="flex-1 font-poppins text-white flex flex-col"
+        style={{
+          backgroundImage:
+            "linear-gradient(135deg, #000 20%, #06174d 90%, #000 -50%)",
+          margin: 0,
+        }}
+      >
         {/* Slider Section */}
         <section className="relative from-gray-900 to-gray-800 text-white py-12">
           <div className="max-w-7xl mx-auto">
@@ -36,9 +43,8 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
                 {(juegosDestacados || []).map((_, index) => (
                   <button
                     key={index}
-                    className={`w-3 h-3 rounded-full ${
-                      index === 0 ? "bg-yellow-400" : "bg-gray-400"
-                    }`}
+                    className={`w-3 h-3 rounded-full ${index === 0 ? "bg-yellow-400" : "bg-gray-400"
+                      }`}
                   />
                 ))}
               </div>
@@ -78,7 +84,7 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
         </section>
 
         {/* Juegos Recientes */}
-        <div className="py-16">
+        <div className="py-16 flex-1">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-3xl font-bold text-center text-[#3a6aff] fw-blod mb-10">
               Juegos Recientes
@@ -115,9 +121,9 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
         </div>
 
         {/* Service Section */}
-        <section className="py-16">
+        <section className="py-16 flex-1">
           <div className="max-w-6xl mx-auto px-4">
-            <h2 className="text-3xl font-bold fw-blod text-[#000] mb-10">
+            <h2 className="text-3xl font-bold fw-blod text-[#fff] mb-10">
               NUEVOS{" "}
               <span className="text-[#3a6aff] fw-blod">JUEGOS</span>
             </h2>
@@ -161,7 +167,7 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
             </div>
             <div className="mt-8">
               <a
-                href="/juegosDisp"
+                href="/games"
                 className=" text-[#fff] font-semibold hover:underline"
               >
                 Más información
@@ -171,7 +177,7 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
         </section>
 
         {/* Buy Section */}
-        <section className="text-white py-16">
+        <section className="text-white py-16 flex-1">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-2xl font-bold mb-4">
               ¡TE INVITAMOS A CONOCER MÁS JUEGOS!
@@ -183,101 +189,28 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
               exclusivos. ¡No te pierdas esta oportunidad de ampliar tu colección
               y disfrutar de los mejores juegos a precios increíbles!
             </p>
-            <div className="d-flex justify-content-center"></div>
           </div>
-        </section>
-
-        {/* Client Section */}
-        <section className="client_section layout_padding-bottom">
-          <div className="container">
-            <h2 className="custom_heading text-center">
+          <br/>
+          <br/>
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-2xl font-bold mb-4">
               NUESTROS CLIENTES ESTAN FELICES...
             </h2>
-            <p className="text-center">
+            <p className="mb-4">
               El 25% de nuestros usuarios consiguió juegos de PC a precios
               increíbles, ¡por $100.000 o menos! Únete a ellos y encuentra los
               mejores títulos a precios inigualables. No dejes pasar esta
               oportunidad para ampliar tu colección y disfrutar de grandes
               aventuras.
             </p>
-            {/* Carousel de clientes (puedes mejorarlo con react-bootstrap) */}
-            <div
-              id="carouselExample2Indicators"
-              className="carousel slide"
-              data-ride="carousel"
-            >
-              <ol className="carousel-indicators">
-                <li
-                  data-target="#carouselExample2Indicators"
-                  data-slide-to="0"
-                  className="active"
-                ></li>
-                <li
-                  data-target="#carouselExample2Indicators"
-                  data-slide-to="1"
-                ></li>
-                <li
-                  data-target="#carouselExample2Indicators"
-                  data-slide-to="2"
-                ></li>
-              </ol>
-              <div className="carousel-inner">
-                <div className="carousel-item active">
-                  <div className="layout_padding2 pl-100">
-                    <div className="client_container ">
-                      <div className="img_box"></div>
-                      <div className="detail_box">
-                        <h5>EN LA CIUDAD DE BOGOTA.</h5>
-                        <p>
-                          una tienda en línea de videojuegos para PC que ofrece una
-                          amplia variedad de títuloS. Con una interfaz fácil de usar y un
-                          proceso de compra rápido, es ideal para quienes buscan
-                          descubrir y adquirir juegos de manera sencilla.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="carousel-item">
-                  <div className="layout_padding2 pl-100">
-                    <div className="client_container ">
-                      <div className="img_box"></div>
-                      <div className="detail_box">
-                        <h5>EN LA CIUDAD DE CUCUTA</h5>
-                        <p>
-                          su opción de intercambio de juegos es un plus para renovar tu
-                          biblioteca sin gastar demasiado. El servicio al cliente es
-                          eficiente, aunque puede haber pequeños retrasos en horas de
-                          alta demanda. En general, ArcadeStore es una opción confiable y
-                          accesible para los gamers.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="carousel-item">
-                  <div className="layout_padding2 pl-100">
-                    <div className="client_container ">
-                      <div className="img_box"></div>
-                      <div className="detail_box">
-                        <h5>EN LA CIUDAD DE CALI</h5>
-                        <p>
-                          Con un catálogo bien curado de títulos populares y novedades,
-                          esta plataforma se posiciona como una opción atractiva para los
-                          jugadores que buscan descubrir, comprar e intercambiar
-                          videojuegos digitales
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <br/>
+            {/* Carousel de clientes */}
+            <CarouselClientes />
           </div>
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 };
 
