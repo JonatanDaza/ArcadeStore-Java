@@ -6,11 +6,8 @@ ArcadeStore-Java is a project that aims to provide a comprehensive platform for 
 
 ```
 ArcadeStore-Java
+├── ArcadeStore
 ├── frontend
-│   ├── src
-│   │   └── index.js
-│   ├── package.json
-│   └── README.md
 └── README.md
 ```
 
