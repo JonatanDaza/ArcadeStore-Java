@@ -7,7 +7,7 @@ export default function Footer() {
   return (
     <footer className="text-white">
       {/* Info Section */}
-      <section className="text-[#000] py-8">
+      <section className="bg-[#000] py-8">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-center items-center gap-8">
             <a
@@ -20,8 +20,8 @@ export default function Footer() {
                 {/* <img src="/images/location.png" alt="Ubicación" /> */}
               </div>
               <div>
-                <p className="font-semibold text-[#fff]">SENA</p>
-                <p className="text-sm text-[#fff]">CALLE 13 # 65-10</p>
+                <p className="font-semibold text-[#fff]">ubicacion</p>
+                <p className="text-sm text-[#fff]">SENA CALLE 13 # 65-10</p>
               </div>
             </a>
             <a
