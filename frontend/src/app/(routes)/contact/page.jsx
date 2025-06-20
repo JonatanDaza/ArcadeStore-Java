@@ -28,7 +28,7 @@ export default function ContactPage() {
   return (
     <div className="flex flex-col min-h-screen bg-[#06174d]">
       <Header />
-      <main className="flex-1 font-poppins text-white flex flex-col items-center justify-center bg-gradient-to-br from-black to-[#06174d] p-6">
+      <main className="flex-1 font-poppins text-white flex flex-col items-center justify-center bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-6">
         <div className="bg-[#222] border border-[#333] rounded-lg shadow-lg p-8 w-full max-w-lg crear-juego-container">
           <h1 className="text-3xl font-bold mb-6 text-center">Contáctenos</h1>
           {enviado ? (

@@ -105,7 +105,7 @@ export default function SoldPage() {
   return (
     <div className="flex flex-col min-h-screen hero_area">
       <Header />
-      <main className="flex-1 w-full min-h-[80vh] bg-gradient-to-br from-black to-[#06174d] p-5">
+      <main className="flex-1 w-full min-h-[80vh] bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-5">
         <div
           className="max-w-7xl mx-auto rounded-xl shadow-xl p-8"
           style={{ background: "#232323" }}

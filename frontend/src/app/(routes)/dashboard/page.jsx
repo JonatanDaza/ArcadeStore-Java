@@ -89,7 +89,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col min-h-screen bg-[#f4f4f9]">
       <Header />
-      <div className="dashboard flex flex-1 w-full min-h-[80vh] bg-gradient-to-br from-black to-[#06174d] p-5 m-0">
+      <div className="dashboard flex flex-1 w-full min-h-[80vh] bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-5 m-0">
         
         <aside className="sidebar w-[280px] min-w-[200px] bg-gradient-to-br from-black via-[#06174d] to-black text-white p-5 h-full rounded-2xl shadow-xl flex flex-col">
         
