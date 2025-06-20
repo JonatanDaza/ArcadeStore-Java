@@ -101,7 +101,7 @@ export default function DashboardPage() {
             <ul className="space-y-2">
               <li>
                 <a
-                  href="/admin/juegos"
+                  href="/dashboard/games"
                   className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
                 >
                   <PuzzlePieceIcon className="h-6 w-6" />
@@ -110,7 +110,7 @@ export default function DashboardPage() {
               </li>
               <li>
                 <a
-                  href="/admin/users"
+                  href="/dashboard/users"
                   className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
                 >
                   <UsersIcon className="h-6 w-6" />
@@ -119,7 +119,7 @@ export default function DashboardPage() {
               </li>
               <li>
                 <a
-                  href="/categorias"
+                  href="/dashboard/categories"
                   className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
                 >
                   <Squares2X2Icon className="h-6 w-6" />
@@ -128,7 +128,7 @@ export default function DashboardPage() {
               </li>
               <li>
                 <a
-                  href="/admin/intercambios"
+                  href="/dashboard/exchanges"
                   className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
                 >
                   <ArrowsRightLeftIcon className="h-6 w-6" />
@@ -137,7 +137,7 @@ export default function DashboardPage() {
               </li>
               <li>
                 <a
-                  href="/admin/ventas"
+                  href="/dashboard/sold"
                   className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
                 >
                   <CurrencyDollarIcon className="h-6 w-6" />
@@ -146,7 +146,7 @@ export default function DashboardPage() {
               </li>
               <li>
                 <a
-                  href="/admin/convenios"
+                  href="/dashboard/agreement"
                   className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
                 >
                   <HandRaisedIcon className="h-6 w-6" />
