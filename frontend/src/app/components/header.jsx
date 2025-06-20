@@ -21,7 +21,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-black pt-4">
+    <header className="bg-black pt-6 pb-4 shadow-lg">
       <div className="px-6 md:px-8">
         <nav className="flex items-center justify-between py-2 z-[99999] relative">
           {/* Logo */}
