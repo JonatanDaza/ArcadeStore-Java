@@ -38,7 +38,7 @@ const GameCarousel = ({ featuredGames = [] }) => {
                             <div
                                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                                 style={{
-                                    backgroundImage: `url('/${juego.image}')`,
+                                    backgroundImage: `url('/images/${juego.image}')`,
                                 }}
                             >
                                 {/* Dark overlay */}
@@ -89,7 +89,7 @@ const GameCarousel = ({ featuredGames = [] }) => {
                                         <div className="md:col-span-6 flex justify-center">
                                             <div className="relative">
                                                 <img
-                                                    src={`/${juego.image}`}
+                                                    src={`/images/${juego.image}`}
                                                     alt={juego.titulo}
                                                     className="w-full max-w-lg h-auto max-h-[500px] object-cover rounded-lg shadow-2xl"
                                                     style={{
