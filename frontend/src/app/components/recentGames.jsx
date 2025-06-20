@@ -42,7 +42,7 @@ const RecentGames = ({ juegosRecientes = [] }) => {
           >
             <div className={`md:w-1/2 ${index % 2 !== 0 ? "md:order-2" : ""}`}>
               <img
-                src={juego.image}
+                src={`/images/${juego.image}`}
                 alt={juego.titulo}
                 className="w-full h-auto"
               />

@@ -29,7 +29,7 @@ export default function Header() {
             href="/"
             className="flex flex-col items-center uppercase font-bold text-[24px] text-[#fafcfd] no-underline mr-2"
           >
-            <img src="/logo.png" alt="Logo Arcade Store" className="w-[30px] mb-1" />
+            <img src="/images/logo.png" alt="Logo Arcade Store" className="w-[30px] mb-1" />
             <span className="text-[20px] font-bold text-white mt-1 tracking-wide">ARCADE STORE</span>
           </Link>
 
@@ -165,7 +165,7 @@ export default function Header() {
           <ul className="flex flex-col items-center gap-y-1 px-4 py-2 text-center">
             <li>
               <Link
-                href="/home"
+                href="/"
                 className="block py-2 px-4 text-white uppercase no-underline hover:text-yellow-400 transition"
                 onClick={() => setMenuOpen(false)}
               >
