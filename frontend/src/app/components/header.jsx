@@ -1,22 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function Header() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [userRole] = useState("admin");
-  const [userName] = useState("Arcade");
-  const [userNick] = useState("ArcadeAdmin");
-  const userId = 123;
+  // Obtiene el estado de autenticación y rol desde localStorage
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+  const [userName, setUserName] = useState("");
+  const [userNick, setUserNick] = useState("");
+  const [userId, setUserId] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const router = useRouter();
 
+  useEffect(() => {
+    // Cargar datos del usuario desde localStorage
+    const storedRole = localStorage.getItem("userRole");
+    const storedName = localStorage.getItem("userName");
+    const storedNick = localStorage.getItem("userNick");
+    const storedId = localStorage.getItem("userId");
+
+    setUserRole(storedRole);
+    setUserName(storedName || "Arcade");
+    setUserNick(storedNick || "ArcadeAdmin");
+    setUserId(storedId || 123);
+    setIsAuthenticated(!!storedRole);
+  }, []);
+
   const handleLogout = () => {
     setIsAuthenticated(false);
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userNick");
+    localStorage.removeItem("userId");
     router.push("/login");
   };
 
@@ -118,9 +137,9 @@ export default function Header() {
                     className="flex items-center py-2 px-2 xl:px-4 text-white uppercase hover:text-yellow-400 transition focus:outline-none text-sm xl:text-base whitespace-nowrap"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                   >
-                    <span className="max-w-[120px] xl:max-w-none">
+                    <span className="max-w-[180px] xl:max-w-none">
                       {userRole === "admin"
-                        ? `Admin - ${userName || userNick}`
+                        ? `Admin - ${userName}`
                         : userNick || userName}
                     </span>
                     <svg className="ml-1 xl:ml-2 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -240,7 +259,7 @@ export default function Header() {
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                 >
                   {userRole === "admin"
-                    ? `Administrador - ${userName || userNick}`
+                    ? `Administrador - ${userName}`
                     : userNick || userName}
                   <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

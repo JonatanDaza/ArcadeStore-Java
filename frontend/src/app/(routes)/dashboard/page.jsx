@@ -9,7 +9,7 @@ import {
   ArrowsRightLeftIcon,
   PuzzlePieceIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Simulación de datos (puedes reemplazar por fetch real)
 const stats = {
@@ -78,6 +78,31 @@ function AnimatedCircle({ percentage, color }) {
 }
 
 export default function DashboardPage() {
+  // Solo permitir acceso a admin
+  const [userRole, setUserRole] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const storedRole = localStorage.getItem("userRole");
+    setUserRole(storedRole);
+    setIsAuthenticated(!!storedRole);
+  }, []);
+
+  if (!isAuthenticated || userRole !== "admin") {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#06174d] items-center justify-center text-white">
+        <h1 className="text-3xl font-bold mb-4">Acceso denegado</h1>
+        <p className="mb-6">Esta página solo está disponible para administradores.</p>
+        <a
+          href="/login"
+          className="bg-[#3a6aff] hover:bg-[#2952ff] px-6 py-3 rounded-lg transition-colors"
+        >
+          Iniciar sesión como administrador
+        </a>
+      </div>
+    );
+  }
+
   let percentage = stats.percentage_games_sold ?? 0;
   let color = "#4CAF50";
   if (percentage < 50) color = "#FFC107";

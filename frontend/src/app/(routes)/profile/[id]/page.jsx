@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { User, Mail, Phone, MapPin, Edit2, Save, X } from "lucide-react";
 
@@ -14,7 +14,22 @@ const sidebarOptions = [
 export default function ProfilePage() {
   const router = useRouter();
   const params = useParams();
-  const userId = params?.id;
+  const urlUserId = params?.id;
+
+  // Obtener el id del usuario autenticado desde localStorage
+  const [sessionUserId, setSessionUserId] = useState(null);
+
+  useEffect(() => {
+    const storedId = localStorage.getItem("id"); // Cambiado a "id"
+    setSessionUserId(storedId);
+
+    // Si el usuario autenticado no coincide con el id de la URL, redirige a su propio perfil
+    if (storedId && urlUserId && storedId !== urlUserId) {
+      router.replace(`/profile/${storedId}`);
+    }
+    // Si no hay usuario autenticado, puedes redirigir a login si lo deseas
+    // if (!storedId) router.replace("/login");
+  }, [urlUserId, router]);
 
   const [selected, setSelected] = useState("info");
   const [isEditing, setIsEditing] = useState(false);
@@ -36,7 +51,7 @@ export default function ProfilePage() {
   // Simular carga de datos del usuario por ID
   useEffect(() => {
     const loadUserData = async () => {
-      if (!userId) {
+      if (!urlUserId) {
         setUserNotFound(true);
         setLoading(false);
         return;
@@ -46,10 +61,10 @@ export default function ProfilePage() {
         setLoading(true);
         // Simular llamada a API para obtener datos del usuario
         const mockUsers = {
-          "123": {
-            id: "123",
+          "1": {
+            id: "1",
             name: "Juan Pérez",
-            email: "juan.perez@email.com",
+            email: "admin@arcade.com",
             phone: "+57 300 123 4567",
             address: "Calle 123 #45-67, Bogotá, Colombia"
           },
@@ -72,7 +87,7 @@ export default function ProfilePage() {
         // Simular delay de red
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        const userData = mockUsers[userId];
+        const userData = mockUsers[urlUserId];
         if (userData) {
           setUserInfo(userData);
           setEditedInfo(userData);
@@ -89,7 +104,7 @@ export default function ProfilePage() {
     };
 
     loadUserData();
-  }, [userId]);
+  }, [urlUserId]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -302,12 +317,14 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#06174d] text-white font-sans">
+    <div className="flex min-h-screen bg-[#06174d] text-white font-sans relative">
       {/* Sidebar */}
       <aside className="w-64 bg-[#222] border-r border-[#333] p-8 flex flex-col">
-        <h1 className="text-2xl font-bold mb-8 text-center">
-          Perfil de {userInfo.name}
-        </h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-bold text-center flex-1">
+            Perfil de {userInfo.name}
+          </h1>
+        </div>
         <nav className="flex flex-col gap-4 flex-1">
           {sidebarOptions.map(option => (
             <button
@@ -323,7 +340,6 @@ export default function ProfilePage() {
             </button>
           ))}
         </nav>
-        
         {/* Cerrar sesión al final */}
         <div className="mt-8 pt-4 border-t border-[#333]">
           <button
@@ -336,7 +352,19 @@ export default function ProfilePage() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-10">{renderContent()}</main>
+      <main className="flex-1 p-10 relative">
+        {/* Botón X fijo a la derecha arriba, fuera del contenido */}
+        <button
+          onClick={() => router.push('/')}
+          className="fixed top-6 right-8 z-50 text-gray-400 hover:text-red-400 transition text-3xl font-bold bg-[#222] rounded-full w-12 h-12 flex items-center justify-center shadow-lg"
+          title="Salir al inicio"
+          aria-label="Salir al inicio"
+          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
+        >
+          ×
+        </button>
+        {renderContent()}
+      </main>
 
       {/* Modal de confirmación de logout */}
       {showLogoutModal && (

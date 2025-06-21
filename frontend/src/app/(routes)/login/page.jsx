@@ -24,8 +24,12 @@ export default function LoginPage() {
 
     // Simulación de autenticación (reemplaza con lógica real)
     if (email === "admin@arcade.com" && password === "123456") {
-      // Guardar el correo en localStorage 
+      // Guardar datos de admin en localStorage
       localStorage.setItem("userEmail", email);
+      localStorage.setItem("userRole", "admin");
+      localStorage.setItem("userName", "Administrador");
+      localStorage.setItem("userNick", "admin");
+      localStorage.setItem("userId", "123");
       router.push("/");
     } else {
       setError("Correo o contraseña incorrectos.");
