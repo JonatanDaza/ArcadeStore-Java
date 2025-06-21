@@ -12,8 +12,8 @@ import RecentGames from "./components/recentGames";
 const HomePage = () => {
   const [isAuthenticated] = useState(true);
   const [userRole] = useState("admin");
-  const [userName] = useState("Jonatan");
-  const [userNick] = useState("JDaza");
+  const [userName] = useState("Arcade");
+  const [userNick] = useState("ArcadeAdmin");
   const userId = 123;
   
 const featuredGames = [

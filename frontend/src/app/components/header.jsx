@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 export default function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [userRole] = useState("admin");
-  const [userName] = useState("Jonatan");
-  const [userNick] = useState("JDaza");
+  const [userName] = useState("Arcade");
+  const [userNick] = useState("ArcadeAdmin");
   const userId = 123;
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
