@@ -1,8 +1,9 @@
 "use client";
-import Header from "@/app/components/header";
-import Footer from "@/app/components/footer";
-import Table from "@/app/components/Table";
-import ActionButton from "@/app/components/ActionButton";
+import Header from "app/components/header";
+import Footer from "app/components/footer";
+import Table from "app/components/Table";
+import ActionButton from "app/components/ActionButton";
+import Sidebar from "app/components/sidebar";
 
 // Define las funciones fuera del array
 function cellNo(info) {
@@ -100,7 +101,7 @@ const columns = [
 const data = [
   {
     id: 1,
-    imagen: "gta-v.jpg",
+    imagen: "GTAV.png",
     titulo: "GTA V",
     precio: 100000,
     descripcion: "Acción y aventura en un mundo abierto inspirado en Los Santos.",
@@ -111,7 +112,7 @@ const data = [
   },
   {
     id: 2,
-    imagen: "call-of-duty.jpg",
+    imagen: "call of duty black ops 6.jpg",
     titulo: "Call of Duty: Black Ops 2",
     precio: 200000,
     descripcion: "Juego en primera persona que combina campaña futurista y multijugador.",
@@ -122,7 +123,7 @@ const data = [
   },
   {
     id: 3,
-    imagen: "halo-4.jpg",
+    imagen: "HALO4.png",
     titulo: "HALO 4",
     precio: 90,
     descripcion: "Juego de disparos en primera persona que sigue las aventuras del Jefe Maestro.",
@@ -133,7 +134,7 @@ const data = [
   },
   {
     id: 4,
-    imagen: "assassins-creed.jpg",
+    imagen: "Assasin's creed valhalla.jpg",
     titulo: "Assassin's Creed",
     precio: 500000,
     descripcion: "Acción y aventura donde encarnas a un asesino en distintas épocas históricas.",
@@ -148,19 +149,22 @@ export default function GamesPage() {
   return (
     <div className="flex flex-col min-h-screen hero_area">
       <Header />
-      <main className="flex-1 w-full min-h-[80vh] bg-gradient-to-br from-black to-[#06174d] p-5">
-        <div
-          className="max-w-7xl mx-auto rounded-xl shadow-xl p-8"
-          style={{ background: "#232323" }}
-        >
-          <h1 className="text-2xl font-bold mb-6 custom_heading">
-            Lista de Juegos
-          </h1>
-          <div className="overflow-x-auto rounded-lg border border-[#444] shadow-lg">
-            <Table columns={columns} data={data} />
+      <div className="flex flex-1 min-h-0">
+        <Sidebar />
+        <main className="flex-1 min-w-0 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-3 lg:p-5">
+          <div
+            className="w-auto h-auto rounded-xl shadow-xl p-4 lg:p-6 xl:p-8"
+            style={{ background: "#232323" }}
+          >
+            <h1 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 custom_heading">
+              Lista de Juegos
+            </h1>
+            <div className="overflow-x-auto rounded-lg border border-[#444] shadow-lg">
+              <Table columns={columns} data={data} />
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
       <Footer />
     </div>
   );

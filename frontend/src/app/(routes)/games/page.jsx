@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from "react";
-import Header from "@/app/components/header";
-import Footer from "@/app/components/footer";
-import GameFilters from "@/app/components/GameFilters";
-import GamesGallery from "@/app/components/GamesGallery";
+import Header from "app/components/header";
+import Footer from "app/components/footer";
+import GameFilters from "app/components/GameFilters";
+import GamesGallery from "app/components/GamesGallery";
 
 // Simulación de datos (reemplaza por fetch real)
 const categorias = [
@@ -46,15 +46,9 @@ export default function GamesPage() {
   });
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#06174d]">
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <main
-        className="flex-1 font-poppins text-white flex flex-row dashboard"
-        style={{
-          backgroundImage: "linear-gradient(135deg, #000 20%, #06174d 90%)",
-          margin: 0,
-          padding: "20px",
-        }}
+      <main className="flex-1 font-poppins text-white flex flex-row  bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-5 m-0"
       >
         <GameFilters categorias={categorias} onFilter={setFiltros} />
         <div className="flex-1 px-4">

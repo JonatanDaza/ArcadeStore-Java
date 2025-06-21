@@ -1,16 +1,13 @@
 'use client';
 
-import Header from "@/app/components/header";
-import Footer from "@/app/components/footer";
+import Header from "app/components/header";
+import Footer from "app/components/footer";
+import Sidebar from "app/components/sidebar";
 import {
   UserGroupIcon,
   ChartBarIcon,
   ArrowsRightLeftIcon,
   PuzzlePieceIcon,
-  Squares2X2Icon,
-  UsersIcon,
-  CurrencyDollarIcon,
-  HandRaisedIcon
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
@@ -87,124 +84,59 @@ export default function DashboardPage() {
   if (percentage < 25) color = "#F44336";
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f4f4f9]">
+    <div className="flex flex-col min-h-screen hero_area">
       <Header />
-      <div className="dashboard flex flex-1 w-full min-h-[80vh] bg-gradient-to-br from-black to-[#06174d] p-5 m-0">
-        
-        <aside className="sidebar w-[280px] min-w-[200px] bg-gradient-to-br from-black via-[#06174d] to-black text-white p-5 h-full rounded-2xl shadow-xl flex flex-col">
-        
-          <div className="flex items-center gap-3 mb-8">
-            <Squares2X2Icon className="h-8 w-8 text-yellow-400" />
-            <span className="text-2xl font-bold tracking-wide">Admin</span>
-          </div>
-          <nav className="flex-1">
-            <ul className="space-y-2">
-              <li>
-                <a
-                  href="/dashboard/games"
-                  className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
-                >
-                  <PuzzlePieceIcon className="h-6 w-6" />
-                  Juegos
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/dashboard/users"
-                  className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
-                >
-                  <UsersIcon className="h-6 w-6" />
-                  Usuarios
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/dashboard/categories"
-                  className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
-                >
-                  <Squares2X2Icon className="h-6 w-6" />
-                  Categorías
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/dashboard/exchanges"
-                  className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
-                >
-                  <ArrowsRightLeftIcon className="h-6 w-6" />
-                  Intercambios
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/dashboard/sold"
-                  className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
-                >
-                  <CurrencyDollarIcon className="h-6 w-6" />
-                  Ventas
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/dashboard/agreement"
-                  className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
-                >
-                  <HandRaisedIcon className="h-6 w-6" />
-                  Convenios
-                </a>
-              </li>
-            </ul>
-          </nav>
-          
-          <div className="border-t border-[#2b2b2b] mt-8 pt-4 text-center text-xs text-gray-400">
-            &copy; {new Date().getFullYear()} ArcadeStore Admin
-          </div>
-        </aside>
-       
-        <main className="flex-grow p-8 bg-transparent">
+      <div className="flex flex-1 min-h-0">
+        <Sidebar />
+        <main className="flex-1 w-full min-h-[80vh] bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-4 sm:p-6 lg:p-8">
           <div className="mx-auto max-w-7xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
               {/* Usuarios */}
-              <div className="card bg-white rounded-xl shadow-xl p-6 hover:-translate-y-2 transition group border border-gray-100 min-w-[220px] max-w-xs mx-auto">
+              <div className="card bg-white rounded-xl shadow-xl p-4 sm:p-6 hover:-translate-y-2 transition group border border-gray-100 w-full">
                 <div className="flex items-center gap-3 mb-3">
-                  <UserGroupIcon className="h-8 w-8 text-blue-500 group-hover:scale-110 transition" />
-                  <h3 className="text-lg font-semibold text-[#555]">Usuarios</h3>
+                  <UserGroupIcon className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 group-hover:scale-110 transition flex-shrink-0" />
+                  <h3 className="text-base sm:text-lg font-semibold text-[#555] truncate">Usuarios</h3>
                 </div>
-                <p className="text-[#555] text-base mb-3">
+                <p className="text-[#555] text-sm sm:text-base mb-3 leading-relaxed">
                   Total de Usuarios Registrados:{" "}
-                  <span className="font-bold">{stats.total_users ?? 0}</span>
+                  <span className="font-bold block sm:inline">{stats.total_users ?? 0}</span>
                 </p>
                 <AnimatedProgressBar value={stats.total_users ?? 0} color="#3b82f6" />
               </div>
+
               {/* Ventas */}
-              <div className="card bg-white rounded-xl shadow-xl p-6 hover:-translate-y-2 transition group border border-gray-100 flex flex-col items-center">
-                <div className="flex items-center gap-3 mb-3">
-                  <ChartBarIcon className="h-8 w-8 text-green-500 group-hover:scale-110 transition" />
-                  <h3 className="text-lg font-semibold text-[#555]">Ventas</h3>
+              <div className="card bg-white rounded-xl shadow-xl p-4 sm:p-6 hover:-translate-y-2 transition group border border-gray-100 flex flex-col items-center w-full">
+                <div className="flex items-center gap-3 mb-3 w-full justify-center">
+                  <ChartBarIcon className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 group-hover:scale-110 transition flex-shrink-0" />
+                  <h3 className="text-base sm:text-lg font-semibold text-[#555]">Ventas</h3>
                 </div>
-                <span className="text-[#555] mb-2">Progreso Ventas</span>
-                <AnimatedCircle percentage={percentage} color={color} />
+                <span className="text-[#555] mb-2 text-sm sm:text-base text-center">Progreso Ventas</span>
+                <div className="w-full flex justify-center">
+                  <AnimatedCircle percentage={percentage} color={color} />
+                </div>
               </div>
+
               {/* Intercambios */}
-              <div className="card bg-white rounded-xl shadow-xl p-6 hover:-translate-y-2 transition group border border-gray-100 min-w-[220px] max-w-xs mx-auto">
+              <div className="card bg-white rounded-xl shadow-xl p-4 sm:p-6 hover:-translate-y-2 transition group border border-gray-100 w-full">
                 <div className="flex items-center gap-3 mb-3">
-                  <ArrowsRightLeftIcon className="h-8 w-8 text-purple-500 group-hover:scale-110 transition" />
-                  <h3 className="text-lg font-semibold text-[#555]">Intercambios</h3>
+                  <ArrowsRightLeftIcon className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 group-hover:scale-110 transition flex-shrink-0" />
+                  <h3 className="text-base sm:text-lg font-semibold text-[#555] truncate">Intercambios</h3>
                 </div>
-                <p className="text-[#555] text-base mb-3">
+                <p className="text-[#555] text-sm sm:text-base mb-3 leading-relaxed">
                   Total de Intercambios Realizados:{" "}
-                  <span className="font-bold">{stats.total_intercambios ?? 0}</span>
+                  <span className="font-bold block sm:inline">{stats.total_intercambios ?? 0}</span>
                 </p>
                 <AnimatedProgressBar value={stats.total_intercambios ?? 0} color="#a78bfa" />
               </div>
+
               {/* Juegos */}
-              <div className="card bg-white rounded-xl shadow-xl p-6 hover:-translate-y-2 transition group border border-gray-100 min-w-[220px] max-w-xs mx-auto">
+              <div className="card bg-white rounded-xl shadow-xl p-4 sm:p-6 hover:-translate-y-2 transition group border border-gray-100 w-full">
                 <div className="flex items-center gap-3 mb-3">
-                  <PuzzlePieceIcon className="h-8 w-8 text-pink-500 group-hover:scale-110 transition" />
-                  <h3 className="text-lg font-semibold text-[#555]">Juegos</h3>
+                  <PuzzlePieceIcon className="h-6 w-6 sm:h-8 sm:w-8 text-pink-500 group-hover:scale-110 transition flex-shrink-0" />
+                  <h3 className="text-base sm:text-lg font-semibold text-[#555] truncate">Juegos</h3>
                 </div>
-                <p className="text-[#555] text-base mb-3">
-                  Total de Juegos: <span className="font-bold">{stats.total_games ?? 0}</span>
+                <p className="text-[#555] text-sm sm:text-base mb-3 leading-relaxed">
+                  Total de Juegos: <span className="font-bold block sm:inline">{stats.total_games ?? 0}</span>
                 </p>
                 <AnimatedProgressBar value={stats.total_games ?? 0} color="#ec4899" />
               </div>

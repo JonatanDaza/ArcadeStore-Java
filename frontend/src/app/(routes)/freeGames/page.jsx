@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from "react";
-import Header from "@/app/components/header";
-import Footer from "@/app/components/footer";
-import GamesGallery from "@/app/components/GamesGallery";
+import Header from "app/components/header";
+import Footer from "app/components/footer";
+import GamesGallery from "app/components/GamesGallery";
 
 // Simulación de datos (reemplaza por fetch real)
 const categorias = [
@@ -50,7 +50,7 @@ export default function FreeGamesPage() {
   return (
     <div className="flex flex-col min-h-screen bg-[#06174d]">
       <Header />
-      <div className="flex flex-row dashboard flex-1 min-h-[80vh] bg-gradient-to-br from-black to-[#06174d] p-5 m-0">
+      <div className="flex flex-row dashboard flex-1 min-h-[80vh] bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-5 m-0">
         {/* Sidebar de filtros */}
         <aside className="w-auto bg-[#2b2b2b] text-white border border-[#333] rounded-lg p-2 h-full min-w-[260px] max-w-xs sidebar">
           <h2 className="text-center mb-5 text-xl font-bold">Filtros</h2>

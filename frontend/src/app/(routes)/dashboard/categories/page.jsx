@@ -1,8 +1,9 @@
 "use client";
-import Header from "@/app/components/header";
-import Footer from "@/app/components/footer";
-import Table from "@/app/components/Table";
-import ActionButton from "@/app/components/ActionButton";
+import Header from "app/components/header";
+import Footer from "app/components/footer";
+import Table from "app/components/Table";
+import ActionButton from "app/components/ActionButton";
+import Sidebar from "app/components/sidebar";
 
 // Función para acciones
 function cellAcciones({ row }) {
@@ -111,19 +112,22 @@ export default function CategoriesPage() {
   return (
     <div className="flex flex-col min-h-screen hero_area">
       <Header />
-      <main className="flex-1 w-full min-h-[80vh] bg-gradient-to-br from-black to-[#06174d] p-5">
-        <div
-          className="max-w-7xl mx-auto rounded-xl shadow-xl p-8"
-          style={{ background: "#232323" }}
-        >
-          <h1 className="text-2xl font-bold mb-6 custom_heading">
-            Lista de Categorías
-          </h1>
-          <div className="overflow-x-auto rounded-lg border border-[#444] shadow-lg">
-            <Table columns={columns} data={data} />
+      <div className="flex flex-1 min-h-0">
+        <Sidebar />
+        <main className="flex-1 min-w-0 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-3 lg:p-5">
+          <div
+            className="w-auto h-auto rounded-xl shadow-xl p-4 lg:p-6 xl:p-8"
+            style={{ background: "#232323" }}
+          >
+            <h1 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 custom_heading">
+              Lista de Categorías
+            </h1>
+            <div className="overflow-x-auto rounded-lg border border-[#444] shadow-lg">
+              <Table columns={columns} data={data} />
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
       <Footer />
     </div>
   );
