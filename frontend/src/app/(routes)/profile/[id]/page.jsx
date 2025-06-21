@@ -61,8 +61,8 @@ export default function ProfilePage() {
         setLoading(true);
         // Simular llamada a API para obtener datos del usuario
         const mockUsers = {
-          "1": {
-            id: "1",
+          "123": {
+            id: "123",
             name: "Juan Pérez",
             email: "admin@arcade.com",
             phone: "+57 300 123 4567",
