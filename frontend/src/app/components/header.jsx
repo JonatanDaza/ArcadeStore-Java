@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function Header() {
-  // Obtiene el estado de autenticación y rol desde localStorage
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [userName, setUserName] = useState("");
@@ -16,28 +15,92 @@ export default function Header() {
 
   const router = useRouter();
 
-  useEffect(() => {
-    // Cargar datos del usuario desde localStorage
+  // Función para cargar datos del usuario
+  const loadUserData = () => {
     const storedRole = localStorage.getItem("userRole");
     const storedName = localStorage.getItem("userName");
     const storedNick = localStorage.getItem("userNick");
-    const storedId = localStorage.getItem("userId");
+    const storedId = localStorage.getItem("id"); // Usar "id" consistentemente
 
     setUserRole(storedRole);
-    setUserName(storedName || "Arcade");
-    setUserNick(storedNick || "ArcadeAdmin");
-    setUserId(storedId || 123);
-    setIsAuthenticated(!!storedRole);
+    setUserName(storedName || "Usuario");
+    setUserNick(storedNick || "user");
+    setUserId(storedId);
+    setIsAuthenticated(!!storedRole && !!storedId);
+  };
+
+  useEffect(() => {
+    // Cargar datos iniciales
+    loadUserData();
+
+    // Escuchar cambios en localStorage (para detectar login/logout desde otras pestañas)
+    const handleStorageChange = (e) => {
+      // Solo recargar si cambiaron las claves relacionadas con autenticación
+      if (['userRole', 'userName', 'userNick', 'id'].includes(e.key) || e.key === null) {
+        loadUserData();
+      }
+    };
+
+    // Escuchar eventos personalizados (para detectar cambios en la misma pestaña)
+    const handleCustomStorageChange = () => {
+      loadUserData();
+    };
+
+    // Agregar listeners
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('storageChange', handleCustomStorageChange);
+
+    // Opcional: También escuchar cambios de enfoque de ventana
+    // (útil si el usuario hace login en otra pestaña)
+    const handleFocus = () => {
+      loadUserData();
+    };
+    window.addEventListener('focus', handleFocus);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storageChange', handleCustomStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    // Limpiar todos los datos de autenticación
     localStorage.removeItem("userRole");
     localStorage.removeItem("userName");
     localStorage.removeItem("userNick");
-    localStorage.removeItem("userId");
-    router.push("/login");
+    localStorage.removeItem("id");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("userSession");
+    
+    // Actualizar estado local inmediatamente
+    setIsAuthenticated(false);
+    setUserRole(null);
+    setUserName("");
+    setUserNick("");
+    setUserId(null);
+    
+    // Disparar evento para que otros componentes se enteren
+    window.dispatchEvent(new Event('storage'));
+    
+    // Redireccionar
+    router.push("/");
   };
+
+  // Cerrar dropdowns cuando se hace clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownOpen && !event.target.closest('.dropdown-container')) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
 
   return (
     <header className="bg-black w-full shadow-lg">
@@ -85,7 +148,7 @@ export default function Header() {
               </li>
               <li>
                 <Link
-                  href="/freeGames"
+                  href="/games/freeGames"
                   className="block py-2 px-2 xl:px-4 text-white text-center uppercase no-underline hover:text-yellow-400 transition text-sm xl:text-base whitespace-nowrap"
                 >
                   Free to play
@@ -110,6 +173,7 @@ export default function Header() {
                 </li>
               )}
             </ul>
+            
             {/* Login/Usuario */}
             <ul className="flex flex-row gap-x-1 flex-shrink-0">
               {!isAuthenticated ? (
@@ -132,12 +196,12 @@ export default function Header() {
                   </li>
                 </>
               ) : (
-                <li className="relative">
+                <li className="relative dropdown-container">
                   <button
                     className="flex items-center py-2 px-2 xl:px-4 text-white uppercase hover:text-yellow-400 transition focus:outline-none text-sm xl:text-base whitespace-nowrap"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                   >
-                    <span className="max-w-[180px] xl:max-w-none">
+                    <span className="max-w-[180px] xl:max-w-none truncate">
                       {userRole === "admin"
                         ? `Admin - ${userName}`
                         : userNick || userName}
@@ -203,7 +267,7 @@ export default function Header() {
             </li>
             <li>
               <Link
-                href="/freeGames"
+                href="/games/freeGames"
                 className="block py-2 px-4 text-white uppercase no-underline hover:text-yellow-400 transition"
                 onClick={() => setMenuOpen(false)}
               >
@@ -230,6 +294,7 @@ export default function Header() {
                 </Link>
               </li>
             )}
+            
             {/* Login/User (Mobile only) */}
             {!isAuthenticated ? (
               <>
@@ -253,15 +318,17 @@ export default function Header() {
                 </li>
               </>
             ) : (
-              <li className="relative w-full flex flex-col items-center">
+              <li className="relative w-full flex flex-col items-center dropdown-container">
                 <button
                   className="flex items-center justify-center py-2 px-4 text-white uppercase hover:text-yellow-400 transition focus:outline-none w-full"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                 >
-                  {userRole === "admin"
-                    ? `Administrador - ${userName}`
-                    : userNick || userName}
-                  <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="truncate max-w-[200px]">
+                    {userRole === "admin"
+                      ? `Admin - ${userName}`
+                      : userNick || userName}
+                  </span>
+                  <svg className="ml-2 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>

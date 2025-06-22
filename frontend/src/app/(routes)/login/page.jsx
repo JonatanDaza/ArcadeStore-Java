@@ -18,21 +18,44 @@ export default function LoginPage() {
 
     if (!email || !password) {
       setTouched({ email: true, password: true });
+      setError("Todos los campos son obligatorios.");
       setLoading(false);
       return;
     }
 
     // Simulación de autenticación (reemplaza con lógica real)
     if (email === "admin@arcade.com" && password === "123456") {
-      // Guardar datos de admin en localStorage
+      // Guardar datos de admin en localStorage con las claves correctas
       localStorage.setItem("userEmail", email);
       localStorage.setItem("userRole", "admin");
       localStorage.setItem("userName", "Administrador");
       localStorage.setItem("userNick", "admin");
-      localStorage.setItem("userId", "123");
+      localStorage.setItem("id", "123"); // Usar "id" en lugar de "userId"
+      
+      // Disparar evento para que otros componentes se enteren del cambio
+      window.dispatchEvent(new Event('storage'));
+      
       router.push("/");
     } else {
-      setError("Correo o contraseña incorrectos.");
+      // Verificar si es un usuario registrado
+      const registeredUsers = JSON.parse(localStorage.getItem("registeredUsers") || "[]");
+      const user = registeredUsers.find(u => u.email === email && u.password === password);
+      
+      if (user) {
+        // Usuario registrado encontrado
+        localStorage.setItem("userEmail", user.email);
+        localStorage.setItem("userRole", "user");
+        localStorage.setItem("userName", user.name || "Usuario");
+        localStorage.setItem("userNick", user.nick || user.email.split('@')[0]);
+        localStorage.setItem("id", user.id);
+        
+        // Disparar evento para que otros componentes se enteren del cambio
+        window.dispatchEvent(new Event('storage'));
+        
+        router.push("/");
+      } else {
+        setError("Correo o contraseña incorrectos.");
+      }
     }
     setLoading(false);
   };
