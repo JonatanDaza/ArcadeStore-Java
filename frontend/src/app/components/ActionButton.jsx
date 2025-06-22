@@ -1,20 +1,53 @@
 import { FiEye, FiEdit2 } from "react-icons/fi";
-import { MdBlock, MdCheckCircle, MdStar } from "react-icons/md";
+import { MdStar } from "react-icons/md";
+import { BsFillStarFill, BsPencilSquare, BsEyeFill } from "react-icons/bs";
 
+// Switch personalizado
+function ToggleSwitch({ checked, onChange, title }) {
+  return (
+    <label className="flex items-center cursor-pointer" title={title}>
+      <div className="relative">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={onChange}
+          className="sr-only"
+        />
+        <div
+          className={`block w-10 h-6 rounded-full transition ${
+            checked ? "bg-green-600" : "bg-red-600"
+          }`}
+        ></div>
+        <div
+          className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${
+            checked ? "translate-x-4" : ""
+          }`}
+        ></div>
+      </div>
+    </label>
+  );
+}
+
+// Íconos modernos y visuales
 const icons = {
-  view: <FiEye size={18} />,
-  edit: <FiEdit2 size={18} />,
-  deactivate: <MdBlock size={20} />,
-  activate: <MdCheckCircle size={20} />,
-  highlight: <MdStar size={20} />,
-};
-
-const colors = {
-  view: "bg-yellow-500 hover:bg-yellow-600",
-  edit: "bg-blue-600 hover:bg-blue-800",
-  deactivate: "bg-red-600 hover:bg-red-700",
-  activate: "bg-green-600 hover:bg-green-700",
-  highlight: "bg-yellow-400 hover:bg-yellow-500 text-white",
+  view: (
+    <BsEyeFill
+      size={28} // antes 22
+      className="text-yellow-500 hover:text-yellow-600 transition"
+    />
+  ),
+  edit: (
+    <BsPencilSquare
+      size={28} // antes 22
+      className="text-blue-500 hover:text-blue-700 transition"
+    />
+  ),
+  highlight: (
+    <BsFillStarFill
+      size={28} // antes 22
+      className="text-yellow-400 hover:text-yellow-600 transition"
+    />
+  ),
 };
 
 export default function ActionButton({
@@ -23,11 +56,15 @@ export default function ActionButton({
   title,
   ...props
 }) {
+  if (type === "activate" || type === "deactivate") {
+    return null;
+  }
   return (
     <button
-      className={`flex items-center justify-center ${colors[type]} text-white p-2 rounded-full transition`}
+      className="flex items-center justify-center bg-transparent p-0 m-0 hover:scale-125 transition"
       onClick={onClick}
       title={title}
+      style={{ boxShadow: "none", border: "none" }}
       {...props}
     >
       {icons[type]}
@@ -37,8 +74,9 @@ export default function ActionButton({
 
 // Ejemplo de uso en cellAcciones:
 function cellAcciones({ row }) {
+  const isActive = row.original.estado === "Activo";
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 items-center">
       <ActionButton
         type="edit"
         title="Editar"
@@ -46,23 +84,13 @@ function cellAcciones({ row }) {
           // lógica para editar
         }}
       />
-      {row.original.estado === "Activo" ? (
-        <ActionButton
-          type="deactivate"
-          title="Desactivar"
-          onClick={() => {
-            // lógica para desactivar
-          }}
-        />
-      ) : (
-        <ActionButton
-          type="activate"
-          title="Activar"
-          onClick={() => {
-            // lógica para activar
-          }}
-        />
-      )}
+      <ToggleSwitch
+        checked={isActive}
+        onChange={() => {
+          // lógica para activar/desactivar
+        }}
+        title={isActive ? "Desactivar" : "Activar"}
+      />
       <ActionButton
         type="view"
         title="Ver detalles"
@@ -80,4 +108,6 @@ function cellAcciones({ row }) {
     </div>
   );
 }
+
+export { ToggleSwitch };
 

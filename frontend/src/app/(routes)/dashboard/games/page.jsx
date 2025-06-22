@@ -2,7 +2,7 @@
 import Header from "app/components/header";
 import Footer from "app/components/footer";
 import Table from "app/components/Table";
-import ActionButton from "app/components/ActionButton";
+import ActionButton, { ToggleSwitch } from "app/components/ActionButton";
 import Sidebar from "app/components/sidebar";
 
 // Define las funciones fuera del array
@@ -25,49 +25,37 @@ function cellAcciones({ row }) {
   return (
     <div className="flex gap-2">
       <ActionButton
-        type="edit"
+        type="highlight"
         onClick={() => {
-          // lógica para editar
+          // lógica para destacar
         }}
-      >
-        Editar
-      </ActionButton>
-      {row.original.estado === "Activo" ? (
-        <ActionButton
-          type="deactivate"
-          onClick={() => {
-            // lógica para desactivar
-          }}
-        >
-          Desactivar
-        </ActionButton>
-      ) : (
-        <ActionButton
-          type="activate"
-          onClick={() => {
-            // lógica para activar
-          }}
-        >
-          Activar
-        </ActionButton>
-      )}
+        title="Destacar"
+      />
+
       <ActionButton
         type="view"
         onClick={() => {
           // lógica para ver detalles
         }}
-      >
-        Ver
-      </ActionButton>
-
+        title="Ver detalles"
+      />
+      
       <ActionButton
-        type="highlight"
+        type="edit"
         onClick={() => {
-          // lógica para ver detalles
+          // lógica para editar
         }}
-      >
-        Ver
-      </ActionButton>
+        title="Editar"
+      />
+      
+      <ToggleSwitch
+        checked={row.original.estado === "Activo"}
+        onChange={() => {
+          // lógica para activar/desactivar
+        }}
+        title={row.original.estado === "Activo" ? "Desactivar" : "Activar"}
+      />
+      
     </div>
   );
 }
@@ -89,7 +77,21 @@ const columns = [
   { header: "Requisitos Mínimos", accessorKey: "requisitos_minimos" },
   { header: "Requisitos Recomendados", accessorKey: "requisitos_recomendados" },
   { header: "Categoría", accessorKey: "categoria" },
-  { header: "Estado", accessorKey: "estado" },
+  {
+    header: "Estado",
+    accessorKey: "estado",
+    cell: info => (
+      info.getValue() === "Activo" ? (
+        <span className="inline-block px-4 py-1 text-xs font-semibold rounded-full bg-green-200/80 text-green-800 text-center min-w-[90px]">
+          Activo
+        </span>
+      ) : (
+        <span className="inline-block px-4 py-1 text-xs font-semibold rounded-full bg-red-200/80 text-red-700 text-center min-w-[90px]">
+          Inactivo
+        </span>
+      )
+    ),
+  },
   {
     header: "Acciones",
     id: "acciones",

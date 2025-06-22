@@ -2,37 +2,16 @@
 import Header from "app/components/header";
 import Footer from "app/components/footer";
 import Table from "app/components/Table";
-import ActionButton from "app/components/ActionButton";
+import ActionButton, { ToggleSwitch } from "app/components/ActionButton";
 import Sidebar from "app/components/sidebar";
 
 // Función para acciones
 function cellAcciones({ row }) {
   return (
+
+    
     <div className="flex gap-2">
-      <ActionButton
-        type="edit"
-        title="Editar"
-        onClick={() => {
-          // lógica para editar
-        }}
-      />
-      {row.original.activo ? (
-        <ActionButton
-          type="deactivate"
-          title="Desactivar"
-          onClick={() => {
-            // lógica para desactivar
-          }}
-        />
-      ) : (
-        <ActionButton
-          type="activate"
-          title="Activar"
-          onClick={() => {
-            // lógica para activar
-          }}
-        />
-      )}
+
       <ActionButton
         type="view"
         title="Ver detalles"
@@ -41,11 +20,19 @@ function cellAcciones({ row }) {
         }}
       />
       <ActionButton
-        type="highlight"
-        title="Destacar"
+        type="edit"
+        title="Editar"
         onClick={() => {
-          // lógica para destacar
+          // lógica para editar
         }}
+      />      
+      
+      <ToggleSwitch
+        checked={row.original.estado === "activo"}
+        onChange={() => {
+          // lógica para cambiar el estado
+        }}
+        title={row.original.estado === "activo" ? "Desactivar" : "Activar"}
       />
     </div>
   );
@@ -69,9 +56,19 @@ const columns = [
     cell: info => info.getValue(),
   },
   {
-    header: "Activo",
-    accessorKey: "activo",
-    cell: info => info.getValue() ? "Activo" : "Inactivo",
+    header: "Estado",
+    accessorKey: "estado",
+    cell: info => (
+      info.getValue() === "activo" || info.getValue() === "Activo" ? (
+        <span className="inline-block px-4 py-1 text-xs font-semibold rounded-full bg-green-200/80 text-green-800 text-center min-w-[90px]">
+          Activo
+        </span>
+      ) : (
+        <span className="inline-block px-4 py-1 text-xs font-semibold rounded-full bg-red-200/80 text-red-700 text-center min-w-[90px]">
+          Inactivo
+        </span>
+      )
+    ),
   },
   {
     header: "Acciones",
@@ -86,25 +83,25 @@ const data = [
     id: 1,
     nombre: "Acción y aventura",
     descripcion: "Juegos con mucha acción y exploración.",
-    activo: true,
+    estado: "activo",
   },
   {
     id: 2,
     nombre: "Shooter",
     descripcion: "Juegos de disparos en primera o tercera persona.",
-    activo: true,
+    estado: "activo",
   },
   {
     id: 3,
     nombre: "Deportes",
     descripcion: "Juegos de fútbol, baloncesto y más.",
-    activo: false,
+    estado: "inactivo",
   },
   {
     id: 4,
     nombre: "Estrategia",
     descripcion: "Juegos de gestión y táctica.",
-    activo: true,
+    estado: "activo",
   },
 ];
 
