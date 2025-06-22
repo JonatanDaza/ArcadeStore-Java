@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
 import Header from "./components/header";
 import Footer from "./components/footer";
@@ -8,65 +8,80 @@ import CarouselClientes from "./components/carouselClients";
 import GameCarousel from "./components/carouselGames";
 import RecentGames from "./components/recentGames";
 
-
 const HomePage = () => {
-  const [isAuthenticated] = useState(true);
-  const [userRole] = useState("admin");
-  const [userName] = useState("Jonatan");
-  const [userNick] = useState("JDaza");
-  const userId = 123;
-  
-const featuredGames = [
-  {
-    id: 1,
-    titulo: "Cyberpunk 2077",
-    descripcion: "Un RPG de mundo abierto ambientado en Night City...",
-    image: "GTAV.png",
-    categoria: { nombre_categoria: "RPG" }
-  },
-  {
-    id: 2,
-    titulo: "Cyberpunk 77",
-    descripcion: "Un RPG de mundo abierto ambientado en Night City...",
-    image: "Assasin's creed valhalla.jpg",
-    categoria: { nombre_categoria: "RPG" }
-  },
-  {
-    id: 3,
-    titulo: "Cyberpunk 20",
-    descripcion: "Un RPG de mundo abierto ambientado en Night City...",
-    image: "HALO4.png",
-    categoria: { nombre_categoria: "RPG" }
-  },
-  {
-    id: 4,
-    titulo: "Cybe 2077",
-    descripcion: "Un RPG de mundo abierto ambientado en Night City...",
-    image: "FARCRY3.jpeg",
-    categoria: { nombre_categoria: "RPG" }
-  },
-];
+  // Obtener el rol del usuario desde localStorage o estado global
+  const [userRole, setUserRole] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userNick, setUserNick] = useState("");
+  const [userId, setUserId] = useState(null);
 
-const recentGames = [
-  {
-    id: 1,
-    titulo: "Red Dead Redemption 2",
-    descripcion: "es una épica aventura de mundo abierto ambientada en el ocaso de la era del salvaje oeste americano. Únete a Arthur Morgan y la banda de Van der Linde...",
-    image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600&h=400&fit=crop"
-  },
-  {
-    id: 2,
-    titulo: "Cyberpunk 2077",
-    descripcion: "Un RPG de mundo abierto ambientado en Night City, una megalópolis obsesionada con el poder, el glamour y la modificación corporal. Juegas como V, un mercenario en busca de un implante único...",
-    image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&h=400&fit=crop"
-  },
-  {
-    id: 3,
-    titulo: "The Witcher 3",
-    descripcion: "Como Geralt de Rivia, un cazador de monstruos conocido como brujo, embárcate en una aventura épica en un mundo fantástico rico en contenido y opciones significativas...",
-    image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=400&fit=crop"
-  }
-];
+  useEffect(() => {
+    // Simulación: obtener datos del usuario autenticado
+    const storedRole = localStorage.getItem("userRole");
+    const storedName = localStorage.getItem("userName");
+    const storedNick = localStorage.getItem("userNick");
+    const storedId = localStorage.getItem("userId");
+
+    setUserRole(storedRole);
+    setUserName(storedName || "Arcade");
+    setUserNick(storedNick || "ArcadeAdmin");
+    setUserId(storedId || 123);
+    setIsAuthenticated(!!storedRole);
+  }, []);
+
+
+  const featuredGames = [
+    {
+      id: 1,
+      titulo: "Cyberpunk 2077",
+      descripcion: "Un RPG de mundo abierto ambientado en Night City...",
+      image: "GTAV.png",
+      categoria: { nombre_categoria: "RPG" }
+    },
+    {
+      id: 2,
+      titulo: "Cyberpunk 77",
+      descripcion: "Un RPG de mundo abierto ambientado en Night City...",
+      image: "Assasin's creed valhalla.jpg",
+      categoria: { nombre_categoria: "RPG" }
+    },
+    {
+      id: 3,
+      titulo: "Cyberpunk 20",
+      descripcion: "Un RPG de mundo abierto ambientado en Night City...",
+      image: "HALO4.png",
+      categoria: { nombre_categoria: "RPG" }
+    },
+    {
+      id: 4,
+      titulo: "Cybe 2077",
+      descripcion: "Un RPG de mundo abierto ambientado en Night City...",
+      image: "FARCRY3.jpeg",
+      categoria: { nombre_categoria: "RPG" }
+    },
+  ];
+
+  const recentGames = [
+    {
+      id: 1,
+      titulo: "Red Dead Redemption 2",
+      descripcion: "es una épica aventura de mundo abierto ambientada en el ocaso de la era del salvaje oeste americano. Únete a Arthur Morgan y la banda de Van der Linde...",
+      image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600&h=400&fit=crop"
+    },
+    {
+      id: 2,
+      titulo: "Cyberpunk 2077",
+      descripcion: "Un RPG de mundo abierto ambientado en Night City, una megalópolis obsesionada con el poder, el glamour y la modificación corporal. Juegas como V, un mercenario en busca de un implante único...",
+      image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&h=400&fit=crop"
+    },
+    {
+      id: 3,
+      titulo: "The Witcher 3",
+      descripcion: "Como Geralt de Rivia, un cazador de monstruos conocido como brujo, embárcate en una aventura épica en un mundo fantástico rico en contenido y opciones significativas...",
+      image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=400&fit=crop"
+    }
+  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-[#06174d]">
@@ -85,14 +100,13 @@ const recentGames = [
           margin: 0,
         }}
       >
-      {/* Solo muestra el carousel si hay juegos */}
-      {featuredGames.length > 0 && (
-        <GameCarousel featuredGames={featuredGames} />
-      )}
-      {/* Juegos Recientes */}
-      {recentGames.length > 0 && (
-      <RecentGames recentGames={recentGames} />
-      )}
+        {/* Solo muestra el carousel si hay juegos */}
+        {featuredGames.length > 0 && (
+          <GameCarousel featuredGames={featuredGames} />
+        )}
+        {/* Juegos Recientes */}
+        {recentGames.length > 0 && (
+          <RecentGames juegosRecientes={recentGames} />        )}
         {/* Service Section */}
         <section className="py-16 flex-1">
           <div className="max-w-6xl mx-auto px-4">

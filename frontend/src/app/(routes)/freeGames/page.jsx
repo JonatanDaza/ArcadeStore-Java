@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from "react";
-import Header from "@/app/components/header";
-import Footer from "@/app/components/footer";
-import GamesGallery from "@/app/components/GamesGallery";
+import Header from "app/components/header";
+import Footer from "app/components/footer";
+import GamesGallery from "app/components/GamesGallery";
 
 // Simulación de datos (reemplaza por fetch real)
 const categorias = [
@@ -66,11 +66,10 @@ export default function FreeGamesPage() {
             />
             <button
               className="bg-black text-white px-4 py-2 rounded-r hover:bg-[#06174d] transition"
-              onClick={() => setSearch(search)}
+              onClick={() => {}} // Search is already triggered by onChange
             >
               Buscar
-            </button>
-            {search && (
+            </button>            {search && (
               <button
                 className="ml-2 bg-black text-white px-3 py-2 rounded hover:bg-[#575d6d] transition"
                 onClick={() => setSearch("")}

@@ -26,20 +26,16 @@ Make sure you have the following installed:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/ArcadeStore-Java.git
+   git clone https://github.com/JonatanDaza/ArcadeStore-Java.git
    ```
-2. Navigate to the `frontend` directory:
+2. Install the dependencies:
    ```
-   cd ArcadeStore-Java/frontend
-   ```
-3. Install the dependencies:
-   ```
-   npm install
+   npm run dev (cd ArcadeStore-Java/frontend && npm install)
    ```
 
 ### Running the Application
 
-To run the frontend application in development mode, execute the following command from the `frontend` directory:
+To run the frontend application in development mode, execute the following command from the `ArcadeStore-Java` directory:
 
 ```
 npm run dev

@@ -18,9 +18,8 @@ export default function GameFilters({ categorias = [], onFilter }) {
   const clearPrice = () => {
     setMinPrice("");
     setMaxPrice("");
-    handleFilter();
+    onFilter({ search, categoria, minPrice: "", maxPrice: "" });
   };
-
   return (
     <aside className="w-auto bg-[#2b2b2b] text-white border border-[#333] rounded-lg p-2 h-full min-w-[260px] max-w-xs sidebar">
       <h2 className="text-center mb-5 text-xl font-bold">Filtros</h2>

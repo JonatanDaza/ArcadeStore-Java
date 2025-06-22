@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from "react";
-import Header from "@/app/components/header";
-import Footer from "@/app/components/footer";
-import GameFilters from "@/app/components/GameFilters";
-import GamesGallery from "@/app/components/GamesGallery";
+import Header from "app/components/header";
+import Footer from "app/components/footer";
+import GameFilters from "app/components/GameFilters";
+import GamesGallery from "app/components/GamesGallery";
 
 // Simulación de datos (reemplaza por fetch real)
 const categorias = [
@@ -54,9 +54,10 @@ export default function GamesPage() {
   const paginated = juegosFiltrados.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#06174d]">
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <div className="flex flex-row dashboard flex-1 min-h-[80vh] bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-5 m-0">
+      <main className="flex-1 font-poppins text-white flex flex-row  bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-5 m-0"
+      >
         <GameFilters categorias={categorias} onFilter={setFiltros} />
         <div className="flex-1 px-4 py-8">
           <GamesGallery juegos={paginated} titulo="Juegos Disponibles" />
@@ -99,7 +100,7 @@ export default function GamesPage() {
             </nav>
           </div>
         </div>
-      </div>
+      </main>
       <Footer />
     </div>
   );

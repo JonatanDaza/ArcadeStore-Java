@@ -7,6 +7,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { useState } from "react";
+import Pagination from "./pagination";
 
 export default function Table({ columns, data }) {
   const [pageIndex, setPageIndex] = useState(0);
@@ -28,8 +29,8 @@ export default function Table({ columns, data }) {
   });
 
   return (
-    <div className="overflow-x-auto mt-5">
-      <table className="min-w-full rounded-lg bg-[#232323] text-white shadow-lg border border-[#444]">
+    <div className="overflow-x-auto mt-0">
+      <table className="min-w-full text-white border border-[#444]">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -66,50 +67,23 @@ export default function Table({ columns, data }) {
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
-                {/* ELIMINA este <td> extra con los botones */}
               </tr>
             ))
           )}
         </tbody>
       </table>
       {/* Paginación */}
-      <div className="flex justify-between items-center mt-4 text-white">
-        <div>
-          <span>
-            Página {pageIndex + 1} de {table.getPageCount()}
-          </span>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-            className="px-3 py-1 bg-[#232323] text-white rounded border border-[#666] hover:bg-[#353535] transition disabled:opacity-50"
-          >
-            {"<<"}
-          </button>
-          <button
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="px-3 py-1 bg-[#232323] text-white rounded border border-[#666] hover:bg-[#353535] transition disabled:opacity-50"
-          >
-            {"Anterior"}
-          </button>
-          <button
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="px-3 py-1 bg-[#232323] text-white rounded border border-[#666] hover:bg-[#353535] transition disabled:opacity-50"
-          >
-            {"Siguiente"}
-          </button>
-          <button
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-            className="px-3 py-1 bg-[#232323] text-white rounded border border-[#666] hover:bg-[#353535] transition disabled:opacity-50"
-          >
-            {">>"}
-          </button>
-        </div>
-      </div>
+      <Pagination
+        pageIndex={pageIndex}
+        pageCount={table.getPageCount()}
+        canPreviousPage={table.getCanPreviousPage()}
+        canNextPage={table.getCanNextPage()}
+        gotoPage={table.setPageIndex}
+        previousPage={table.previousPage}
+        nextPage={table.nextPage}
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+      />
     </div>
   );
 }
