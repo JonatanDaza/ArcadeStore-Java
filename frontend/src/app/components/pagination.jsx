@@ -30,7 +30,7 @@ export default function Pagination({
           onChange={e => setPageSize(Number(e.target.value))}
           className="bg-[#232323] border border-[#666] rounded px-2 py-1 text-white"
         >
-          {[5, 10, 20, 50, 100].map(size => (
+          {[5, 10, 20, 50].map(size => (
             <option key={size} value={size}>{size}</option>
           ))}
         </select>

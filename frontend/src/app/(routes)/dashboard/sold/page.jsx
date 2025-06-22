@@ -10,7 +10,7 @@ import Sidebar from "app/components/sidebar";
 function ButtonPDF({ onClick }) {
   return (
     <button
-      className="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded transition text-xs"
+      className="flex items-center gap-2 border border-blue-500 text-blue-500 px-3 py-1 rounded transition hover:bg-blue-500 hover:text-white font-semibold text-xs"
       onClick={onClick}
     >
       <HiOutlineDocumentText size={18} />
@@ -23,7 +23,7 @@ function ButtonPDF({ onClick }) {
 function ButtonShow({ onClick }) {
   return (
     <button
-      className="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded transition text-xs"
+      className="flex items-center gap-2 border border-blue-500 text-blue-500 px-3 py-1 rounded transition hover:bg-blue-500 hover:text-white font-semibold text-xs"
       onClick={onClick}
     >
       <FiEye size={18} />
