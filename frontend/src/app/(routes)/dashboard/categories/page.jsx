@@ -116,13 +116,12 @@ export default function CategoriesPage() {
         <Sidebar />
         <main className="flex-1 min-w-0 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-3 lg:p-5">
           <div
-            className="w-auto h-auto rounded-xl shadow-xl p-4 lg:p-6 xl:p-8"
-            style={{ background: "#232323" }}
+            className="w-auto h-auto pt-3"
           >
             <h1 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 custom_heading">
               Lista de Categorías
             </h1>
-            <div className="overflow-x-auto rounded-lg border border-[#444] shadow-lg">
+            <div className="overflow-x-auto rounded-lg shadow-lg">
               <Table columns={columns} data={data} />
             </div>
           </div>

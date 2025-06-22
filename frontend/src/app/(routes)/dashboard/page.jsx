@@ -3,6 +3,10 @@
 import Header from "app/components/header";
 import Footer from "app/components/footer";
 import Sidebar from "app/components/sidebar";
+import { usersData } from "../dashboard/users/page";
+import { gamesData } from "../dashboard/games/page";
+import { soldData } from "../dashboard/sold/page";
+import { exchangesData } from "../dashboard/exchanges/page";
 import {
   UserGroupIcon,
   ChartBarIcon,
@@ -11,12 +15,20 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 
-// Simulación de datos (puedes reemplazar por fetch real)
+const total_users = usersData.length;
+const total_games = gamesData.length;
+const total_intercambios = exchangesData.length;
+const total_ventas = soldData.length;
+
+// Ejemplo de porcentaje de juegos vendidos (puedes ajustar la lógica)
+const percentage_games_sold =
+  total_games === 0 ? 0 : Math.round((total_ventas / total_games) * 100);
+
 const stats = {
-  total_users: 120,
-  percentage_games_sold: 65,
-  total_intercambios: 40,
-  total_games: 80,
+  total_users,
+  percentage_games_sold,
+  total_intercambios,
+  total_games,
 };
 
 function AnimatedProgressBar({ value, color }) {
@@ -137,7 +149,7 @@ export default function DashboardPage() {
                 </div>
                 <span className="text-[#555] mb-2 text-sm sm:text-base text-center">Progreso Ventas</span>
                 <div className="w-full flex justify-center">
-                  <AnimatedCircle percentage={percentage} color={color} />
+                  <AnimatedCircle percentage={stats.percentage_games_sold ?? 0} color={color} />
                 </div>
               </div>
 

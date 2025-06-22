@@ -106,8 +106,7 @@ const HomePage = () => {
         )}
         {/* Juegos Recientes */}
         {recentGames.length > 0 && (
-          <RecentGames recentGames={recentGames} />
-        )}
+          <RecentGames juegosRecientes={recentGames} />        )}
         {/* Service Section */}
         <section className="py-16 flex-1">
           <div className="max-w-6xl mx-auto px-4">

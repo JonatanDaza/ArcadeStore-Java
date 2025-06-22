@@ -38,14 +38,18 @@ export default function RegisterPage() {
       return;
     }
 
-    // Simulación de registro exitoso (reemplaza con lógica real)
+    // TODO: Replace with actual API call to registration endpoint
+    // const response = await fetch('/api/register', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ email, password })
+    // });
+    // Handle proper authentication token storage
     setSuccess("Registro exitoso. Redirigiendo...");
-    localStorage.setItem("userEmail", email);
     setTimeout(() => {
       router.push("/");
     }, 1500);
-    setLoading(false);
-  };
+    setLoading(false);  };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#06174d]">
