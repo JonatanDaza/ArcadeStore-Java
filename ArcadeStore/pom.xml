@@ -11,7 +11,7 @@
 	<groupId>com.Scrum3</groupId>
 	<artifactId>ArcadeStore</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>ArcadeStore</name>
 	<description>ArcadeStore project for Spring Boot</description>
 	<url/>
@@ -76,7 +76,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -102,8 +101,8 @@
 							<artifactId>lombok</artifactId>
 						</path>
 					</annotationProcessorPaths>
-					<source>24</source>
-					<target>24</target>
+					<source>17</source>
+					<target>17</target>
 					<compilerArgs>--enable-preview</compilerArgs>
 				</configuration>
 			</plugin>
