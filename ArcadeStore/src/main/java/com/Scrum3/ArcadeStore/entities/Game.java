@@ -27,6 +27,8 @@ public class Game {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    private boolean active = true;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
@@ -42,4 +44,12 @@ public class Game {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public void set_active(boolean active) {
+        this.active = active;
+    }
+
+    public static boolean is_active(Object o) {
+            return false;
+    }
 }

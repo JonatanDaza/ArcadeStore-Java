@@ -11,6 +11,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "categories") // Mapeado a la tabla 'categories' en tu base de datos
@@ -43,4 +44,13 @@ public class Category {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "category")
+    private List<Game> games;
+
+    public List<Game> getGames() {
+        return games;
+    }
+
 }
+

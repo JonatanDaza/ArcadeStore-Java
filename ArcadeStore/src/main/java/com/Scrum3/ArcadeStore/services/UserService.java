@@ -23,8 +23,7 @@ public class UserService {
     }
 
     public User createUser(User user) {
-        // En un caso real, aquí encriptarías la contraseña antes de guardar:
-        // user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+
         return userRepository.save(user);
     }
 
@@ -34,8 +33,6 @@ public class UserService {
             User existingUser = optionalUser.get();
             existingUser.setUsername(userDetails.getUsername());
             existingUser.setEmail(userDetails.getEmail());
-            // Si la contraseña se actualiza, deberías volver a encriptarla
-            // existingUser.setPasswordHash(passwordEncoder.encode(userDetails.getPasswordHash()));
             existingUser.setRole(userDetails.getRole());
             return userRepository.save(existingUser);
         } else {
@@ -43,12 +40,14 @@ public class UserService {
         }
     }
 
-    public boolean deleteUser(Long id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
+    public boolean desactiveUser(Long id) {
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            user.setActive(false);
+            userRepository.save(user);
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 }
