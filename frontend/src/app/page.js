@@ -1,24 +1,90 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
 import Header from "./components/header";
 import Footer from "./components/footer";
 import CarouselClientes from "./components/carouselClients";
+import GameCarousel from "./components/carouselGames";
+import RecentGames from "./components/recentGames";
 
-function limitText(text, max) {
-  return text.length > max ? text.slice(0, max) + "..." : text;
-}
+const HomePage = () => {
+  // Obtener el rol del usuario desde localStorage o estado global
+  const [userRole, setUserRole] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userNick, setUserNick] = useState("");
+  const [userId, setUserId] = useState(null);
 
-const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
-  const [isAuthenticated] = useState(true);
-  const [userRole] = useState("admin");
-  const [userName] = useState("Jonatan");
-  const [userNick] = useState("JDaza");
-  const userId = 123;
+  useEffect(() => {
+    // Simulación: obtener datos del usuario autenticado
+    const storedRole = localStorage.getItem("userRole");
+    const storedName = localStorage.getItem("userName");
+    const storedNick = localStorage.getItem("userNick");
+    const storedId = localStorage.getItem("userId");
+
+    setUserRole(storedRole);
+    setUserName(storedName || "Arcade");
+    setUserNick(storedNick || "ArcadeAdmin");
+    setUserId(storedId || 123);
+    setIsAuthenticated(!!storedRole);
+  }, []);
+
+
+  const featuredGames = [
+    {
+      id: 1,
+      titulo: "GTA V",
+      descripcion: "Un ... de mundo ...",
+      image: "GTAV.png",
+      categoria: { nombre_categoria: "..." }
+    },
+    {
+      id: 2,
+      titulo: "Dragon ball sparking zero",
+      descripcion: "Un ... de mundo ...",
+      image: "Dragon ball sparking zero.png",
+      categoria: { nombre_categoria: "..." }
+    },
+    {
+      id: 3,
+      titulo: "HALO 4",
+      descripcion: "Un ... de mundo ...",
+      image: "HALO4.png",
+      categoria: { nombre_categoria: "..." }
+    },
+    {
+      id: 4,
+      titulo: "FARCRY 3",
+      descripcion: "Un ... de mundo ...",
+      image: "FARCRY3.jpeg",
+      categoria: { nombre_categoria: "..." }
+    },
+  ];
+
+  const recentGames = [
+    {
+      id: 1,
+      titulo: "Red Dead Redemption 2",
+      descripcion: "es una épica aventura de mundo abierto ambientada en el ocaso de la era del salvaje oeste americano. Únete a Arthur Morgan y la banda de Van der Linde...",
+      image: "Red Dead Redeption 2.png"
+    },
+    {
+      id: 2,
+      titulo: "Borderlands 2",
+      descripcion: "Un RPG de mundo abierto ambientado en Night City, una megalópolis obsesionada con el poder, el glamour y la modificación corporal. Juegas como V, un mercenario en busca de un implante único...",
+      image: "Borderlands 2.png"
+    },
+    {
+      id: 3,
+      titulo: "Dragon ball sparking zero",
+      descripcion: "Como Geralt de Rivia, un cazador de monstruos conocido como brujo, embárcate en una aventura épica en un mundo fantástico rico en contenido y opciones significativas...",
+      image: "Dragon ball sparking zero.png"
+    }
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen bg-[#06174d]">
       <Header
         isAuthenticated={isAuthenticated}
         userRole={userRole}
@@ -30,96 +96,17 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
         className="flex-1 font-poppins text-white flex flex-col"
         style={{
           backgroundImage:
-            "linear-gradient(135deg, #000 20%, #06174d 90%, #000 -50%)",
+            "linear-gradient(180deg, #000 -2%, #06174d 90%, #000 100%)",
           margin: 0,
         }}
       >
-        {/* Slider Section */}
-        <section className="relative from-gray-900 to-gray-800 text-white py-12">
-          <div className="max-w-7xl mx-auto">
-            <div className="relative">
-              {/* Carousel indicators */}
-              <div className="flex justify-center mb-4 space-x-2">
-                {(juegosDestacados || []).map((_, index) => (
-                  <button
-                    key={index}
-                    className={`w-3 h-3 rounded-full ${index === 0 ? "bg-yellow-400" : "bg-gray-400"
-                      }`}
-                  />
-                ))}
-              </div>
-              {/* Carousel items (solo muestra el primero como ejemplo) */}
-              {(juegosDestacados || []).slice(0, 1).map((juego, index) => (
-                <div
-                  key={juego.id}
-                  className="flex flex-col md:flex-row items-center justify-between"
-                >
-                  <div className="md:w-1/2 p-8 bg-black bg-opacity-60 rounded-lg shadow-lg">
-                    <h1 className="text-3xl font-bold mb-2 drop-shadow">
-                      {juego.titulo}
-                      <br />
-                      <span className="text-yellow-400 text-xl">
-                        {juego.categoria?.nombre_categoria || "Sin Categoría"}
-                      </span>
-                    </h1>
-                    <p className="mb-4">{limitText(juego.descripcion, 200)}</p>
-                    <a
-                      href={`/tienda/${juego.id}`}
-                      className="inline-block text-black font-semibold px-6 py-2 rounded-full hover:bg-yellow-500 transition"
-                    >
-                      Compra ahora
-                    </a>
-                  </div>
-                  <div className="md:w-1/2 flex justify-center">
-                    <img
-                      src={`/images/${juego.imagen}`}
-                      alt={juego.titulo}
-                      className="rounded-lg shadow-lg max-h-[400px] object-cover"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
+        {/* Solo muestra el carousel si hay juegos */}
+        {featuredGames.length > 0 && (
+          <GameCarousel featuredGames={featuredGames} />
+        )}
         {/* Juegos Recientes */}
-        <div className="py-16 flex-1">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-3xl font-bold text-center text-[#3a6aff] fw-blod mb-10">
-              Juegos Recientes
-            </h2>
-            {(juegosRecientes || []).map((juego, index) => (
-              <section
-                className="flex flex-col md:flex-row items-center mb-12 bg-white rounded-lg shadow-md overflow-hidden"
-                key={juego.id}
-              >
-                <div className={`md:w-1/2 ${index % 2 !== 0 ? "md:order-2" : ""}`}>
-                  <img
-                    src={`/images/${juego.imagen}`}
-                    alt={juego.titulo}
-                    className="w-full h-64 object-cover"
-                  />
-                </div>
-                <div className="md:w-1/2 p-8">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                    {juego.titulo}
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    {limitText(juego.descripcion, 150)}
-                  </p>
-                  <a
-                    href={`/tienda/${juego.id}`}
-                    className="text-yellow-500 font-semibold hover:underline"
-                  >
-                    Más información
-                  </a>
-                </div>
-              </section>
-            ))}
-          </div>
-        </div>
-
+        {recentGames.length > 0 && (
+          <RecentGames juegosRecientes={recentGames} />        )}
         {/* Service Section */}
         <section className="py-16 flex-1">
           <div className="max-w-6xl mx-auto px-4">
@@ -168,7 +155,7 @@ const HomePage = ({ juegosDestacados = [], juegosRecientes = [] }) => {
             <div className="mt-8">
               <a
                 href="/games"
-                className=" text-[#fff] font-semibold hover:underline"
+                className="inline-block bg-[#fff] hover:bg-[#3a6aff] text-black py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 Más información
               </a>
