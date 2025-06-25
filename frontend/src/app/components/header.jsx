@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ShoppingCart } from "lucide-react";
 
 export default function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -174,8 +175,19 @@ export default function Header() {
               )}
             </ul>
             
-            {/* Login/Usuario */}
-            <ul className="flex flex-row gap-x-1 flex-shrink-0">
+            {/* Carrito y Login/Usuario */}
+            <ul className="flex flex-row gap-x-1 items-center flex-shrink-0">
+              {/* Botón del carrito */}
+              <li>
+                <Link
+                  href="/shoppingCart"
+                  className="block py-2 px-2 xl:px-3 text-white hover:text-yellow-400 transition"
+                  title="Carrito de compras"
+                >
+                  <ShoppingCart className="h-6 w-6" />
+                </Link>
+              </li>
+              
               {!isAuthenticated ? (
                 <>
                   <li>
@@ -281,6 +293,17 @@ export default function Header() {
                 onClick={() => setMenuOpen(false)}
               >
                 Contáctenos
+              </Link>
+            </li>
+            {/* Botón del carrito en móvil */}
+            <li>
+              <Link
+                href="/shoppingCart"
+                className="flex items-center justify-center gap-2 py-2 px-4 text-white uppercase no-underline hover:text-yellow-400 transition"
+                onClick={() => setMenuOpen(false)}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                Carrito
               </Link>
             </li>
             {isAuthenticated && userRole === "admin" && (

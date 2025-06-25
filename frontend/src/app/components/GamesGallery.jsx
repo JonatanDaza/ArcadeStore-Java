@@ -18,7 +18,7 @@ export default function GamesGallery({ juegos = [], titulo = "Juegos" }) {
               <p className="text-sm text-white mb-3">{juego.descripcion?.slice(0, 100) ?? ""}{juego.descripcion?.length > 100 ? "..." : ""}</p>
               <a href={`/games/details/${juego.id}`}>
                 <button className="bg-black text-white px-4 py-2 rounded hover:bg-[#06174d] transition">
-                  Comprar
+                  Detalles
                 </button>
               </a>
             </div>

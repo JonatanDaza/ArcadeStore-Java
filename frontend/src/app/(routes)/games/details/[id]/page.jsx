@@ -127,13 +127,47 @@ export default function GameDetailsPage() {
   }
 
   const handleAddToCart = () => {
+  //   if (game.price === 0) {
+  //     alert("¡Juego gratuito añadido a la biblioteca!");
+  //   } else {
+  //     alert("¡Juego agregado al carrito!");
+  //   }
+  // };
+  // const handleAddToCart = () => {
+  // 1. Obtener el carrito actual del localStorage
+  const existingCart = JSON.parse(localStorage.getItem('shoppingCart') || '[]');
+  
+  // 2. Verificar si el juego ya está en el carrito
+  const existingItemIndex = existingCart.findIndex(item => item.id === game.id);
+  
+  if (existingItemIndex !== -1) {
+    // Si ya existe, incrementar la cantidad
+    existingCart[existingItemIndex].quantity += 1;
+  } else {
+    // Si no existe, agregarlo al carrito
+    const cartItem = {
+      id: game.id,
+      title: game.title,
+      price: game.price,
+      image: game.image,
+      genre: game.genre,
+      quantity: 1
+    };
+    existingCart.push(cartItem);
+  }
+  // 3. Guardar el carrito actualizado en localStorage
+  localStorage.setItem('shoppingCart', JSON.stringify(existingCart));
+    
+    // 4. Mostrar mensaje de confirmación
     if (game.price === 0) {
       alert("¡Juego gratuito añadido a la biblioteca!");
     } else {
       alert("¡Juego agregado al carrito!");
     }
+    
+    // 5. Redirigir al carrito de compras
+    router.push('/shoppingCart');
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white font-sans flex items-center justify-center p-2">
       <div className="bg-[#222] rounded-2xl shadow-2xl flex flex-col lg:flex-row w-full max-w-6xl min-h-[600px] overflow-hidden relative">

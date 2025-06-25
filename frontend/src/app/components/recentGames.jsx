@@ -55,7 +55,7 @@ const RecentGames = ({ juegosRecientes = [] }) => {
                 {limitText(juego.descripcion, 150)}
               </p>
               <a
-                href={`/tienda/${juego.id}`}
+                href={`/games/details/${juego.id}`}
                 className="inline-block bg-[#fff] hover:bg-[#3a6aff] text-black py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 Más información
