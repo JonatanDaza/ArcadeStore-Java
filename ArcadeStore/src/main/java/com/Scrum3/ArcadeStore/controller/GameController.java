@@ -1,4 +1,4 @@
-package com.Scrum3.ArcadeStore.controllers;
+package com.Scrum3.ArcadeStore.controller;
 
 import com.Scrum3.ArcadeStore.entities.Game;
 import com.Scrum3.ArcadeStore.services.GameService;

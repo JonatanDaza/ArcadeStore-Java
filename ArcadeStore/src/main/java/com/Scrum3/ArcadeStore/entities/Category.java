@@ -1,3 +1,5 @@
+// Ubicación: src/main/java/com/Scrum3/ArcadeStore/entities/Category.java
+
 package com.Scrum3.ArcadeStore.entities;
 
 import jakarta.persistence.*;
@@ -9,9 +11,10 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@Table(name = "categories") // Mapped to the 'categories' table in your database
+@Table(name = "categories") // Mapeado a la tabla 'categories' en tu base de datos
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,14 +25,17 @@ public class Category {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "category_name", length = 45, nullable = false) // Mapped to 'category_name'
+    @Column(name = "category_name", length = 45, nullable = false) // Mapeado a 'category_name'
     private String name;
 
-    @Column(name = "description", columnDefinition = "TEXT") // Mapped to 'description'
+    @Column(name = "description", columnDefinition = "TEXT") // Mapeado a 'description'
     private String description;
 
-    @Column(name = "is_active", columnDefinition = "TINYINT(1)") // Mapped to 'is_active' (BOOLEAN)
-    private Boolean active;
+    // --- CAMBIO CLAVE AQUÍ ---
+    // Eliminamos 'columnDefinition = "TINYINT(1)"'.
+    // Hibernate ahora mapeará 'Boolean active' a 'BOOLEAN' en PostgreSQL automáticamente.
+    @Column(name = "is_active") // Mapeado a 'is_active' (ahora correctamente BOOLEAN en PostgreSQL)
+    private Boolean active; // Mantenlo como 'Boolean' si puede ser nulo, o 'boolean' si siempre es verdadero/falso
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -38,4 +44,13 @@ public class Category {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "category")
+    private List<Game> games;
+
+    public List<Game> getGames() {
+        return games;
+    }
+
 }
+

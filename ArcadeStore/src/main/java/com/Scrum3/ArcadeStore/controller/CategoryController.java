@@ -45,12 +45,14 @@ public class CategoryController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
-        if (categoryService.deleteCategory(id)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<String> desactiveCategory(@PathVariable Long id) {
+        boolean result = categoryService.desactivarCategoriaSiNoTieneJuegosActivos(id);
+
+        if (result) {
+            return ResponseEntity.noContent().build();
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("No se puede desactivar la categoría porque contiene juegos activos.");
         }
     }
 }

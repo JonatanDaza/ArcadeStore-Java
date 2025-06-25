@@ -30,6 +30,8 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    private  boolean active = true;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
@@ -41,4 +43,12 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public boolean is_active() {
+        return active;
+    }
+
+    public void set_active(boolean active) {
+        this.active = active;
+    }
 }
