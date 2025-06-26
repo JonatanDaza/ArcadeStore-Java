@@ -21,7 +21,8 @@ export default function GameFilters({ categorias = [], onFilter }) {
     setCategoria("");
     setMasDe("");
     setMenosDe("");
-    onFilter({ search: "", categoria: "", masDe: "", menosDe: "" });
+    onFilter({ search: "", categoria: ""//, masDe: "", menosDe: "" 
+    });
   };
 
   const clearPrice = () => {
@@ -31,7 +32,7 @@ export default function GameFilters({ categorias = [], onFilter }) {
   };
 
   return (
-    <div className="w-full bg-[#2b2b2b] text-white border-b border-[#333] rounded-b-lg p-3 flex flex-wrap gap-4 items-center justify-between shadow-lg mb-6">
+    <div className="w-[600px] bg-[#2b2b2b] text-white border-b border-[#333] rounded-lg p-3 flex flex-wrap gap-4 items-center justify-between shadow-lg mb-6">
       {/* Barra de búsqueda */}
       <div className="flex flex-row items-center gap-2 flex-1 min-w-[200px]">
         <input
@@ -57,7 +58,7 @@ export default function GameFilters({ categorias = [], onFilter }) {
         </select>
       </div>
       {/* Filtro por precio */}
-      <div className="flex flex-row items-center gap-2">
+      {/* <div className="flex flex-row items-center gap-2">
         <label className="text-[#ddd] whitespace-nowrap">Más de:</label>
         <input
           type="number"
@@ -74,7 +75,7 @@ export default function GameFilters({ categorias = [], onFilter }) {
           value={menosDe}
           onChange={e => setMenosDe(e.target.value)}
         />
-      </div>
+      </div> */}
       {/* Botón limpiar */}
       {(search || categoria || masDe || menosDe) && (
         <button

@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { User, Mail, Phone, MapPin, Edit2, Save, X } from "lucide-react";
+import PersonalInfo from "app/components/personalInfo";
+import Orders from "app/components/orders";
+import Favorites from "app/components/favorites";
+import Settings from "app/components/settings";
+import SidebarPerfil from "app/components/sidebarPerfil";
+import LogoutModal from "app/components/logoutModal";
 
 const sidebarOptions = [
   { key: "info", label: "Información personal" },
@@ -11,33 +16,33 @@ const sidebarOptions = [
   { key: "settings", label: "Configuración" },
 ];
 
+// Botón de salir como componente
+function ExitButton({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="fixed top-6 right-8 z-50 text-gray-400 hover:text-red-400 transition text-3xl font-bold bg-[#222] rounded-full w-12 h-12 flex items-center justify-center shadow-lg"
+      title="Salir al inicio"
+      aria-label="Salir al inicio"
+      style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
+    >
+      ×
+    </button>
+  );
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const params = useParams();
   const urlUserId = params?.id;
 
-  // Obtener el id del usuario autenticado desde localStorage
   const [sessionUserId, setSessionUserId] = useState(null);
-
-  useEffect(() => {
-    const storedId = localStorage.getItem("id"); // Cambiado a "id"
-    setSessionUserId(storedId);
-
-    // Si el usuario autenticado no coincide con el id de la URL, redirige a su propio perfil
-    if (storedId && urlUserId && storedId !== urlUserId) {
-      router.replace(`/profile/${storedId}`);
-    }
-    // Si no hay usuario autenticado, puedes redirigir a login si lo deseas
-    // if (!storedId) router.replace("/login");
-  }, [urlUserId, router]);
-
   const [selected, setSelected] = useState("info");
   const [isEditing, setIsEditing] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userNotFound, setUserNotFound] = useState(false);
 
-  // Estado para la información del usuario
   const [userInfo, setUserInfo] = useState({
     id: null,
     name: "",
@@ -48,7 +53,16 @@ export default function ProfilePage() {
 
   const [editedInfo, setEditedInfo] = useState({ ...userInfo });
 
-  // Simular carga de datos del usuario por ID
+  useEffect(() => {
+    const storedId = localStorage.getItem("id");
+    setSessionUserId(storedId);
+
+    if (storedId && urlUserId && storedId !== urlUserId) {
+      router.replace(`/profile/${storedId}`);
+    }
+    // if (!storedId) router.replace("/login");
+  }, [urlUserId, router]);
+
   useEffect(() => {
     const loadUserData = async () => {
       if (!urlUserId) {
@@ -59,7 +73,6 @@ export default function ProfilePage() {
 
       try {
         setLoading(true);
-        // Simular llamada a API para obtener datos del usuario
         const mockUsers = {
           "123": {
             id: "123",
@@ -84,7 +97,6 @@ export default function ProfilePage() {
           }
         };
 
-        // Simular delay de red
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         const userData = mockUsers[urlUserId];
@@ -126,7 +138,6 @@ export default function ProfilePage() {
     router.push('/');
   };
 
-  // Pantalla de carga
   if (loading) {
     return (
       <div className="flex min-h-screen bg-[#06174d] text-white font-sans items-center justify-center">
@@ -138,7 +149,6 @@ export default function ProfilePage() {
     );
   }
 
-  // Usuario no encontrado
   if (userNotFound) {
     return (
       <div className="flex min-h-screen bg-[#06174d] text-white font-sans items-center justify-center">
@@ -157,237 +167,49 @@ export default function ProfilePage() {
     );
   }
 
-  // Renderiza el contenido principal según la opción seleccionada
   function renderContent() {
     switch (selected) {
       case "info":
         return (
-          <div className="max-w-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold">Información personal</h2>
-              {!isEditing && (
-                <button
-                  onClick={handleEdit}
-                  className="flex items-center gap-2 bg-[#3a6aff] hover:bg-[#2952ff] px-4 py-2 rounded-lg transition-colors"
-                >
-                  <Edit2 size={16} />
-                  Editar
-                </button>
-              )}
-            </div>
-
-            {isEditing ? (
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
-                      Nombre completo
-                    </label>
-                    <input
-                      type="text"
-                      value={editedInfo.name}
-                      onChange={(e) => setEditedInfo({ ...editedInfo, name: e.target.value })}
-                      className="w-full px-4 py-3 bg-[#333] border border-[#555] rounded-lg text-white focus:outline-none focus:border-[#3a6aff]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
-                      Correo electrónico
-                    </label>
-                    <input
-                      type="email"
-                      value={editedInfo.email}
-                      onChange={(e) => setEditedInfo({ ...editedInfo, email: e.target.value })}
-                      className="w-full px-4 py-3 bg-[#333] border border-[#555] rounded-lg text-white focus:outline-none focus:border-[#3a6aff]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
-                      Teléfono
-                    </label>
-                    <input
-                      type="tel"
-                      value={editedInfo.phone}
-                      onChange={(e) => setEditedInfo({ ...editedInfo, phone: e.target.value })}
-                      className="w-full px-4 py-3 bg-[#333] border border-[#555] rounded-lg text-white focus:outline-none focus:border-[#3a6aff]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
-                      Dirección
-                    </label>
-                    <textarea
-                      value={editedInfo.address}
-                      onChange={(e) => setEditedInfo({ ...editedInfo, address: e.target.value })}
-                      rows={3}
-                      className="w-full px-4 py-3 bg-[#333] border border-[#555] rounded-lg text-white focus:outline-none focus:border-[#3a6aff] resize-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleSave}
-                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg transition-colors font-medium"
-                  >
-                    <Save size={16} />
-                    Guardar cambios
-                  </button>
-                  <button
-                    onClick={handleCancel}
-                    className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-lg transition-colors font-medium"
-                  >
-                    <X size={16} />
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-[#333] p-6 rounded-lg">
-                    <div className="flex items-center gap-3 mb-3">
-                      <User className="text-[#3a6aff]" size={20} />
-                      <h3 className="font-semibold text-lg">Nombre</h3>
-                    </div>
-                    <p className="text-gray-300">{userInfo.name}</p>
-                  </div>
-
-                  <div className="bg-[#333] p-6 rounded-lg">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Mail className="text-[#3a6aff]" size={20} />
-                      <h3 className="font-semibold text-lg">Email</h3>
-                    </div>
-                    <p className="text-gray-300">{userInfo.email}</p>
-                  </div>
-
-                  <div className="bg-[#333] p-6 rounded-lg">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Phone className="text-[#3a6aff]" size={20} />
-                      <h3 className="font-semibold text-lg">Teléfono</h3>
-                    </div>
-                    <p className="text-gray-300">{userInfo.phone}</p>
-                  </div>
-
-                  <div className="bg-[#333] p-6 rounded-lg">
-                    <div className="flex items-center gap-3 mb-3">
-                      <MapPin className="text-[#3a6aff]" size={20} />
-                      <h3 className="font-semibold text-lg">Dirección</h3>
-                    </div>
-                    <p className="text-gray-300">{userInfo.address}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <PersonalInfo
+            userInfo={userInfo}
+            isEditing={isEditing}
+            editedInfo={editedInfo}
+            setEditedInfo={setEditedInfo}
+            handleEdit={handleEdit}
+            handleSave={handleSave}
+            handleCancel={handleCancel}
+          />
         );
       case "orders":
-        return (
-          <div>
-            <h2 className="text-3xl font-bold mb-6">Mis pedidos</h2>
-            <div className="bg-[#333] p-6 rounded-lg">
-              <p className="text-gray-300">No tienes pedidos recientes.</p>
-            </div>
-          </div>
-        );
+        return <Orders />;
       case "favorites":
-        return (
-          <div>
-            <h2 className="text-3xl font-bold mb-6">Favoritos</h2>
-            <div className="bg-[#333] p-6 rounded-lg">
-              <p className="text-gray-300">No tienes juegos marcados como favoritos.</p>
-            </div>
-          </div>
-        );
+        return <Favorites />;
       case "settings":
-        return (
-          <div>
-            <h2 className="text-3xl font-bold mb-6">Configuración</h2>
-            <div className="bg-[#333] p-6 rounded-lg">
-              <p className="text-gray-300">Opciones de configuración de tu cuenta.</p>
-            </div>
-          </div>
-        );
+        return <Settings />;
       default:
         return null;
     }
   }
 
   return (
-    <div className="flex min-h-screen bg-[#06174d] text-white font-sans relative">
-      {/* Sidebar */}
-      <aside className="w-64 bg-[#222] border-r border-[#333] p-8 flex flex-col">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-center flex-1">
-            Perfil de {userInfo.name}
-          </h1>
-        </div>
-        <nav className="flex flex-col gap-4 flex-1">
-          {sidebarOptions.map(option => (
-            <button
-              key={option.key}
-              onClick={() => setSelected(option.key)}
-              className={`text-left px-4 py-3 rounded-lg transition-colors ${
-                selected === option.key
-                  ? "bg-[#3a6aff] text-white font-semibold"
-                  : "hover:bg-[#333] text-gray-200"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </nav>
-        {/* Cerrar sesión al final */}
-        <div className="mt-8 pt-4 border-t border-[#333]">
-          <button
-            onClick={() => setShowLogoutModal(true)}
-            className="w-full text-left px-4 py-3 rounded-lg transition-colors hover:bg-red-600/20 text-red-400 hover:text-red-300"
-          >
-            Cerrar sesión
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
+    <div className="flex min-h-screen bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white font-sans relative ">
+      <SidebarPerfil
+        userName={userInfo.name}
+        sidebarOptions={sidebarOptions}
+        selected={selected}
+        setSelected={setSelected}
+        setShowLogoutModal={setShowLogoutModal}
+      />
       <main className="flex-1 p-10 relative">
-        {/* Botón X fijo a la derecha arriba, fuera del contenido */}
-        <button
-          onClick={() => router.push('/')}
-          className="fixed top-6 right-8 z-50 text-gray-400 hover:text-red-400 transition text-3xl font-bold bg-[#222] rounded-full w-12 h-12 flex items-center justify-center shadow-lg"
-          title="Salir al inicio"
-          aria-label="Salir al inicio"
-          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
-        >
-          ×
-        </button>
+        <ExitButton onClick={() => router.push('/')} />
         {renderContent()}
       </main>
-
-      {/* Modal de confirmación de logout */}
       {showLogoutModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-[#333] p-8 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold mb-4">Cerrar sesión</h3>
-            <p className="text-gray-300 mb-6">¿Estás seguro que deseas cerrar sesión?</p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setShowLogoutModal(false)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
-              >
-                Cerrar sesión
-              </button>
-            </div>
-          </div>
-        </div>
+        <LogoutModal
+          isOpen={showLogoutModal}
+          onClose={() => setShowLogoutModal(false)}
+        />
       )}
     </div>
   );
