@@ -1,4 +1,4 @@
-package com.Scrum3.ArcadeStore.controllers;
+package com.Scrum3.ArcadeStore.controller;
 
 import com.Scrum3.ArcadeStore.entities.Product;
 import com.Scrum3.ArcadeStore.services.ProductService;
@@ -40,15 +40,6 @@ public class ProductController {
         Product updatedProduct = productService.updateProduct(id, productDetails);
         if (updatedProduct != null) {
             return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        if (productService.deleteProduct(id)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

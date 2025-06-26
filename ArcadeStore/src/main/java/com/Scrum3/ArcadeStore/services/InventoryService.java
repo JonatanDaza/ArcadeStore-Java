@@ -37,13 +37,4 @@ public class InventoryService {
             return null;
         }
     }
-
-    public boolean deleteInventory(Long id) {
-        if (inventoryRepository.existsById(id)) {
-            inventoryRepository.deleteById(id);
-            return true;
-        } else {
-            return false;
-        }
-    }
 }

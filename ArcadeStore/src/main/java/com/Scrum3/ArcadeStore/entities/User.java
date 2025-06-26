@@ -51,4 +51,7 @@ public class User {
     public void set_active(boolean active) {
         this.active = active;
     }
+
+    public void setRole(String user) {
+    }
 }

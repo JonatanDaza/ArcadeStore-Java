@@ -22,6 +22,8 @@ public class Sale {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private boolean active = true;
+
     @Column(name = "sale_date", nullable = false)
     private LocalDateTime saleDate;
 

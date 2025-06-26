@@ -39,13 +39,4 @@ public class OrderService {
             return null;
         }
     }
-
-    public boolean deleteOrder(Long id) {
-        if (orderRepository.existsById(id)) {
-            orderRepository.deleteById(id);
-            return true;
-        } else {
-            return false;
-        }
-    }
 }

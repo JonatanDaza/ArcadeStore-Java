@@ -40,12 +40,16 @@ public class SaleService {
         }
     }
 
-    public boolean deleteSale(Long id) {
-        if (saleRepository.existsById(id)) {
-            saleRepository.deleteById(id);
+    public boolean SaleDesactive(Long id) {
+        Optional<Sale> ventaOptional = saleRepository.findById(id);
+
+        if (ventaOptional.isPresent()) {
+            Sale venta = ventaOptional.get();
+            venta.setActive(false);
+            saleRepository.save(venta);
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 }
