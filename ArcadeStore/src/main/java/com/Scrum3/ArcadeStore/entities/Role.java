@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "roles")
 public class Role extends User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
