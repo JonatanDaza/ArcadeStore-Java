@@ -18,6 +18,17 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/**").authenticated()
+                .anyRequest().permitAll()
+            )
+            .httpBasic();
+        return http.build();
+    }
 
     // Configuración del UserDetailsService para usuarios en memoria
     @Bean
