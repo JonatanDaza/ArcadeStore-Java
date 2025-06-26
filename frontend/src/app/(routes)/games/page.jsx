@@ -8,28 +8,43 @@ import GamesGallery from "app/components/GamesGallery";
 
 // Simulación de datos (reemplaza por fetch real)
 const categorias = [
-  { id: 1, nombre_categoria: "Acción" },
+  { id: 1, nombre_categoria: "Accion" },
   { id: 2, nombre_categoria: "Aventura" },
   { id: 3, nombre_categoria: "Estrategia" },
 ];
+// correcto
+// const [categorias, setCategorias] = useState([]);
+
+// useEffect(() => {
+//   fetch('/api/categorias') // Ajusta la ruta a tu API real
+//     .then(res => res.json())
+//     .then(data => setCategorias(data));
+// }, []);
 const juegosData = [
   {
     id: 1,
-    titulo: "Juego 1",
-    descripcion: "Descripción del juego 1...",
-    imagen: "juego1.jpg",
-    categoria: 1,
-    precio: 50000,
+    titulo: "GTA V",
+    descripcion: "Un ... de mundo ...",
+    image: "GTAV.png",
+    categoria: { nombre_categoria: "Accion" },
+    precio: 60000,
   },
   {
     id: 2,
-    titulo: "Juego 2",
-    descripcion: "Descripción del juego 2...",
-    imagen: "juego2.jpg",
-    categoria: 2,
+    titulo: "Dragon ball sparking zero",
+    descripcion: "Un ... de mundo ...",
+    image: "Dragon ball sparking zero.png",
+    categoria: { nombre_categoria: "Aventura" },
     precio: 70000,
   },
-  // ...otros juegos
+  {
+    id: 3,
+    titulo: "HALO 4",
+    descripcion: "Un ... de mundo ...",
+    image: "HALO4.png",
+    categoria: { nombre_categoria: "Estrategia" },
+    precio: 50000,
+  },
 ];
 
 export default function GamesPage() {
@@ -43,10 +58,11 @@ export default function GamesPage() {
   // Filtrado simple en frontend (puedes reemplazar por fetch a backend)
   const juegosFiltrados = juegos.filter(juego => {
     const matchSearch = !filtros.search || juego.titulo.toLowerCase().includes(filtros.search.toLowerCase());
-    const matchCategoria = !filtros.categoria || juego.categoria == filtros.categoria;
-    const matchMin = !filtros.minPrice || juego.precio >= Number(filtros.minPrice);
-    const matchMax = !filtros.maxPrice || juego.precio <= Number(filtros.maxPrice);
-    return matchSearch && matchCategoria && matchMin && matchMax;
+    const categoriaSeleccionada = categorias.find(cat => String(cat.id) === String(filtros.categoria))?.nombre_categoria;
+    const matchCategoria = !filtros.categoria || juego.categoria?.nombre_categoria === categoriaSeleccionada;
+    const matchMasDe = !filtros.masDe || juego.precio >= Number(filtros.masDe);
+    const matchMenosDe = !filtros.menosDe || juego.precio <= Number(filtros.menosDe);
+    return matchSearch && matchCategoria && matchMasDe && matchMenosDe;
   });
 
   const total = juegosFiltrados.length;
@@ -58,49 +74,14 @@ export default function GamesPage() {
       <Header />
       <main className="flex-1 font-poppins text-white flex flex-row  bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-5 m-0"
       >
-        <GameFilters categorias={categorias} onFilter={setFiltros} />
-        <div className="flex-1 px-4 py-8">
-          <GamesGallery juegos={paginated} titulo="Juegos Disponibles" />
-          {/* Paginación */}
-          <div className="flex justify-between items-center mt-6">
-            <div className="text-white text-sm">
-              Mostrando {total === 0 ? 0 : (page - 1) * pageSize + 1} a {Math.min(page * pageSize, total)} de {total} registros
-            </div>
-            <nav>
-              <ul className="inline-flex -space-x-px">
-                <li>
-                  <button
-                    className={`px-3 py-2 rounded-l border border-[#333] bg-[#2b2b2b] text-white ${page === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-[#575d6d]"}`}
-                    onClick={() => setPage(page - 1)}
-                    disabled={page === 1}
-                  >
-                    &laquo;
-                  </button>
-                </li>
-                {[...Array(lastPage)].map((_, i) => (
-                  <li key={i}>
-                    <button
-                      className={`px-3 py-2 border border-[#333] bg-[#2b2b2b] text-white ${page === i + 1 ? "bg-[#06174d] font-bold" : "hover:bg-[#575d6d]"}`}
-                      onClick={() => setPage(i + 1)}
-                    >
-                      {i + 1}
-                    </button>
-                  </li>
-                ))}
-                <li>
-                  <button
-                    className={`px-3 py-2 rounded-r border border-[#333] bg-[#2b2b2b] text-white ${page === lastPage || lastPage === 0 ? "opacity-50 cursor-not-allowed" : "hover:bg-[#575d6d]"}`}
-                    onClick={() => setPage(page + 1)}
-                    disabled={page === lastPage || lastPage === 0}
-                  >
-                    &raquo;
-                  </button>
-                </li>
-              </ul>
-            </nav>
-          </div>
+        {/* correcto */}
+        {/* <GameFilters categorias={categorias} onFilter={handleFilter} />*/}
+        <div className="flex-1 px-4">
+          <GameFilters categorias={categorias} onFilter={setFiltros} />
+          <GamesGallery juegos={juegosFiltrados} titulo="Juegos Disponibles" />
         </div>
       </main>
+      {/* <PaginationGames/> */}
       <Footer />
     </div>
   );

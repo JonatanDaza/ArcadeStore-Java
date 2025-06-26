@@ -91,9 +91,11 @@ const GameCarousel = ({ featuredGames = [] }) => {
                                                 <img
                                                     src={`/images/${juego.image}`}
                                                     alt={juego.titulo}
-                                                    className="w-full max-w-lg h-auto max-h-[500px] object-cover rounded-lg shadow-2xl"
+                                                    className="w-full max-w-lg min-w-[320px] h-auto max-h-[500px] min-h-[320px] object-cover rounded-lg shadow-2xl"
                                                     style={{
-                                                        filter: 'drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3))'
+                                                        filter: 'drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3))',
+                                                        background: '#222',
+                                                        objectFit: 'cover'
                                                     }}
                                                 />
                                             </div>

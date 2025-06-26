@@ -10,7 +10,7 @@ export default function GamesGallery({ juegos = [], titulo = "Juegos" }) {
               className="bg-[#2b2b2b] border border-[#333] rounded-lg w-[250px] text-center p-3 shadow transition-transform duration-300 juego-tarjeta hover:scale-105"
             >
               <img
-                src={`/${juego.imagen}`}
+                src={`/images/${juego.image}`}
                 alt={juego.titulo}
                 className="w-full rounded-lg mb-2"
               />

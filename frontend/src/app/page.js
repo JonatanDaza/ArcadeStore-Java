@@ -34,31 +34,31 @@ const HomePage = () => {
   const featuredGames = [
     {
       id: 1,
-      titulo: "Cyberpunk 2077",
-      descripcion: "Un RPG de mundo abierto ambientado en Night City...",
+      titulo: "GTA V",
+      descripcion: "Un ... de mundo ...",
       image: "GTAV.png",
-      categoria: { nombre_categoria: "RPG" }
+      categoria: { nombre_categoria: "..." }
     },
     {
       id: 2,
-      titulo: "Cyberpunk 77",
-      descripcion: "Un RPG de mundo abierto ambientado en Night City...",
-      image: "Assasin's creed valhalla.jpg",
-      categoria: { nombre_categoria: "RPG" }
+      titulo: "Dragon ball sparking zero",
+      descripcion: "Un ... de mundo ...",
+      image: "Dragon ball sparking zero.png",
+      categoria: { nombre_categoria: "..." }
     },
     {
       id: 3,
-      titulo: "Cyberpunk 20",
-      descripcion: "Un RPG de mundo abierto ambientado en Night City...",
+      titulo: "HALO 4",
+      descripcion: "Un ... de mundo ...",
       image: "HALO4.png",
-      categoria: { nombre_categoria: "RPG" }
+      categoria: { nombre_categoria: "..." }
     },
     {
       id: 4,
-      titulo: "Cybe 2077",
-      descripcion: "Un RPG de mundo abierto ambientado en Night City...",
+      titulo: "FARCRY 3",
+      descripcion: "Un ... de mundo ...",
       image: "FARCRY3.jpeg",
-      categoria: { nombre_categoria: "RPG" }
+      categoria: { nombre_categoria: "..." }
     },
   ];
 
@@ -67,19 +67,19 @@ const HomePage = () => {
       id: 1,
       titulo: "Red Dead Redemption 2",
       descripcion: "es una épica aventura de mundo abierto ambientada en el ocaso de la era del salvaje oeste americano. Únete a Arthur Morgan y la banda de Van der Linde...",
-      image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600&h=400&fit=crop"
+      image: "Red Dead Redeption 2.png"
     },
     {
       id: 2,
-      titulo: "Cyberpunk 2077",
+      titulo: "Borderlands 2",
       descripcion: "Un RPG de mundo abierto ambientado en Night City, una megalópolis obsesionada con el poder, el glamour y la modificación corporal. Juegas como V, un mercenario en busca de un implante único...",
-      image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&h=400&fit=crop"
+      image: "Borderlands 2.png"
     },
     {
       id: 3,
-      titulo: "The Witcher 3",
+      titulo: "Dragon ball sparking zero",
       descripcion: "Como Geralt de Rivia, un cazador de monstruos conocido como brujo, embárcate en una aventura épica en un mundo fantástico rico en contenido y opciones significativas...",
-      image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=400&fit=crop"
+      image: "Dragon ball sparking zero.png"
     }
   ];
 
