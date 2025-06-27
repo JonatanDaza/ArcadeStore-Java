@@ -18,5 +18,10 @@
   "bugs": {
     "url": "https://github.com/JonatanDaza/ArcadeStore-Java/issues"
   },
-  "homepage": "https://github.com/JonatanDaza/ArcadeStore-Java#readme"
+  "homepage": "https://github.com/JonatanDaza/ArcadeStore-Java#readme",
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "axios": "^1.10.0",
+    "react-hot-toast": "^2.5.2"
+  }
 }

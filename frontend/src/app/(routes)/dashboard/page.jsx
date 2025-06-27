@@ -123,78 +123,6 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col min-h-screen hero_area">
       <Header />
-      <div className="dashboard flex flex-1 w-full min-h-[80vh] bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-5 m-0">
-        
-        <aside className="sidebar w-[280px] min-w-[200px] bg-gradient-to-br from-black via-[#06174d] to-black text-white p-5 h-full rounded-2xl shadow-xl flex flex-col">
-        
-          <div className="flex items-center gap-3 mb-8">
-            <Squares2X2Icon className="h-8 w-8 text-yellow-400" />
-            <span className="text-2xl font-bold tracking-wide">Admin</span>
-          </div>
-          <nav className="flex-1">
-            <ul className="space-y-2">
-              <li>
-                <a
-                  href="/dashboard/games"
-                  className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
-                >
-                  <PuzzlePieceIcon className="h-6 w-6" />
-                  Juegos
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/dashboard/users"
-                  className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
-                >
-                  <UsersIcon className="h-6 w-6" />
-                  Usuarios
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/dashboard/categories"
-                  className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
-                >
-                  <Squares2X2Icon className="h-6 w-6" />
-                  Categorías
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/dashboard/exchanges"
-                  className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
-                >
-                  <ArrowsRightLeftIcon className="h-6 w-6" />
-                  Intercambios
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/dashboard/sold"
-                  className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
-                >
-                  <CurrencyDollarIcon className="h-6 w-6" />
-                  Ventas
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/dashboard/agreement"
-                  className="flex items-center gap-3 text-white text-lg px-3 py-2 rounded-lg hover:bg-[#222c4d] hover:text-yellow-400 transition"
-                >
-                  <HandRaisedIcon className="h-6 w-6" />
-                  Convenios
-                </a>
-              </li>
-            </ul>
-          </nav>
-          
-          <div className="border-t border-[#2b2b2b] mt-8 pt-4 text-center text-xs text-gray-400">
-            &copy; {new Date().getFullYear()} ArcadeStore Admin
-          </div>
-        </aside>
-       
       <div className="flex flex-1 min-h-0">
         <Sidebar />
         <main className="flex-1 w-full min-h-[80vh] bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-4 sm:p-6 lg:p-8">
@@ -253,8 +181,6 @@ export default function DashboardPage() {
           </div>
           
         </main>
-      </div>
-
       </div>
       <Footer />
     </div>

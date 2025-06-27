@@ -1,7 +1,7 @@
 package com.Scrum3.ArcadeStore.services;
 
 import com.Scrum3.ArcadeStore.entities.Exchange;
-import com.Scrum3.ArcadeStore.repositories.ExchangeRepository;
+import com.Scrum3.ArcadeStore.Repository.ExchangeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
