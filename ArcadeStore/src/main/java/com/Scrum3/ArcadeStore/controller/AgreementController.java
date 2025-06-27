@@ -23,7 +23,7 @@ public class AgreementController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Agreement> getAgreementById(@PathVariable Long id) {
+    public Object getAgreementById(@PathVariable Long id) {
         return agreementService.getAgreementById(id)
                 .map(agreement -> new ResponseEntity<>(agreement, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -37,11 +37,22 @@ public class AgreementController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Agreement> updateAgreement(@PathVariable Long id, @RequestBody Agreement agreementDetails) {
-        Agreement updatedAgreement = agreementService.updateAgreement(id, agreementDetails);
+        Agreement updatedAgreement = (Agreement) agreementService.updateAgreement(id, agreementDetails);
         if (updatedAgreement != null) {
             return new ResponseEntity<>(updatedAgreement, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/desactivar/{id}")
+    public ResponseEntity<String> desactiveAgreement(@PathVariable Long id) {
+        boolean desactive = agreementService.desactiveAgreement(id);
+        if (desactive) {
+            return ResponseEntity.ok("Convenio desactivado.");
+        } else {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("No se puede desactivar: Hay juegos activos asociados.");
         }
     }
 

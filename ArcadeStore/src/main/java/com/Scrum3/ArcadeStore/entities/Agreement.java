@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "agreements") // Mapped to the 'agreements' table in your database
@@ -21,22 +22,19 @@ public class Agreement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "agreement_type", length = 100, nullable = false) // Mapped to 'agreement_type'
-    private String agreementType;
+    @Column(name = "company_name")
+    private String companyName;
+
+    private boolean active = true;
+
+    @Column(name = "details", length = 100, nullable = false) // Mapped to 'agreement_type'
+    private String details;
 
     @Column(name = "start_date", nullable = false) // Mapped to 'start_date'
     private LocalDateTime startDate;
 
     @Column(name = "end_date") // Mapped to 'end_date' (can be nullable in DB)
     private LocalDateTime endDate;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false) // FK to the 'users' table
-    private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "game_id", nullable = false) // FK to the 'games' table
-    private Game game;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -45,4 +43,11 @@ public class Agreement {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "agreement", cascade = CascadeType.ALL)
+    private List<Game> games;
+
+    public void set_Active(boolean b) {
+
+    }
 }

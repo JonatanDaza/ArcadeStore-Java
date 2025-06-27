@@ -1,5 +1,7 @@
 package com.Scrum3.ArcadeStore.controller;
 
+import com.Scrum3.ArcadeStore.Repository.GameRepository;
+import com.Scrum3.ArcadeStore.dto.GameDTO;
 import com.Scrum3.ArcadeStore.entities.Game;
 import com.Scrum3.ArcadeStore.services.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/games")
@@ -15,11 +18,19 @@ public class GameController {
 
     @Autowired
     private GameService gameService;
+    private GameRepository gameRepository;
 
     @GetMapping
     public ResponseEntity<List<Game>> getAllGames() {
         List<Game> games = gameService.getAllGames();
         return new ResponseEntity<>(games, HttpStatus.OK);
+    }
+
+    @GetMapping("/api/games/dto")
+    public List<GameDTO> Gamesobtain() {
+        return gameRepository.findAll().stream()
+                .map(GameDTO::new)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")

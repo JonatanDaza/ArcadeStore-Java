@@ -36,7 +36,6 @@ public class AuthService {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             return "El correo ya está en uso.";
         }
-        // Crear nuevo usuario
         User newUser = new User();
         newUser.setEmail(request.getEmail());
         newUser.setUsername(request.getUsername());
