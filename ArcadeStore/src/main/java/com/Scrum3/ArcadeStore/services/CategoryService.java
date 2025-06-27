@@ -15,6 +15,8 @@ public class CategoryService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+    @Autowired
+    private GameRepository gameRepository;
 
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
@@ -45,7 +47,7 @@ public class CategoryService {
 
     public boolean desactivarCategoriaSiNoTieneJuegosActivos(Long id) {
         Category category = categoryRepository.findById(id).orElseThrow();
-        boolean tieneJuegosActivos = GameRepository.existsByCategoriaIdAndActivoTrue(id);
+        boolean tieneJuegosActivos = gameRepository.existsByCategoryIdAndActiveTrue(id);
 
         if (!tieneJuegosActivos) {
             category.setActive(false);
