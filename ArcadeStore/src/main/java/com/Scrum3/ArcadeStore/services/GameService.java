@@ -1,7 +1,7 @@
 package com.Scrum3.ArcadeStore.services;
 
 import com.Scrum3.ArcadeStore.entities.Game;
-import com.Scrum3.ArcadeStore.repositories.GameRepository;
+import com.Scrum3.ArcadeStore.Repository.GameRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

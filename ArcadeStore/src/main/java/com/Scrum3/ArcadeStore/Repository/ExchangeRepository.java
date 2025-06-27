@@ -1,4 +1,4 @@
-package com.Scrum3.ArcadeStore.repositories;
+package com.Scrum3.ArcadeStore.Repository;
 
 import com.Scrum3.ArcadeStore.entities.Exchange;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,8 +1,9 @@
 package com.Scrum3.ArcadeStore.services;
 
+import com.Scrum3.ArcadeStore.Repository.GameRepository;
 import com.Scrum3.ArcadeStore.entities.Category;
 import com.Scrum3.ArcadeStore.entities.Game;
-import com.Scrum3.ArcadeStore.repositories.CategoryRepository;
+import com.Scrum3.ArcadeStore.Repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,22 +44,21 @@ public class CategoryService {
     }
 
     public boolean desactivarCategoriaSiNoTieneJuegosActivos(Long id) {
-        Optional<Category> categoryOptional = categoryRepository.findById(id);
-        if (categoryOptional.isPresent()) {
-            Category category = categoryOptional.get();
+        Category category = categoryRepository.findById(id).orElseThrow();
+        boolean tieneJuegosActivos = GameRepository.existsByCategoriaIdAndActivoTrue(id);
 
-            boolean tieneJuegosActivos = category.getGames()
-                    .stream()
-                    .anyMatch(Game::is_active);
-
-            if (tieneJuegosActivos) {
-                return false;
-            }
-
+        if (!tieneJuegosActivos) {
             category.setActive(false);
             categoryRepository.save(category);
             return true;
         }
         return false;
     }
+
+    public void activarCategoria(Long id) {
+        Category category = categoryRepository.findById(id).orElseThrow();
+        category.setActive(true);
+        categoryRepository.save(category);
     }
+
+}
