@@ -50,4 +50,8 @@ public class UserService {
         }
         return false;
     }
+
+    public boolean equals(Long id, String authEmail) {
+        return false;
+    }
 }

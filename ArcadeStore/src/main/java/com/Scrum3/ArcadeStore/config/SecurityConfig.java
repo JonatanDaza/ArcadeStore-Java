@@ -45,7 +45,6 @@ public class SecurityConfig {
         return new InMemoryUserDetailsManager(user, user2);
     }
 
-    // Bean para el codificador de contraseñas
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

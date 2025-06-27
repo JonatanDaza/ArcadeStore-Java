@@ -1,6 +1,7 @@
 package com.Scrum3.ArcadeStore.controller;
 
 import com.Scrum3.ArcadeStore.dto.LoginRequest;
+import com.Scrum3.ArcadeStore.dto.RegisterRequest;
 import com.Scrum3.ArcadeStore.services.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,17 @@ public class AuthController {
             return ResponseEntity.ok("Inicio de sesión exitoso");
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Correo o contraseña incorrectos");
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
+        String answer = authService.register(request);
+
+        if (answer.contains("exitosamente")) {
+            return ResponseEntity.ok(answer);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(answer);
         }
     }
 }
