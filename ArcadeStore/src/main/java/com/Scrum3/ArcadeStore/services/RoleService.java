@@ -1,9 +1,9 @@
 package com.Scrum3.ArcadeStore.services;
 
 import com.Scrum3.ArcadeStore.Repository.UserRepository;
-import com.Scrum3.ArcadeStore.entities.Role;
 import com.Scrum3.ArcadeStore.Repository.RoleRepository;
 import com.Scrum3.ArcadeStore.entities.User;
+import com.Scrum3.ArcadeStore.entities.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,12 +12,37 @@ import java.util.Optional;
 
 @Service
 public class RoleService {
-
     @Autowired
     private RoleRepository roleRepository;
+    @Autowired
     private UserRepository userRepository;
 
+    public boolean cambiarRolSiActivo(Long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
 
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            if (!user.isActive()) {
+                return false;
+            }
+
+            Role rolActual = user.getRole();
+
+            if ("ADMIN".equalsIgnoreCase(rolActual.getName())) {
+                Role userRole = roleRepository.findByName("USER").orElseThrow(() -> new RuntimeException("Rol USER no encontrado"));
+                user.setRole(userRole);
+            } else {
+                Role adminRole = roleRepository.findByName("ADMIN").orElseThrow(() -> new RuntimeException("Rol ADMIN no encontrado"));
+                user.setRole(adminRole);
+            }
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
+    // Métodos CRUD mínimos para que compile el controlador
     public List<Role> getAllRoles() {
         return roleRepository.findAll();
     }
@@ -33,34 +58,12 @@ public class RoleService {
     public Role updateRole(Long id, Role roleDetails) {
         Optional<Role> optionalRole = roleRepository.findById(id);
         if (optionalRole.isPresent()) {
-            Role existingRole = optionalRole.get();
-            existingRole.setName(roleDetails.getName());
-            existingRole.setDescription(roleDetails.getDescription());
-            return roleRepository.save(existingRole);
-        } else {
-            return null;
+            Role role = optionalRole.get();
+            role.setName(roleDetails.getName());
+            role.setDescription(roleDetails.getDescription());
+            role.setActive(roleDetails.isActive());
+            return roleRepository.save(role);
         }
-    }
-
-    public boolean cambiarRolSiActivo(Long userId) {
-        Optional<Role> userOptional = roleRepository.findById(userId);
-
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-
-            if (!user.isActive()) {
-                return false;
-            }
-
-            Role rolActual = user.getRole();
-
-            if ("ADMIN".equalsIgnoreCase(String.valueOf(rolActual))) {
-                user.setRole("USER");
-            } else {
-                user.setRole("ADMIN");
-            }
-            return false;
-        }
-        return false;
+        return null;
     }
 }

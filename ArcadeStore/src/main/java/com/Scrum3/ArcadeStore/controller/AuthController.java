@@ -10,17 +10,17 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-public class AuthController {
+public class    AuthController {
 
     @Autowired
     private AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
-        boolean result = authService.login(loginRequest.getEmail(), loginRequest.getPasswordHash());
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        String token = authService.loginAndGetToken(loginRequest.getEmail(), loginRequest.getPasswordHash());
 
-        if (result) {
-            return ResponseEntity.ok("Inicio de sesión exitoso");
+        if (token != null) {
+            return ResponseEntity.ok().body("{\"token\": \"" + token + "\"}");
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Correo o contraseña incorrectos");
         }

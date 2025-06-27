@@ -29,7 +29,7 @@ public class RoleController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<Role> createRole(@RequestBody Role role) {
         Role createdRole = roleService.createRole(role);
         return new ResponseEntity<>(createdRole, HttpStatus.CREATED);
@@ -45,14 +45,13 @@ public class RoleController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> cambiarRolUsuario(@PathVariable Long id) {
-        if (roleService.cambiarRolSiActivo(id)) {
+    @PutMapping("/cambiar/{userId}")
+    public ResponseEntity<String> cambiarRolUsuario(@PathVariable Long userId) {
+        if (roleService.cambiarRolSiActivo(userId)) {
             return ResponseEntity.ok("Rol actualizado correctamente");
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("No se puede cambiar el rol porque el usuario está desactivado o no existe");
         }
     }
-
 }

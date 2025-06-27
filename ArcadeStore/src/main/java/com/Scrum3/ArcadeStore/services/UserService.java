@@ -2,6 +2,8 @@ package com.Scrum3.ArcadeStore.services;
 
 import com.Scrum3.ArcadeStore.entities.User;
 import com.Scrum3.ArcadeStore.Repository.UserRepository;
+import com.Scrum3.ArcadeStore.Repository.RoleRepository;
+import com.Scrum3.ArcadeStore.entities.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -33,7 +38,7 @@ public class UserService {
             User existingUser = optionalUser.get();
             existingUser.setUsername(userDetails.getUsername());
             existingUser.setEmail(userDetails.getEmail());
-            existingUser.setRole(String.valueOf(userDetails.getRole()));
+            existingUser.setRole(userDetails.getRole()); // userDetails.getRole() debe ser un objeto Role
             return userRepository.save(existingUser);
         } else {
             return null;
@@ -53,5 +58,12 @@ public class UserService {
 
     public boolean equals(Long id, String authEmail) {
         return false;
+    }
+
+    public void asignarRolAUsuario(Long userId, String nombreRol) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Role role = roleRepository.findByName(nombreRol).orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+        user.setRole(role);
+        userRepository.save(user);
     }
 }

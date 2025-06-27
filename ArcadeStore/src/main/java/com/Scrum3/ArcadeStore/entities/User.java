@@ -52,6 +52,7 @@ public class User {
         this.active = active;
     }
 
-    public void setRole(String user) {
+    public void setRole(Role role) {
+        this.role = role;
     }
 }
