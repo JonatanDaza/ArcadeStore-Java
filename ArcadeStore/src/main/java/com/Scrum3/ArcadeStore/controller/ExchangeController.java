@@ -44,13 +44,4 @@ public class ExchangeController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteExchange(@PathVariable Long id) {
-        if (exchangeService.deleteExchange(id)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
 }

@@ -34,14 +34,4 @@ public class PaymentController {
         Payment createdPayment = paymentService.createPayment(payment);
         return new ResponseEntity<>(createdPayment, HttpStatus.CREATED);
     }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Payment> updatePayment(@PathVariable Long id, @RequestBody Payment paymentDetails) {
-        Payment updatedPayment = paymentService.updatePayment(id, paymentDetails);
-        if (updatedPayment != null) {
-            return new ResponseEntity<>(updatedPayment, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
 }

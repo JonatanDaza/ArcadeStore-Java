@@ -1,4 +1,4 @@
-package com.Scrum3.ArcadeStore.controllers;
+package com.Scrum3.ArcadeStore.controller;
 
 import com.Scrum3.ArcadeStore.entities.Inventory;
 import com.Scrum3.ArcadeStore.services.InventoryService;
@@ -45,12 +45,4 @@ public class InventoryController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteInventory(@PathVariable Long id) {
-        if (inventoryService.deleteInventory(id)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
 }

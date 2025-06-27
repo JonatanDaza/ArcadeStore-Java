@@ -33,7 +33,7 @@ public class UserService {
             User existingUser = optionalUser.get();
             existingUser.setUsername(userDetails.getUsername());
             existingUser.setEmail(userDetails.getEmail());
-            existingUser.setRole(userDetails.getRole());
+            existingUser.setRole(String.valueOf(userDetails.getRole()));
             return userRepository.save(existingUser);
         } else {
             return null;
@@ -48,6 +48,10 @@ public class UserService {
             userRepository.save(user);
             return true;
         }
+        return false;
+    }
+
+    public boolean equals(Long id, String authEmail) {
         return false;
     }
 }

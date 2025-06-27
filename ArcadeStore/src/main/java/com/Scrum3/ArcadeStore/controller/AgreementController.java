@@ -45,12 +45,4 @@ public class AgreementController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAgreement(@PathVariable Long id) {
-        if (agreementService.deleteAgreement(id)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
 }

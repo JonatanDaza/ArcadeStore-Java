@@ -1,9 +1,11 @@
-package com.Scrum3.ArcadeStore.controllers;
+package com.Scrum3.ArcadeStore.controller;
 
 import com.Scrum3.ArcadeStore.entities.Order;
 import com.Scrum3.ArcadeStore.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,12 +47,28 @@ public class OrderController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
-        if (orderService.deleteOrder(id)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> downloadOrderPdf(@PathVariable Long id) {
+        return orderService.getOrderById(id)
+                .map(order -> {
+                    try {
+                        byte[] pdfBytes = generateOrderPdf(order);
+
+                        HttpHeaders headers = new HttpHeaders();
+                        headers.setContentType(MediaType.APPLICATION_PDF);
+                        headers.setContentDispositionFormData(
+                                "attachment", "orden-" + order.getId() + ".pdf");
+
+                        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+                    } catch (Exception e) {
+                        return new ResponseEntity<byte[]>(HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                })
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+
+    private byte[] generateOrderPdf(Order order) {
+        return null;
+    }
+
 }

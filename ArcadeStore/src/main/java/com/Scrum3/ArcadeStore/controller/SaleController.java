@@ -46,8 +46,8 @@ public class SaleController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSale(@PathVariable Long id) {
-        if (saleService.deleteSale(id)) {
+    public ResponseEntity<Void> SaleDesactive(@PathVariable Long id) {
+        if (saleService.SaleDesactive(id)) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

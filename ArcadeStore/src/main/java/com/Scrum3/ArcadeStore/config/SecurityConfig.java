@@ -32,7 +32,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Configuración del UserDetailsService para usuarios en memoria
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails user = User.withUsername("Edgard") // Nombre de usuario
@@ -48,7 +47,6 @@ public class SecurityConfig {
         return new InMemoryUserDetailsManager(user, user2);
     }
 
-    // Bean para el codificador de contraseñas
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

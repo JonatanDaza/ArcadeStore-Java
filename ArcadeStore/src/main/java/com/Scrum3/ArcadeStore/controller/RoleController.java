@@ -46,11 +46,13 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
-        if (roleService.deleteRole(id)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<String> cambiarRolUsuario(@PathVariable Long id) {
+        if (roleService.cambiarRolSiActivo(id)) {
+            return ResponseEntity.ok("Rol actualizado correctamente");
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("No se puede cambiar el rol porque el usuario está desactivado o no existe");
         }
     }
+
 }
