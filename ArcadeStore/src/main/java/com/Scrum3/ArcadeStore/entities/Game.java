@@ -45,6 +45,10 @@ public class Game {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @ManyToOne
+    @JoinColumn(name = "agreement_id")
+    private Agreement agreement;
+
     public void set_active(boolean active) {
         this.active = active;
     }
