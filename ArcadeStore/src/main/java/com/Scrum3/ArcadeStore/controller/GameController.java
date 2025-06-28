@@ -14,13 +14,19 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/games")
-public class GameController {
+@CrossOrigin(
+        origins = {"http://localhost:3000", "http://127.0.0.1:3000"},
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE, RequestMethod.OPTIONS},
+        allowedHeaders = {"Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"},
+        allowCredentials = "true",
+        maxAge = 3600
+)public class GameController {
 
     @Autowired
     private GameService gameService;
     private GameRepository gameRepository;
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<Game>> getAllGames() {
         List<Game> games = gameService.getAllGames();
         return new ResponseEntity<>(games, HttpStatus.OK);
@@ -40,13 +46,13 @@ public class GameController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<Game> createGame(@RequestBody Game game) {
         Game createdGame = gameService.createGame(game);
         return new ResponseEntity<>(createdGame, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id}/update")
     public ResponseEntity<Game> updateGame(@PathVariable Long id, @RequestBody Game gameDetails) {
         Game updatedGame = gameService.updateGame(id, gameDetails);
         if (updatedGame != null) {
@@ -56,12 +62,20 @@ public class GameController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteGame(@PathVariable Long id) {
-        if (gameService.deleteGame(id)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<String> changeGameStatus(@PathVariable Long id, @RequestParam boolean active) {
+        if (!active) {
+            boolean desactivado = gameService.desactivarJuegoSINoTieneCategoriaActiva(id);
+            if (desactivado) {
+                return ResponseEntity.noContent().build(); // 204 No Content
+            } else {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("No se puede desactivar el juego porque tiene una categoría activa.");
+            }
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            gameService.activarJuego(id);
+            return ResponseEntity.noContent().build();
         }
     }
 }

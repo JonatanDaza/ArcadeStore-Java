@@ -5,11 +5,12 @@ import Table from "app/components/Table";
 import ActionButton, { ToggleSwitch } from "app/components/ActionButton";
 import Sidebar from "app/components/sidebar";
 import CategoryService from "app/services/api/categories";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-hot-toast";
 
 // Ejecutar diagnóstico
 CategoryService.testConnection();
+
 export default function CategoriesPage() {
   // Estados para manejar los datos y la UI
   const [categories, setCategories] = useState([]);
@@ -19,6 +20,7 @@ export default function CategoriesPage() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('view');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Estados para el formulario
   const [formData, setFormData] = useState({
@@ -27,16 +29,26 @@ export default function CategoriesPage() {
     active: true
   });
 
-  // Verificar conexión al montar el componente
-  useEffect(() => {
-    checkConnectionAndLoad();
+  // Función para cargar todas las categorías
+  const loadCategories = useCallback(async () => {
+    try {
+      setError(null);
+      const data = await CategoryService.getAllCategories();
+      setCategories(Array.isArray(data) ? data : []);
+    } catch (err) {
+      const errorMessage = err.message || 'Error desconocido al cargar categorías';
+      setError(errorMessage);
+      console.error('Error loading categories:', err);
+      setCategories([]);
+    }
   }, []);
 
   // Función para verificar conexión y cargar datos
-  const checkConnectionAndLoad = async () => {
+  const checkConnectionAndLoad = useCallback(async () => {
     try {
       setLoading(true);
       setConnectionStatus('checking');
+      setError(null);
       
       // Verificar conexión primero
       const isConnected = await CategoryService.checkConnection();
@@ -51,33 +63,28 @@ export default function CategoriesPage() {
       await loadCategories();
     } catch (err) {
       setConnectionStatus('error');
-      setError(err.message);
+      const errorMessage = err.message || 'Error de conexión desconocido';
+      setError(errorMessage);
       console.error('Connection error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadCategories]);
 
-  // Función para cargar todas las categorías
-  const loadCategories = async () => {
-    try {
-      setError(null);
-      const data = await CategoryService.getAllCategories();
-      setCategories(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err.message);
-      console.error('Error loading categories:', err);
-      setCategories([]);
-    }
-  };
+  // Verificar conexión al montar el componente
+  useEffect(() => {
+    checkConnectionAndLoad();
+  }, [checkConnectionAndLoad]);
 
   // Función para alternar el estado de una categoría
-  const toggleCategoryStatus = async (categoryId, currentStatus) => {
+  const toggleCategoryStatus = useCallback(async (categoryId, currentStatus) => {
     try {
+      setError(null);
+      
       if (currentStatus) {
         const result = await CategoryService.deactivateCategory(categoryId);
         
-        if (result.success) {
+        if (result?.success) {
           setCategories(prev => 
             prev.map(cat => 
               cat.id === categoryId 
@@ -87,11 +94,17 @@ export default function CategoriesPage() {
           );
           toast?.success('Categoría desactivada exitosamente');
         } else {
-          toast?.error(result.message);
+          toast?.error(result?.message || 'Error al desactivar categoría');
         }
       } else {
+        const category = categories.find(cat => cat.id === categoryId);
+        if (!category) {
+          toast?.error('Categoría no encontrada');
+          return;
+        }
+
         const updatedCategory = await CategoryService.updateCategory(categoryId, {
-          ...categories.find(cat => cat.id === categoryId),
+          ...category,
           active: true
         });
         
@@ -105,32 +118,33 @@ export default function CategoriesPage() {
         toast?.success('Categoría activada exitosamente');
       }
     } catch (err) {
-      toast?.error(`Error al cambiar estado: ${err.message}`);
+      const errorMessage = err.message || 'Error desconocido al cambiar estado';
+      toast?.error(`Error al cambiar estado: ${errorMessage}`);
       console.error('Error toggling category status:', err);
     }
-  };
+  }, [categories]);
 
   // Función para manejar la visualización de detalles
-  const handleViewCategory = (category) => {
+  const handleViewCategory = useCallback((category) => {
     setSelectedCategory(category);
     setModalType('view');
     setShowModal(true);
-  };
+  }, []);
 
   // Función para manejar la edición
-  const handleEditCategory = (category) => {
+  const handleEditCategory = useCallback((category) => {
     setSelectedCategory(category);
     setFormData({
-      name: category.name,
+      name: category.name || '',
       description: category.description || '',
-      active: category.active
+      active: Boolean(category.active)
     });
     setModalType('edit');
     setShowModal(true);
-  };
+  }, []);
 
   // Función para crear nueva categoría
-  const handleCreateCategory = () => {
+  const handleCreateCategory = useCallback(() => {
     setSelectedCategory(null);
     setFormData({
       name: '',
@@ -139,31 +153,71 @@ export default function CategoriesPage() {
     });
     setModalType('create');
     setShowModal(true);
-  };
+  }, []);
+
+  // Función para cerrar modal
+  const handleCloseModal = useCallback(() => {
+    setShowModal(false);
+    setSelectedCategory(null);
+    setIsSubmitting(false);
+    setFormData({
+      name: '',
+      description: '',
+      active: true
+    });
+  }, []);
 
   // Función para guardar categoría (crear o actualizar)
-  const handleSaveCategory = async (e) => {
+  const handleSaveCategory = useCallback(async (e) => {
     e.preventDefault();
     
+    // Validación básica
+    if (!formData.name?.trim()) {
+      toast?.error('El nombre es requerido');
+      return;
+    }
+
+    if (formData.name.trim().length < 2) {
+      toast?.error('El nombre debe tener al menos 2 caracteres');
+      return;
+    }
+
     try {
+      setIsSubmitting(true);
+      setError(null);
+
+      const categoryData = {
+        name: formData.name.trim(),
+        description: formData.description?.trim() || '',
+        active: Boolean(formData.active)
+      };
+      
       if (modalType === 'create') {
-        await CategoryService.createCategory(formData);
+        await CategoryService.createCategory(categoryData);
         toast?.success('Categoría creada exitosamente');
-      } else if (modalType === 'edit') {
-        await CategoryService.updateCategory(selectedCategory.id, formData);
+      } else if (modalType === 'edit' && selectedCategory) {
+        await CategoryService.updateCategory(selectedCategory.id, categoryData);
         toast?.success('Categoría actualizada exitosamente');
       }
       
-      setShowModal(false);
-      loadCategories();
+      handleCloseModal();
+      await loadCategories();
     } catch (err) {
-      toast?.error(`Error al guardar: ${err.message}`);
+      const errorMessage = err.message || 'Error desconocido al guardar';
+      toast?.error(`Error al guardar: ${errorMessage}`);
       console.error('Error saving category:', err);
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }, [formData, modalType, selectedCategory, handleCloseModal, loadCategories]);
+
+  // Función para manejar cambios en el formulario
+  const handleFormChange = useCallback((field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
 
   // Función para acciones en cada fila
-  function cellAcciones({ row }) {
+  const cellAcciones = useCallback(({ row }) => {
     const category = row.original;
     
     return (
@@ -180,25 +234,25 @@ export default function CategoriesPage() {
         />      
         
         <ToggleSwitch
-          checked={category.active}
+          checked={Boolean(category.active)}
           onChange={() => toggleCategoryStatus(category.id, category.active)}
           title={category.active ? "Desactivar" : "Activar"}
         />
       </div>
     );
-  }
+  }, [handleViewCategory, handleEditCategory, toggleCategoryStatus]);
 
   // Configuración de columnas
   const columns = [
     {
       header: "ID",
       accessorKey: "id",
-      cell: info => info.getValue(),
+      cell: info => info.getValue() || '-',
     },
     {
       header: "Nombre",
       accessorKey: "name",
-      cell: info => info.getValue(),
+      cell: info => info.getValue() || 'Sin nombre',
     },
     {
       header: "Descripción",
@@ -225,7 +279,11 @@ export default function CategoriesPage() {
       accessorKey: "createdAt",
       cell: info => {
         const date = info.getValue();
-        return date ? new Date(date).toLocaleDateString('es-ES') : '-';
+        try {
+          return date ? new Date(date).toLocaleDateString('es-ES') : '-';
+        } catch {
+          return '-';
+        }
       },
     },
     {
@@ -238,13 +296,25 @@ export default function CategoriesPage() {
   // Componente de estado de conexión
   const ConnectionStatus = () => {
     const statusConfig = {
-      checking: { color: 'bg-yellow-100 border-yellow-400 text-yellow-700', text: 'Verificando conexión...' },
-      connected: { color: 'bg-green-100 border-green-400 text-green-700', text: 'Conectado al servidor' },
-      disconnected: { color: 'bg-red-100 border-red-400 text-red-700', text: 'Sin conexión al servidor' },
-      error: { color: 'bg-red-100 border-red-400 text-red-700', text: 'Error de conexión' }
+      checking: { 
+        color: 'bg-yellow-100 border-yellow-400 text-yellow-700', 
+        text: 'Verificando conexión...' 
+      },
+      connected: { 
+        color: 'bg-green-100 border-green-400 text-green-700', 
+        text: 'Conectado al servidor' 
+      },
+      disconnected: { 
+        color: 'bg-red-100 border-red-400 text-red-700', 
+        text: 'Sin conexión al servidor' 
+      },
+      error: { 
+        color: 'bg-red-100 border-red-400 text-red-700', 
+        text: 'Error de conexión' 
+      }
     };
 
-    const config = statusConfig[connectionStatus];
+    const config = statusConfig[connectionStatus] || statusConfig.error;
 
     return (
       <div className={`${config.color} border px-4 py-3 rounded mb-4`}>
@@ -253,9 +323,10 @@ export default function CategoriesPage() {
           {connectionStatus !== 'connected' && (
             <button
               onClick={checkConnectionAndLoad}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Reconectar
+              {loading ? 'Conectando...' : 'Reconectar'}
             </button>
           )}
         </div>
@@ -278,8 +349,9 @@ export default function CategoriesPage() {
                 {modalType === 'create' && 'Nueva Categoría'}
               </h2>
               <button
-                onClick={() => setShowModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                onClick={handleCloseModal}
+                disabled={isSubmitting}
+                className="text-gray-500 hover:text-gray-700 text-2xl disabled:opacity-50"
               >
                 ×
               </button>
@@ -289,11 +361,11 @@ export default function CategoriesPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">ID</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedCategory?.id}</p>
+                  <p className="mt-1 text-sm text-gray-900">{selectedCategory?.id || '-'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Nombre</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedCategory?.name}</p>
+                  <p className="mt-1 text-sm text-gray-900">{selectedCategory?.name || 'Sin nombre'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Descripción</label>
@@ -306,13 +378,25 @@ export default function CategoriesPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Fecha de Creación</label>
                   <p className="mt-1 text-sm text-gray-900">
-                    {selectedCategory?.createdAt ? new Date(selectedCategory.createdAt).toLocaleString('es-ES') : '-'}
+                    {selectedCategory?.createdAt ? (() => {
+                      try {
+                        return new Date(selectedCategory.createdAt).toLocaleString('es-ES');
+                      } catch {
+                        return '-';
+                      }
+                    })() : '-'}
                   </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Última Actualización</label>
                   <p className="mt-1 text-sm text-gray-900">
-                    {selectedCategory?.updatedAt ? new Date(selectedCategory.updatedAt).toLocaleString('es-ES') : '-'}
+                    {selectedCategory?.updatedAt ? (() => {
+                      try {
+                        return new Date(selectedCategory.updatedAt).toLocaleString('es-ES');
+                      } catch {
+                        return '-';
+                      }
+                    })() : '-'}
                   </p>
                 </div>
               </div>
@@ -325,9 +409,12 @@ export default function CategoriesPage() {
                   <input
                     type="text"
                     required
+                    minLength={2}
+                    maxLength={100}
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => handleFormChange('name', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ingrese el nombre de la categoría"
                   />
                 </div>
                 <div>
@@ -336,9 +423,11 @@ export default function CategoriesPage() {
                   </label>
                   <textarea
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => handleFormChange('description', e.target.value)}
                     rows={3}
+                    maxLength={500}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Descripción opcional de la categoría"
                   />
                 </div>
                 <div className="flex items-center">
@@ -346,7 +435,7 @@ export default function CategoriesPage() {
                     type="checkbox"
                     id="active"
                     checked={formData.active}
-                    onChange={(e) => setFormData({...formData, active: e.target.checked})}
+                    onChange={(e) => handleFormChange('active', e.target.checked)}
                     className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label htmlFor="active" className="text-sm font-medium text-gray-700">
@@ -356,14 +445,16 @@ export default function CategoriesPage() {
                 <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={isSubmitting || !formData.name?.trim()}
+                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {modalType === 'create' ? 'Crear' : 'Actualizar'}
+                    {isSubmitting ? 'Guardando...' : (modalType === 'create' ? 'Crear' : 'Actualizar')}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowModal(false)}
-                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    onClick={handleCloseModal}
+                    disabled={isSubmitting}
+                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
                   >
                     Cancelar
                   </button>
@@ -374,6 +465,13 @@ export default function CategoriesPage() {
         </div>
       </div>
     );
+  };
+
+  // Estadísticas de categorías
+  const categoryStats = {
+    total: categories.length,
+    active: categories.filter(cat => cat.active).length,
+    inactive: categories.filter(cat => !cat.active).length
   };
 
   return (
@@ -389,7 +487,7 @@ export default function CategoriesPage() {
               </h1>
               <button
                 onClick={handleCreateCategory}
-                disabled={connectionStatus !== 'connected'}
+                disabled={connectionStatus !== 'connected' || loading}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 + Nueva Categoría
@@ -413,7 +511,7 @@ export default function CategoriesPage() {
                   <div>
                     <strong>Error:</strong> {error}
                     <br />
-                    <small className="text-xs">
+                    <small className="text-xs mt-2 block">
                       Posibles soluciones:
                       <br />
                       • Verificar que el backend esté ejecutándose en http://localhost:8085
@@ -425,9 +523,10 @@ export default function CategoriesPage() {
                   </div>
                   <button
                     onClick={checkConnectionAndLoad}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm ml-4"
+                    disabled={loading}
+                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm ml-4 disabled:opacity-50"
                   >
-                    Reintentar
+                    {loading ? 'Cargando...' : 'Reintentar'}
                   </button>
                 </div>
               </div>
@@ -447,9 +546,9 @@ export default function CategoriesPage() {
             {/* Información adicional */}
             {!loading && !error && categories.length > 0 && (
               <div className="mt-4 text-sm text-gray-300">
-                Total de categorías: {categories.length} | 
-                Activas: {categories.filter(cat => cat.active).length} | 
-                Inactivas: {categories.filter(cat => !cat.active).length}
+                Total de categorías: {categoryStats.total} | 
+                Activas: {categoryStats.active} | 
+                Inactivas: {categoryStats.inactive}
               </div>
             )}
           </div>
