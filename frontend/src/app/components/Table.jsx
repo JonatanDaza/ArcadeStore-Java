@@ -9,7 +9,7 @@ import {
 import { useState } from "react";
 import Pagination from "./pagination";
 
-export default function Table({ columns, data, onAdd }) {
+export default function Table({ columns, data, onAdd, showAddButton = false }) {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [filter, setFilter] = useState("");
@@ -41,7 +41,7 @@ export default function Table({ columns, data, onAdd }) {
 
   return (
     <div className="overflow-x-auto mt-4">
-      <table className="min-w-full border border-[#23272e] rounded-xl shadow-2xl bg-[#181a1b]">
+      <table className="min-w-full border-[#23272e] rounded-xl shadow-2xl bg-[#181a1b]">
         <thead>
           {/* Fila de filtros y botón agregar */}
           <tr>
@@ -54,12 +54,14 @@ export default function Table({ columns, data, onAdd }) {
                   onChange={(e) => setFilter(e.target.value)}
                   className="px-3 py-2 rounded-lg border border-[#353b48] bg-[#23272e] text-white placeholder-gray-400 shadow focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64"
                 />
-                <button
-                  className="bg-gradient-to-r from-[#353b48] to-[#23272e] hover:from-[#23272e] hover:to-[#353b48] text-white font-bold py-2 px-5 rounded-lg shadow-md transition"
-                  onClick={onAdd}
-                >
-                  + Agregar
-                </button>
+                {showAddButton && (
+                  <button
+                    onClick={onAdd}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
+                  >
+                    + Nuevo
+                  </button>
+                )}
               </div>
             </th>
           </tr>
@@ -69,7 +71,7 @@ export default function Table({ columns, data, onAdd }) {
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="p-4 border-b border-[#353b48] bg-[#23272e] text-[#7fd1fc] font-bold text-left uppercase tracking-wider text-sm shadow-inner"
+                  className="p-4 border-b border-[#353b48] bg-[#181a1b] text-[#7fd1fc] font-bold text-left uppercase tracking-wider text-sm shadow-inner"
                 >
                   {flexRender(header.column.columnDef.header, header.getContext())}
                 </th>
@@ -90,8 +92,8 @@ export default function Table({ columns, data, onAdd }) {
                 key={row.id}
                 className={
                   idx % 2 === 0
-                    ? "bg-[#23272e] hover:bg-[#353b48] transition shadow"
-                    : "bg-[#181a1b] hover:bg-[#353b48] transition shadow"
+                  ? "bg-[#23272e] hover:bg-[#353b48] transition shadow"
+                  : "bg-[#181a1b] hover:bg-[#353b48] transition shadow"
                 }
               >
                 {row.getVisibleCells().map((cell) => (

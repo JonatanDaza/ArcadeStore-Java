@@ -5,9 +5,11 @@ import Table from "app/components/Table";
 import ActionButton, { ToggleSwitch } from "app/components/ActionButton";
 import Sidebar from "app/components/sidebar";
 import CategoryService, { getAllCategories } from "app/services/api/categories";
+import CreateModal from "app/components/modalCreate";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import ShowModal from "@/components/modalShow";
 
 export default function CategoriesPage() {
   // Estados para manejar los datos y la UI
@@ -20,13 +22,6 @@ export default function CategoriesPage() {
   const [modalType, setModalType] = useState('view');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Estados para el formulario
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    active: true
-  });
-
   const router = useRouter();
 
   // Función para cargar todas las categorías
@@ -34,12 +29,12 @@ export default function CategoriesPage() {
     try {
       setError(null);
       const token = localStorage.getItem("authToken");
-      const data = await CategoryService.getAllCategories(token); // <-- Guarda el resultado aquí
+      const data = await CategoryService.getAllCategories(token);
       setCategories(Array.isArray(data) ? data : []);
     } catch (err) {
       const errorMessage = err.message || 'Error desconocido al cargar categorías';
       setError(errorMessage);
-      setCategories([]); // Esto asegura que la tabla se muestre vacía si hay error
+      setCategories([]);
     }
   }, []);
 
@@ -80,14 +75,14 @@ export default function CategoriesPage() {
   const toggleCategoryStatus = useCallback(async (categoryId, currentStatus) => {
     try {
       setError(null);
-      
+
       if (currentStatus) {
         const result = await CategoryService.deactivateCategory(categoryId);
-        
+
         if (result?.success) {
-          setCategories(prev => 
-            prev.map(cat => 
-              cat.id === categoryId 
+          setCategories(prev =>
+            prev.map(cat =>
+              cat.id === categoryId
                 ? { ...cat, active: false }
                 : cat
             )
@@ -107,10 +102,10 @@ export default function CategoriesPage() {
           ...category,
           active: true
         });
-        
-        setCategories(prev => 
-          prev.map(cat => 
-            cat.id === categoryId 
+
+        setCategories(prev =>
+          prev.map(cat =>
+            cat.id === categoryId
               ? updatedCategory
               : cat
           )
@@ -134,11 +129,6 @@ export default function CategoriesPage() {
   // Función para manejar la edición
   const handleEditCategory = useCallback((category) => {
     setSelectedCategory(category);
-    setFormData({
-      name: category.name || '',
-      description: category.description || '',
-      active: Boolean(category.active)
-    });
     setModalType('edit');
     setShowModal(true);
   }, []);
@@ -146,11 +136,6 @@ export default function CategoriesPage() {
   // Función para crear nueva categoría
   const handleCreateCategory = useCallback(() => {
     setSelectedCategory(null);
-    setFormData({
-      name: '',
-      description: '',
-      active: true
-    });
     setModalType('create');
     setShowModal(true);
   }, []);
@@ -160,40 +145,15 @@ export default function CategoriesPage() {
     setShowModal(false);
     setSelectedCategory(null);
     setIsSubmitting(false);
-    setFormData({
-      name: '',
-      description: '',
-      active: true
-    });
   }, []);
 
   // Función para guardar categoría (crear o actualizar)
-  const handleSaveCategory = useCallback(async (e) => {
-    e.preventDefault();
-    
-    // Validación básica
-    if (!formData.name?.trim()) {
-      toast?.error('El nombre es requerido');
-      return;
-    }
-
-    if (formData.name.trim().length < 2) {
-      toast?.error('El nombre debe tener al menos 2 caracteres');
-      return;
-    }
-
+  const handleSaveCategory = useCallback(async (categoryData) => {
     try {
       setIsSubmitting(true);
       setError(null);
-
-      const categoryData = {
-        name: formData.name.trim(),
-        description: formData.description?.trim() || '',
-        active: Boolean(formData.active)
-      };
-      
       const token = localStorage.getItem("authToken");
-      
+
       if (modalType === 'create') {
         await CategoryService.createCategory(categoryData, token);
         toast?.success('Categoría creada exitosamente');
@@ -201,27 +161,23 @@ export default function CategoriesPage() {
         await CategoryService.updateCategory(selectedCategory.id, categoryData, token);
         toast?.success('Categoría actualizada exitosamente');
       }
-      
+
       handleCloseModal();
       await loadCategories();
     } catch (err) {
       const errorMessage = err.message || 'Error desconocido al guardar';
       toast?.error(`Error al guardar: ${errorMessage}`);
       console.error('Error saving category:', err);
+      throw err; // Re-throw to keep modal open on error
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, modalType, selectedCategory, handleCloseModal, loadCategories]);
-
-  // Función para manejar cambios en el formulario
-  const handleFormChange = useCallback((field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  }, []);
+  }, [modalType, selectedCategory, handleCloseModal, loadCategories]);
 
   // Función para acciones en cada fila
   const cellAcciones = useCallback(({ row }) => {
     const category = row.original;
-    
+
     return (
       <div className="flex gap-2">
         <ActionButton
@@ -233,8 +189,8 @@ export default function CategoriesPage() {
           type="edit"
           title="Editar"
           onClick={() => handleEditCategory(category)}
-        />      
-        
+        />
+
         <ToggleSwitch
           checked={Boolean(category.active)}
           onChange={() => toggleCategoryStatus(category.id, category.active)}
@@ -295,24 +251,78 @@ export default function CategoriesPage() {
     },
   ];
 
+  // Configuración de campos para el modal universal
+  const getModalFields = () => {
+    return [
+      {
+        name: 'name',
+        label: 'Nombre',
+        type: 'text',
+        required: true,
+        placeholder: 'Ingrese el nombre de la categoría',
+        minLength: 2,
+        maxLength: 100,
+        errorMessage: 'El nombre es requerido',
+        helpText: 'Mínimo 2 caracteres, máximo 100'
+      },
+      {
+        name: 'description',
+        label: 'Descripción',
+        type: 'textarea',
+        required: false,
+        placeholder: 'Ingrese una descripción opcional',
+        maxLength: 500,
+        rows: 4,
+        helpText: 'Descripción opcional de la categoría (máximo 500 caracteres)'
+      },
+      {
+        name: 'active',
+        label: 'Categoría activa',
+        type: 'checkbox',
+        required: false,
+        defaultValue: true
+      }
+    ];
+  };
+  const showFields = [
+    {
+      name: 'name',
+      label: 'Nombre',
+      type: 'text'
+    },
+    {
+      name: 'description',
+      label: 'Descripción',
+      type: 'textarea',
+      fullWidth: true,
+      maxDisplayLength: 100
+    },
+    {
+      name: 'active',
+      label: 'Estado',
+      type: 'boolean',
+      trueText: 'Activo',
+      falseText: 'Inactivo'
+    },
+  ];
   // Componente de estado de conexión
   const ConnectionStatus = () => {
     const statusConfig = {
-      checking: { 
-        color: 'bg-yellow-100 border-yellow-400 text-yellow-700', 
-        text: 'Verificando conexión...' 
+      checking: {
+        color: 'bg-yellow-100 border-yellow-400 text-yellow-700',
+        text: 'Verificando conexión...'
       },
-      connected: { 
-        color: 'bg-green-100 border-green-400 text-green-700', 
-        text: 'Conectado al servidor' 
+      connected: {
+        color: 'bg-green-100 border-green-400 text-green-700',
+        text: 'Conectado al servidor'
       },
-      disconnected: { 
-        color: 'bg-red-100 border-red-400 text-red-700', 
-        text: 'Sin conexión al servidor' 
+      disconnected: {
+        color: 'bg-red-100 border-red-400 text-red-700',
+        text: 'Sin conexión al servidor'
       },
-      error: { 
-        color: 'bg-red-100 border-red-400 text-red-700', 
-        text: 'Error de conexión' 
+      error: {
+        color: 'bg-red-100 border-red-400 text-red-700',
+        text: 'Error de conexión'
       }
     };
 
@@ -336,139 +346,6 @@ export default function CategoriesPage() {
     );
   };
 
-  // Componente Modal
-  const Modal = () => {
-    if (!showModal) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">
-                {modalType === 'view' && 'Detalles de Categoría'}
-                {modalType === 'edit' && 'Editar Categoría'}
-                {modalType === 'create' && 'Nueva Categoría'}
-              </h2>
-              <button
-                onClick={handleCloseModal}
-                disabled={isSubmitting}
-                className="text-gray-500 hover:text-gray-700 text-2xl disabled:opacity-50"
-              >
-                ×
-              </button>
-            </div>
-
-            {modalType === 'view' ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">ID</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedCategory?.id || '-'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Nombre</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedCategory?.name || 'Sin nombre'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Descripción</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedCategory?.description || 'Sin descripción'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Estado</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedCategory?.active ? 'Activo' : 'Inactivo'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Fecha de Creación</label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {selectedCategory?.createdAt ? (() => {
-                      try {
-                        return new Date(selectedCategory.createdAt).toLocaleString('es-ES');
-                      } catch {
-                        return '-';
-                      }
-                    })() : '-'}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Última Actualización</label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {selectedCategory?.updatedAt ? (() => {
-                      try {
-                        return new Date(selectedCategory.updatedAt).toLocaleString('es-ES');
-                      } catch {
-                        return '-';
-                      }
-                    })() : '-'}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleSaveCategory} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nombre *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    minLength={2}
-                    maxLength={100}
-                    value={formData.name}
-                    onChange={(e) => handleFormChange('name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ingrese el nombre de la categoría"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Descripción
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => handleFormChange('description', e.target.value)}
-                    rows={3}
-                    maxLength={500}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Descripción opcional de la categoría"
-                  />
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="active"
-                    checked={formData.active}
-                    onChange={(e) => handleFormChange('active', e.target.checked)}
-                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="active" className="text-sm font-medium text-gray-700">
-                    Categoría activa
-                  </label>
-                </div>
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || !formData.name?.trim()}
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? 'Guardando...' : (modalType === 'create' ? 'Crear' : 'Actualizar')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCloseModal}
-                    disabled={isSubmitting}
-                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   // Estadísticas de categorías
   const categoryStats = {
     total: categories.length,
@@ -487,18 +364,8 @@ export default function CategoriesPage() {
               <h1 className="text-xl lg:text-2xl font-bold custom_heading">
                 Lista de Categorías
               </h1>
-              <button
-                onClick={handleCreateCategory}
-                disabled={connectionStatus !== 'connected' || loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                + Nueva Categoría
-              </button>
             </div>
 
-            {/* Estado de conexión */}
-            <ConnectionStatus />
-            
             {/* Estados de carga y error */}
             {loading && (
               <div className="flex justify-center items-center p-8">
@@ -537,10 +404,12 @@ export default function CategoriesPage() {
             {/* Tabla de categorías */}
             {!loading && !error && connectionStatus === 'connected' && (
               <div className="overflow-x-auto rounded-lg shadow-lg">
-                <Table 
-                  columns={columns} 
+                <Table
+                  columns={columns}
                   data={categories}
                   emptyMessage="No hay categorías disponibles"
+                  showAddButton={true}
+                  onAdd={handleCreateCategory}
                 />
               </div>
             )}
@@ -548,8 +417,8 @@ export default function CategoriesPage() {
             {/* Información adicional */}
             {!loading && !error && categories.length > 0 && (
               <div className="mt-4 text-sm text-gray-300">
-                Total de categorías: {categoryStats.total} | 
-                Activas: {categoryStats.active} | 
+                Total de categorías: {categoryStats.total} |
+                Activas: {categoryStats.active} |
                 Inactivas: {categoryStats.inactive}
               </div>
             )}
@@ -557,9 +426,27 @@ export default function CategoriesPage() {
         </main>
       </div>
       <Footer />
-      
-      {/* Modal */}
-      <Modal />
+
+      {/* Modal Universal */}
+      {showModal && (modalType === 'create' || modalType === 'edit') && (
+        <CreateModal
+          showModal={showModal}
+          onClose={handleCloseModal}
+          onSave={handleSaveCategory}
+          title={modalType === 'create' ? 'Nueva Categoría' : 'Editar Categoría'}
+          fields={getModalFields()}
+          initialData={selectedCategory || {}}
+        />
+      )}
+      {showModal && modalType === 'view' && (
+        <ShowModal
+          showModal={showModal}
+          onClose={handleCloseModal}
+          title="Detalles de la Categoría"
+          data={selectedCategory}
+          fields={showFields}
+        />
+      )}
     </div>
   );
 }

@@ -1,10 +1,14 @@
 package com.Scrum3.ArcadeStore.services;
 
+import com.Scrum3.ArcadeStore.Repository.AgreementRepository;
 import com.Scrum3.ArcadeStore.Repository.CategoryRepository;
+import com.Scrum3.ArcadeStore.entities.Agreement;
 import com.Scrum3.ArcadeStore.entities.Category;
 import com.Scrum3.ArcadeStore.entities.Game;
 import com.Scrum3.ArcadeStore.Repository.GameRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jdbc.core.JdbcAggregateOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,10 +19,12 @@ public class GameService {
 
     private final CategoryRepository categoryRepository;
     private final GameRepository gameRepository;
+    private final AgreementRepository agreementRepository;
 
-    public GameService(CategoryRepository categoryRepository, GameRepository gameRepository) {
+    public GameService(CategoryRepository categoryRepository, GameRepository gameRepository, AgreementRepository agreementRepository) {
         this.categoryRepository = categoryRepository;
         this.gameRepository = gameRepository;
+        this.agreementRepository = agreementRepository;
     }
 
     public List<Game> getAllGames() {
@@ -30,7 +36,23 @@ public class GameService {
     }
 
     public Game createGame(Game game) {
-        return gameRepository.save(game);
+
+        Long agreementId = game.getAgreement().getId();
+        Optional<Agreement> optionalAgreement = agreementRepository.findById(agreementId);
+
+        if (optionalAgreement.isPresent()) {
+            Agreement agreement = optionalAgreement.get();
+
+
+            if (!agreement.isActive()) {
+                throw new IllegalStateException("No se pueden agregar juegos a un convenio desactivado.");
+            }
+
+
+            return gameRepository.save(game);
+        } else {
+            throw new EntityNotFoundException("Convenio no encontrado.");
+        }
     }
 
     public Game updateGame(Long id, Game gameDetails) {
@@ -40,7 +62,6 @@ public class GameService {
             existingGame.setName(gameDetails.getName());
             existingGame.setDescription(gameDetails.getDescription());
             existingGame.setCategory(gameDetails.getCategory());
-            existingGame.setInventory(gameDetails.getInventory());
             existingGame.setRequisiteMinimum(gameDetails.getRequisiteMinimum());
             existingGame.setRequisiteRecommended(gameDetails.getRequisiteRecommended());
             return gameRepository.save(existingGame);
