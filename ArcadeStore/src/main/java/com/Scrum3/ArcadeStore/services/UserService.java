@@ -66,4 +66,29 @@ public class UserService {
         user.setRole(role);
         userRepository.save(user);
     }
+
+    public boolean cambiarRolSiActivo(Long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            if (!user.isActive()) {
+                return false;
+            }
+
+            Role rolActual = user.getRole();
+
+            if ("ADMIN".equalsIgnoreCase(rolActual.getName())) {
+                Role userRole = roleRepository.findByName("USER").orElseThrow(() -> new RuntimeException("Rol USER no encontrado"));
+                user.setRole(userRole);
+            } else {
+                Role adminRole = roleRepository.findByName("ADMIN").orElseThrow(() -> new RuntimeException("Rol ADMIN no encontrado"));
+                user.setRole(adminRole);
+            }
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
 }

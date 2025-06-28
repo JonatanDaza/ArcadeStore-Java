@@ -33,38 +33,13 @@ export default function Header() {
   useEffect(() => {
     // Cargar datos iniciales
     loadUserData();
-
-    // Escuchar cambios en localStorage (para detectar login/logout desde otras pestañas)
-    const handleStorageChange = (e) => {
-      // Solo recargar si cambiaron las claves relacionadas con autenticación
-      if (['userRole', 'userName', 'userNick', 'id'].includes(e.key) || e.key === null) {
-        loadUserData();
-      }
-    };
-
-    // Escuchar eventos personalizados (para detectar cambios en la misma pestaña)
-    const handleCustomStorageChange = () => {
-      loadUserData();
-    };
-
-    // Agregar listeners
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('storageChange', handleCustomStorageChange);
-
-    // Opcional: También escuchar cambios de enfoque de ventana
-    // (útil si el usuario hace login en otra pestaña)
-    const handleFocus = () => {
-      loadUserData();
-    };
-    window.addEventListener('focus', handleFocus);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('storageChange', handleCustomStorageChange);
-      window.removeEventListener('focus', handleFocus);
-    };
+    window.addEventListener('storageChange', loadUserData);
+    return () => window.removeEventListener('storageChange', loadUserData);
   }, []);
+
+  useEffect(() => {
+    console.log("userRole:", userRole);
+  }, [userRole]);
 
   const handleLogout = () => {
     // Limpiar todos los datos de autenticación
@@ -89,6 +64,7 @@ export default function Header() {
     
     // Redireccionar
     router.push("/");
+    window.location.reload();
   };
 
   // Cerrar dropdowns cuando se hace clic fuera
@@ -163,7 +139,7 @@ export default function Header() {
                   Contáctenos
                 </Link>
               </li>
-              {isAuthenticated && userRole === "admin" && (
+              {isAuthenticated && userRole?.toLowerCase() === "admin" && (
                 <li>
                   <Link
                     href="/dashboard"
@@ -306,7 +282,7 @@ export default function Header() {
                 Carrito
               </Link>
             </li>
-            {isAuthenticated && userRole === "admin" && (
+            {isAuthenticated && userRole?.toLowerCase() === "admin" && (
               <li>
                 <Link
                   href="/dashboard"

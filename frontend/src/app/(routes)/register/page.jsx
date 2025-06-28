@@ -5,81 +5,38 @@ import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [touched, setTouched] = useState({ email: false, password: false, confirm: false, name: false });
   const router = useRouter();
-
-  const generateUserId = () => {
-    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
-    setLoading(true);
 
-    if (!email || !password || !confirm || !name) {
-      setTouched({ email: true, password: true, confirm: true, name: true });
-      setError("Todos los campos son obligatorios.");
-      setLoading(false);
-      return;
+    try {
+      const res = await fetch("http://localhost:8085/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          username,
+          passwordHash: password, // Debe coincidir con el DTO del backend
+        }),
+      });
+
+      if (res.ok) {
+        setSuccess("Registro exitoso. Ahora puedes iniciar sesión.");
+        setTimeout(() => router.push("/login"), 1500);
+      } else {
+        const text = await res.text();
+        setError(text || "Error al registrar");
+      }
+    } catch (err) {
+      setError("Error de red o servidor");
     }
-
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
-      setLoading(false);
-      return;
-    }
-
-    if (password !== confirm) {
-      setError("Las contraseñas no coinciden.");
-      setLoading(false);
-      return;
-    }
-
-    // Verificar si el email ya existe
-    const existingUsers = JSON.parse(localStorage.getItem("registeredUsers") || "[]");
-    if (existingUsers.some(user => user.email === email)) {
-      setError("Este correo electrónico ya está registrado.");
-      setLoading(false);
-      return;
-    }
-
-    // Crear nuevo usuario
-    const newUser = {
-      id: generateUserId(),
-      email: email,
-      password: password, // En producción, esto debería estar hasheado
-      name: name,
-      nick: name.toLowerCase().replace(/\s+/g, ''),
-      createdAt: new Date().toISOString()
-    };
-
-    // Guardar en localStorage
-    const updatedUsers = [...existingUsers, newUser];
-    localStorage.setItem("registeredUsers", JSON.stringify(updatedUsers));
-
-    // Auto-login después del registro
-    localStorage.setItem("userEmail", newUser.email);
-    localStorage.setItem("userRole", "user");
-    localStorage.setItem("userName", newUser.name);
-    localStorage.setItem("userNick", newUser.nick);
-    localStorage.setItem("id", newUser.id);
-
-    // Disparar evento para que otros componentes se enteren del cambio
-    window.dispatchEvent(new Event('storage'));
-
-    setSuccess("Registro exitoso. Redirigiendo...");
-    setTimeout(() => {
-      router.push("/");
-    }, 1500);
-    setLoading(false);
   };
 
   return (
@@ -89,21 +46,17 @@ export default function RegisterPage() {
           <h1 className="text-3xl font-bold mb-6 text-center">Registro</h1>
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="name" className="block mb-1 font-semibold">Nombre completo:</label>
+              <label htmlFor="username" className="block mb-1 font-semibold">Nombre de usuario:</label>
               <input
                 type="text"
-                name="name"
-                id="name"
+                name="username"
+                id="username"
                 required
-                value={name}
-                onChange={e => setName(e.target.value)}
-                onBlur={() => setTouched(t => ({ ...t, name: true }))}
+                value={username}
+                onChange={e => setUsername(e.target.value)}
                 className="w-full px-4 py-2 rounded bg-[#444] text-white border border-[#555] focus:outline-none focus:ring-2 focus:ring-[#06174d]"
-                placeholder="Ingresa tu nombre completo"
+                placeholder="Ingresa tu nombre de usuario"
               />
-              {touched.name && !name && (
-                <div className="text-red-500 text-xs mt-1">Este campo es obligatorio.</div>
-              )}
             </div>
             <div>
               <label htmlFor="email" className="block mb-1 font-semibold">Correo electrónico:</label>
@@ -114,13 +67,9 @@ export default function RegisterPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                onBlur={() => setTouched(t => ({ ...t, email: true }))}
                 className="w-full px-4 py-2 rounded bg-[#444] text-white border border-[#555] focus:outline-none focus:ring-2 focus:ring-[#06174d]"
                 placeholder="correo@ejemplo.com"
               />
-              {touched.email && !email && (
-                <div className="text-red-500 text-xs mt-1">Este campo es obligatorio.</div>
-              )}
             </div>
             <div>
               <label htmlFor="password" className="block mb-1 font-semibold">Contraseña:</label>
@@ -131,30 +80,9 @@ export default function RegisterPage() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                onBlur={() => setTouched(t => ({ ...t, password: true }))}
                 className="w-full px-4 py-2 rounded bg-[#444] text-white border border-[#555] focus:outline-none focus:ring-2 focus:ring-[#06174d]"
                 placeholder="Mínimo 6 caracteres"
               />
-              {touched.password && !password && (
-                <div className="text-red-500 text-xs mt-1">Este campo es obligatorio.</div>
-              )}
-            </div>
-            <div>
-              <label htmlFor="confirm" className="block mb-1 font-semibold">Confirmar contraseña:</label>
-              <input
-                type="password"
-                name="confirm"
-                id="confirm"
-                required
-                value={confirm}
-                onChange={e => setConfirm(e.target.value)}
-                onBlur={() => setTouched(t => ({ ...t, confirm: true }))}
-                className="w-full px-4 py-2 rounded bg-[#444] text-white border border-[#555] focus:outline-none focus:ring-2 focus:ring-[#06174d]"
-                placeholder="Repite tu contraseña"
-              />
-              {touched.confirm && !confirm && (
-                <div className="text-red-500 text-xs mt-1">Este campo es obligatorio.</div>
-              )}
             </div>
             {error && (
               <div className="text-red-500 text-sm text-center">{error}</div>
@@ -171,9 +99,8 @@ export default function RegisterPage() {
             <button
               type="submit"
               className="w-full bg-black text-white py-2 rounded hover:bg-[#06174d] transition font-bold"
-              disabled={loading}
             >
-              {loading ? "Registrando..." : "Registrarse"}
+              Registrarse
             </button>
           </form>
         </div>

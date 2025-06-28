@@ -2,62 +2,50 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [touched, setTouched] = useState({ email: false, password: false });
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
-    if (!email || !password) {
-      setTouched({ email: true, password: true });
-      setError("Todos los campos son obligatorios.");
-      setLoading(false);
-      return;
-    }
+    try {
+      const res = await fetch("http://localhost:8085/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          passwordHash: password,
+        }),
+      });
 
-    // Simulación de autenticación (reemplaza con lógica real)
-    if (email === "admin@arcade.com" && password === "123456") {
-      // Guardar datos de admin en localStorage con las claves correctas
-      localStorage.setItem("userEmail", email);
-      localStorage.setItem("userRole", "admin");
-      localStorage.setItem("userName", "Administrador");
-      localStorage.setItem("userNick", "admin");
-      localStorage.setItem("id", "123"); // Usar "id" en lugar de "userId"
-      
-      // Disparar evento para que otros componentes se enteren del cambio
-      window.dispatchEvent(new Event('storage'));
-      
-      router.push("/");
-    } else {
-      // Verificar si es un usuario registrado
-      const registeredUsers = JSON.parse(localStorage.getItem("registeredUsers") || "[]");
-      const user = registeredUsers.find(u => u.email === email && u.password === password);
-      
-      if (user) {
-        // Usuario registrado encontrado
-        localStorage.setItem("userEmail", user.email);
-        localStorage.setItem("userRole", "user");
-        localStorage.setItem("userName", user.name || "Usuario");
-        localStorage.setItem("userNick", user.nick || user.email.split('@')[0]);
-        localStorage.setItem("id", user.id);
-        
-        // Disparar evento para que otros componentes se enteren del cambio
-        window.dispatchEvent(new Event('storage'));
-        
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem("authToken", data.token);
+
+        // Decodifica el token y guarda los datos del usuario
+        const decoded = jwtDecode(data.token);
+        localStorage.setItem("userRole", decoded.role || "user");
+        localStorage.setItem("userName", decoded.username || decoded.email || "");
+        localStorage.setItem("id", decoded.id || "");
+        localStorage.setItem("userNick", decoded.username || "");
+
+        // Dispara un evento para que el header se actualice
+        window.dispatchEvent(new Event('storageChange'));
+
         router.push("/");
       } else {
-        setError("Correo o contraseña incorrectos.");
+        const text = await res.text();
+        setError(text || "Correo o contraseña incorrectos");
       }
+    } catch (err) {
+      setError("Error de red o servidor");
     }
-    setLoading(false);
   };
 
   return (
@@ -75,12 +63,8 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                onBlur={() => setTouched(t => ({ ...t, email: true }))}
                 className="w-full px-4 py-2 rounded bg-[#444] text-white border border-[#555] focus:outline-none focus:ring-2 focus:ring-[#06174d]"
               />
-              {touched.email && !email && (
-                <div className="text-red-500 text-xs mt-1">Este campo es obligatorio.</div>
-              )}
             </div>
             <div>
               <label htmlFor="password" className="block mb-1 font-semibold">Contraseña:</label>
@@ -91,29 +75,16 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                onBlur={() => setTouched(t => ({ ...t, password: true }))}
                 className="w-full px-4 py-2 rounded bg-[#444] text-white border border-[#555] focus:outline-none focus:ring-2 focus:ring-[#06174d]"
               />
-              {touched.password && !password && (
-                <div className="text-red-500 text-xs mt-1">Este campo es obligatorio.</div>
-              )}
-            </div>
-            {error && (
-              <div className="text-red-500 text-sm text-center">{error}</div>
-            )}
-            <div className="text-center text-sm mt-2">
-              ¿No tienes una cuenta?{" "}
-              <a href="/register" className="text-[#61dafb] hover:underline">
-                Regístrate aquí
-              </a>
             </div>
             <button
               type="submit"
               className="w-full bg-black text-white py-2 rounded hover:bg-[#06174d] transition font-bold"
-              disabled={loading}
             >
-              {loading ? "Ingresando..." : "Iniciar sesión"}
+              Iniciar sesión
             </button>
+            {error && <div className="text-red-500 text-sm text-center">{error}</div>}
           </form>
         </div>
       </main>

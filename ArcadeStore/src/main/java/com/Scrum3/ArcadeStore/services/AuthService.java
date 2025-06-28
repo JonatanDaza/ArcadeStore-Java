@@ -76,7 +76,7 @@ public class AuthService {
             System.out.println("Comparando contraseñas...");
             if (passwordEncoder.matches(passwordHash, user.getPasswordHash())) {
                 System.out.println("Login exitoso");
-                return jwtUtil.generateToken(user.getEmail());
+                return jwtUtil.generateToken(user);
             } else {
                 System.out.println("Contraseña incorrecta");
             }
