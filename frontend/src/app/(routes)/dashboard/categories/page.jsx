@@ -4,12 +4,10 @@ import Footer from "app/components/footer";
 import Table from "app/components/Table";
 import ActionButton, { ToggleSwitch } from "app/components/ActionButton";
 import Sidebar from "app/components/sidebar";
-import CategoryService from "app/services/api/categories";
+import CategoryService, { getAllCategories } from "app/services/api/categories";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-hot-toast";
-
-// Ejecutar diagnóstico
-CategoryService.testConnection();
+import { useRouter } from "next/navigation";
 
 export default function CategoriesPage() {
   // Estados para manejar los datos y la UI
@@ -29,17 +27,19 @@ export default function CategoriesPage() {
     active: true
   });
 
+  const router = useRouter();
+
   // Función para cargar todas las categorías
   const loadCategories = useCallback(async () => {
     try {
       setError(null);
-      const data = await CategoryService.getAllCategories();
+      const token = localStorage.getItem("authToken");
+      const data = await CategoryService.getAllCategories(token); // <-- Guarda el resultado aquí
       setCategories(Array.isArray(data) ? data : []);
     } catch (err) {
       const errorMessage = err.message || 'Error desconocido al cargar categorías';
       setError(errorMessage);
-      console.error('Error loading categories:', err);
-      setCategories([]);
+      setCategories([]); // Esto asegura que la tabla se muestre vacía si hay error
     }
   }, []);
 
@@ -49,16 +49,16 @@ export default function CategoriesPage() {
       setLoading(true);
       setConnectionStatus('checking');
       setError(null);
-      
-      // Verificar conexión primero
-      const isConnected = await CategoryService.checkConnection();
-      
+
+      const token = localStorage.getItem("authToken");
+      const isConnected = await CategoryService.checkConnection(token);
+
       if (!isConnected) {
         setConnectionStatus('disconnected');
         setError('No se pudo conectar al servidor. Verifica que el backend esté ejecutándose.');
         return;
       }
-      
+
       setConnectionStatus('connected');
       await loadCategories();
     } catch (err) {
@@ -192,11 +192,13 @@ export default function CategoriesPage() {
         active: Boolean(formData.active)
       };
       
+      const token = localStorage.getItem("authToken");
+      
       if (modalType === 'create') {
-        await CategoryService.createCategory(categoryData);
+        await CategoryService.createCategory(categoryData, token);
         toast?.success('Categoría creada exitosamente');
       } else if (modalType === 'edit' && selectedCategory) {
-        await CategoryService.updateCategory(selectedCategory.id, categoryData);
+        await CategoryService.updateCategory(selectedCategory.id, categoryData, token);
         toast?.success('Categoría actualizada exitosamente');
       }
       
