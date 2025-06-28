@@ -4,16 +4,21 @@ import com.Scrum3.ArcadeStore.entities.Role;
 import com.Scrum3.ArcadeStore.entities.User;
 import com.Scrum3.ArcadeStore.Repository.RoleRepository;
 import com.Scrum3.ArcadeStore.Repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class DataInitializer {
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Bean
-    public ApplicationRunner initData(RoleRepository roleRepository, UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+    public ApplicationRunner initData(RoleRepository roleRepository, UserRepository userRepository) {
         return args -> {
             // Crear roles si no existen
             if (roleRepository.findByName("ADMIN").isEmpty()) {

@@ -7,7 +7,7 @@ import com.Scrum3.ArcadeStore.entities.User;
 import com.Scrum3.ArcadeStore.entities.Role;
 import com.Scrum3.ArcadeStore.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Bean;
 
@@ -21,7 +21,7 @@ public class AuthService {
     @Autowired
     private RoleRepository roleRepository;
     @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtUtil jwtUtil;
 

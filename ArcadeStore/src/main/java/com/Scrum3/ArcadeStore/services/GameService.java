@@ -55,7 +55,7 @@ public class GameService {
     }
     public boolean desactivarJuegoSINoTieneCategoriaActiva(Long id) {
         Game game = gameRepository.findById(id).orElseThrow();
-        boolean tieneJuegosActivos = GameRepository.existsByCategoryIdAndActiveTrue(game.getCategory().getId());
+        boolean tieneJuegosActivos = gameRepository.existsByCategoryIdAndActiveTrue(game.getCategory().getId());
         if (!tieneJuegosActivos) {
             game.setActive(false);
             gameRepository.save(game);
