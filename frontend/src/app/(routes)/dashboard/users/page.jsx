@@ -5,14 +5,17 @@ import Table from "app/components/Table";
 import ActionButton from "app/components/ActionButton";
 import Sidebar from "app/components/sidebar";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
 import { getAllUsers, cambiarRolUsuario } from "app/services/api/users";
 
 // Botón personalizado para cambiar rol
-function ButtonChangeRole({ onClick, children }) {
+function ButtonChangeRole({ onClick, children, disabled }) {
   return (
     <button
-      className="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1 rounded font-semibold transition text-xs"
+      className={`bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1 rounded font-semibold transition text-xs ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       onClick={onClick}
+      disabled={disabled}
     >
       {children}
     </button>
@@ -21,9 +24,13 @@ function ButtonChangeRole({ onClick, children }) {
 
 // Acciones de usuario
 function cellCambiarRol({ row, reloadUsers }) {
+  const loggedUserId = localStorage.getItem("id");
+  const isSelf = String(row.original.id) === String(loggedUserId);
+
   return (
     <ButtonChangeRole
       onClick={async () => {
+        if (isSelf) return; // Previene acción si es el mismo usuario
         try {
           const token = localStorage.getItem("authToken");
           await cambiarRolUsuario(row.original.id, token);
@@ -32,6 +39,7 @@ function cellCambiarRol({ row, reloadUsers }) {
           alert("No se pudo cambiar el rol");
         }
       }}
+      disabled={isSelf}
     >
       {row.original.role?.name?.toLowerCase() === "admin"
         ? "Convertir a Usuario"
@@ -56,6 +64,28 @@ export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const role = decoded.role?.toLowerCase();
+        setIsAuthenticated(role === "admin");
+        if (role !== "admin") {
+          router.replace("/login");
+        }
+      } catch (err) {
+        setIsAuthenticated(false);
+        router.replace("/login");
+      }
+    } else {
+      setIsAuthenticated(false);
+      router.replace("/login");
+    }
+  }, [router]);
 
   const reloadUsers = () => {
     setLoading(true);
@@ -67,8 +97,10 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    reloadUsers();
-  }, []);
+    if (isAuthenticated) {
+      reloadUsers();
+    }
+  }, [isAuthenticated]);
 
   // Mueve la definición de columns aquí:
   const columns = [
@@ -86,6 +118,10 @@ export default function UsersPage() {
       cell: cellActivarUsuario,
     },
   ];
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col min-h-screen hero_area">

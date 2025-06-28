@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
+import { useState } from "react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -35,10 +35,12 @@ export default function LoginPage() {
         localStorage.setItem("id", decoded.id || "");
         localStorage.setItem("userNick", decoded.username || "");
 
-        // Dispara un evento para que el header se actualice
-        window.dispatchEvent(new Event('storageChange'));
-
-        router.push("/");
+        // Redirección según el rol
+        if ((decoded.role || "").toLowerCase() === "admin") {
+          router.push("/dashboard");
+        } else {
+          router.push("/");
+        }
       } else {
         const text = await res.text();
         setError(text || "Correo o contraseña incorrectos");
