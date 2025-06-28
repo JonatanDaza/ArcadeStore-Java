@@ -6,7 +6,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface GameRepository extends JpaRepository<Game, Long> {
-    static boolean existsByCategoriaIdAndActivoTrue(Long id) {
+    static boolean existsByCategoryIdAndActiveTrue(Long id) {
         return false;
     }
+
 }

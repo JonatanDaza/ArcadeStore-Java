@@ -45,7 +45,7 @@ public class CategoryService {
 
     public boolean desactivarCategoriaSiNoTieneJuegosActivos(Long id) {
         Category category = categoryRepository.findById(id).orElseThrow();
-        boolean tieneJuegosActivos = GameRepository.existsByCategoriaIdAndActivoTrue(id);
+        boolean tieneJuegosActivos = GameRepository.existsByCategoryIdAndActiveTrue(id);
 
         if (!tieneJuegosActivos) {
             category.setActive(false);

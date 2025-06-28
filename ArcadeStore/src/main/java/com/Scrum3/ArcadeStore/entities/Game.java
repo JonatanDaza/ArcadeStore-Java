@@ -37,6 +37,12 @@ public class Game {
     @JoinColumn(name = "inventory_id", unique = true)
     private Inventory inventory;
 
+    @Column(name = "requisite_minimum", columnDefinition = "TEXT")
+    private String requisiteMinimum;
+
+    @Column(name = "requisite_recommended", columnDefinition = "TEXT")
+    private String requisiteRecommended;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
