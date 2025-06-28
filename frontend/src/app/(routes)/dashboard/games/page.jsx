@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Header from "app/components/header";
 import Footer from "app/components/footer";
 import Table from "app/components/Table";
@@ -13,7 +13,7 @@ export default function GamesPage() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState(null); // Keep this for connection feedback
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('view');
   const [selectedGame, setSelectedGame] = useState(null);
@@ -30,9 +30,28 @@ export default function GamesPage() {
   });
 
   // Load games on component mount
+  const loadGames = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem("authToken"); // Get token inside the async function
+      const gamesData = await GameService.getAllGames(token);
+      setGames(Array.isArray(gamesData) ? gamesData : []);
+      // Check connection status after loading games
+      const status = await GameService.checkConnection(token);
+      setConnectionStatus(status);
+    } catch (err) {
+      setError(err.message || "Error al cargar juegos");
+      setGames([]);
+      setConnectionStatus({ connected: false, authenticated: false, error: err.message || "Network Error" });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadGames();
-  }, []);
+  }, [loadGames]);
 
   // Reset form data when modal is closed or opened for a new game
   useEffect(() => {
@@ -56,69 +75,34 @@ export default function GamesPage() {
         imagen: selectedGame.imagen || '',
         requisitos_minimos: selectedGame.requisitos_minimos || '',
         requisitos_recomendados: selectedGame.requisitos_recomendados || '',
-        categoryId: selectedGame.categoryId || (selectedGame.category ? selectedGame.category.id : ''),
+        categoryId: selectedGame.categoryId || (selectedGame.category ? selectedGame.category.id : ''), // Ensure categoryId is set correctly
         active: selectedGame.active || false
       });
     }
   }, [showModal, modalType, selectedGame]);
 
-  // Load all games from backend
-  const loadGames = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Check connection and authentication
-      const status = await GameService.checkConnectionAndAuth();
-      setConnectionStatus(status);
-
-      if (!status.connected || !status.authenticated) {
-        throw new Error(status.error || 'No se pudo conectar con el servidor');
-      }
-
-      // Get games from API
-      const gamesData = await GameService.getAllGames();
-      console.log('✅ Data loaded from API');
-      // Log the structure of the first game object to understand the category field
-      if (gamesData.length > 0) {
-        console.log('🔍 Game data structure:', gamesData[0]);
-      }
-      
-      // Transform data to match expected format
-      const transformedGames = gamesData.map(game => ({
-        ...game,
-        estado: game.active ? "Activo" : "Inactivo",
-        precio: typeof game.precio === 'number' ? game.precio : parseFloat(game.precio) || 0,
-        categoria: game.category ? game.category.name : (game.categoryId || 'Sin categoría')
-      }));
-      
-      setGames(transformedGames);
-    } catch (err) {
-      console.error('❌ Error loading games:', err);
-      setError(`Error al cargar juegos: ${err.message}`);
-      setGames([]); // Clear games on error
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Handle status change (activate/deactivate)
   const handleStatusChange = async (gameId, currentActive) => {
     try {
       const newStatus = !currentActive;
-      const result = await GameService.changeGameStatus(gameId, newStatus);
-      
-      if (result.success) {
-        setGames(prevGames => 
-          prevGames.map(game => 
-            game.id === gameId 
+      const token = localStorage.getItem("authToken"); // Get token here
+      const result = await GameService.changeGameStatus(gameId, newStatus, token);
+
+      // Assuming result.success or similar is returned by your backend for the status change
+      // If your backend directly returns the updated game object, you can use that.
+      // For now, assuming a simple success message or a small payload.
+      if (result) { // Adjust this condition based on your backend's response for success
+        setGames(prevGames =>
+          prevGames.map(game =>
+            game.id === gameId
               ? { ...game, active: newStatus, estado: newStatus ? "Activo" : "Inactivo" }
               : game
           )
         );
-        console.log('✅', result.message);
+        console.log('✅ Status changed successfully!');
       } else {
-        setError(result.message);
+        // If your backend returns an error message in result
+        setError(result.message || "Failed to change game status.");
       }
     } catch (err) {
       setError(`Error al cambiar estado: ${err.message}`);
@@ -130,17 +114,20 @@ export default function GamesPage() {
   const handleHighlight = async (gameId, currentHighlighted) => {
     try {
       const newHighlighted = !currentHighlighted;
-      const result = await GameService.highlightGame(gameId, newHighlighted);
-      
-      if (result.success) {
-        setGames(prevGames => 
-          prevGames.map(game => 
-            game.id === gameId 
+      const token = localStorage.getItem("authToken"); // Get token here
+      const result = await GameService.highlightGame(gameId, newHighlighted, token);
+
+      if (result) { // Adjust this condition based on your backend's response for success
+        setGames(prevGames =>
+          prevGames.map(game =>
+            game.id === gameId
               ? { ...game, highlighted: newHighlighted }
               : game
           )
         );
-        console.log('✅', result.message);
+        console.log('✅ Highlight status changed successfully!');
+      } else {
+        setError(result.message || "Failed to change highlight status.");
       }
     } catch (err) {
       setError(`Error al destacar juego: ${err.message}`);
@@ -157,19 +144,21 @@ export default function GamesPage() {
   const handleSaveGame = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+    setError(null);
+    const token = localStorage.getItem("authToken"); // Get token here
+
     try {
       // Validation
       if (!formData.titulo?.trim()) {
         setError('El título es requerido');
         return;
       }
-      if (!formData.precio || formData.precio <= 0) {
-        setError('El precio debe ser mayor a 0');
+      if (isNaN(Number(formData.precio)) || Number(formData.precio) <= 0) { // More robust price validation
+        setError('El precio debe ser un número válido mayor a 0');
         return;
       }
-      if (!formData.categoryId) {
-        setError('La categoría es requerida');
+      if (!formData.categoryId || isNaN(Number(formData.categoryId))) { // Category ID must be a number
+        setError('La categoría es requerida y debe ser un número');
         return;
       }
 
@@ -186,48 +175,47 @@ export default function GamesPage() {
 
       let updatedGame;
       if (modalType === 'create') {
-        updatedGame = await GameService.createGame(gameData);
-        setGames(prevGames => [...prevGames, updatedGame]);
+        updatedGame = await GameService.createGame(gameData, token);
+        setGames(prevGames => [...prevGames, { ...updatedGame, estado: updatedGame.active ? "Activo" : "Inactivo" }]); // Add estado field for new game
         console.log('✅ Juego creado exitosamente');
       } else if (modalType === 'edit' && selectedGame) {
-        updatedGame = await GameService.updateGame(selectedGame.id, gameData);
-        setGames(prevGames => 
-          prevGames.map(game => 
-            game.id === selectedGame.id ? { ...game, ...updatedGame } : game
+        updatedGame = await GameService.updateGame(selectedGame.id, gameData, token);
+        setGames(prevGames =>
+          prevGames.map(game =>
+            game.id === selectedGame.id ? { ...game, ...updatedGame, estado: updatedGame.active ? "Activo" : "Inactivo" } : game
           )
         );
         console.log('✅ Juego actualizado exitosamente');
       }
-      
+
       setShowModal(false);
+      // Optional: Re-fetch all games to ensure data consistency
+      // loadGames();
     } catch (err) {
-      setError(`Error al guardar juego: ${err.message}`);
-      console.error('❌ Error saving game:', err);
+      setError(err.message || "Error al guardar juego");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Functions for table cells
+  // Functions for table cells (No changes needed here unless image path requires adjustment)
   function cellNo(info) {
     return info.row.index + 1;
   }
 
   function cellImagenTitulo({ row }) {
     const game = row.original;
-    const imageSrc = game.imagen 
-      ? `/images/${game.imagen}` 
-      : '/images/default-game.png';
+    // Ensure that game.imagen is not null or undefined for the image source
+    const imagePath = game.imagen ? `http://localhost:8085/images/${game.imagen}` : '/images/default-game.png';
 
     return (
       <div className="flex items-center gap-2">
-        <img 
-          src={`http://localhost:8085/images/${game.imagen}`} 
-          alt={game.titulo} 
+        <img
+          src={imagePath}
+          alt={game.titulo || 'Game Image'}
           className="w-24 h-auto object-cover rounded"
         />
-
-        <span className="font-medium">{game.titulo}</span>
+        <span className="font-medium text-gray-800">{game.titulo}</span>
       </div>
     );
   }
@@ -254,7 +242,7 @@ export default function GamesPage() {
 
   function cellAcciones({ row }) {
     const game = row.original;
-    
+
     return (
       <div className="flex gap-2">
         <ActionButton
@@ -273,7 +261,7 @@ export default function GamesPage() {
           }}
           title="Ver detalles"
         />
-        
+
         <ActionButton
           type="edit"
           onClick={() => {
@@ -283,18 +271,18 @@ export default function GamesPage() {
           }}
           title="Editar"
         />
-        
+
         <ToggleSwitch
           checked={game.active}
           onChange={() => handleStatusChange(game.id, game.active)}
           title={game.active ? "Desactivar" : "Activar"}
-          disabled={loading}
+          disabled={loading} // Disable during loading to prevent multiple clicks
         />
       </div>
     );
   }
 
-  // Column definitions
+  // Column definitions (unchanged)
   const columns = [
     {
       header: "No",
@@ -306,19 +294,23 @@ export default function GamesPage() {
       accessorKey: "titulo",
       cell: cellImagenTitulo,
     },
-    { 
-      header: "Precio", 
+    {
+      header: "Precio",
       accessorKey: "precio",
       cell: cellPrecio
     },
-    { 
-      header: "Descripción", 
+    {
+      header: "Descripción",
       accessorKey: "descripcion",
       cell: cellDescripcion
     },
     { header: "Req. Mínimos", accessorKey: "requisitos_minimos" },
     { header: "Req. Recomendados", accessorKey: "requisitos_recomendados" },
-    { header: "Categoría", accessorKey: "categoria" },
+    {
+      header: "Categoría",
+      accessorKey: "category", // Assuming the game object directly has a 'category' object
+      cell: ({ row }) => row.original.category ? row.original.category.name : 'N/A' // Display category name
+    },
     {
       header: "Estado",
       accessorKey: "estado",
@@ -341,24 +333,6 @@ export default function GamesPage() {
     },
   ];
 
-  // Connection status component
-  const ConnectionStatus = () => {
-    if (!connectionStatus) return null;
-
-    if (connectionStatus.connected && connectionStatus.authenticated) {
-      return (
-        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-          ✅ Conectado a la API correctamente
-        </div>
-      );
-    }
-
-    return (
-      <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-        ❌ {connectionStatus.error || 'Error de conexión con la API'}
-      </div>
-    );
-  };
 
   // Error component
   const ErrorMessage = () => {
@@ -368,7 +342,7 @@ export default function GamesPage() {
       <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
         <h3 className="font-bold">Error:</h3>
         <p>{error}</p>
-        <button 
+        <button
           onClick={loadGames}
           className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
@@ -421,37 +395,37 @@ export default function GamesPage() {
               </div>
             </div>
 
-            <ConnectionStatus />
+           
             <ErrorMessage />
-            
+
             {loading ? (
               <LoadingMessage />
-            ) : games.length > 0 ? (
-              <div className="overflow-x-auto rounded-lg shadow-lg">
-                <Table 
-                  columns={columns} 
-                  data={games}
-                  emptyMessage="No se encontraron juegos"
-                />
-              </div>
             ) : (
-              <div className="text-center py-8 text-white">
-                <p className="text-lg">No hay juegos disponibles</p>
-                <p className="text-sm text-gray-300 mt-2">
-                  Verifica la conexión con el servidor o crea un nuevo juego
-                </p>
+              <div className="overflow-x-auto rounded-lg shadow-lg">
+                <Table
+                  columns={columns}
+                  data={games}
+                  emptyMessage={
+                    <div className="text-center py-8 text-white">
+                      <p className="text-lg">No hay juegos disponibles</p>
+                      <p className="text-sm text-gray-300 mt-2">
+                        Verifica la conexión con el servidor o crea un nuevo juego
+                      </p>
+                    </div>
+                  }
+                />
               </div>
             )}
 
             {/* Additional information */}
             {!loading && games.length > 0 && (
               <div className="mt-4 text-sm text-gray-300">
-                Total de juegos: {games.length} | 
-                Activos: {games.filter(g => g.active).length} | 
+                Total de juegos: {games.length} |
+                Activos: {games.filter(g => g.active).length} |
                 Inactivos: {games.filter(g => !g.active).length}
               </div>
             )}
-            
+
             {/* Modal for View/Edit/Create Game */}
             {showModal && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -469,7 +443,7 @@ export default function GamesPage() {
                       ✕
                     </button>
                   </div>
-                  
+
                   <div className="overflow-y-auto max-h-[70vh]">
                     {modalType === 'view' ? (
                       <div className="space-y-4">
@@ -487,12 +461,22 @@ export default function GamesPage() {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Categoría</label>
-                          <p className="mt-1 text-sm text-gray-900">{selectedGame?.categoria || 'Sin categoría'}</p>
+                          <p className="mt-1 text-sm text-gray-900">{selectedGame?.category ? selectedGame.category.name : 'Sin categoría'}</p> {/* Display category name */}
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Estado</label>
                           <p className="mt-1 text-sm text-gray-900">{selectedGame?.estado}</p>
                         </div>
+                        {selectedGame?.imagen && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Imagen</label>
+                          <img
+                            src={`http://localhost:8085/images/${selectedGame.imagen}`}
+                            alt={selectedGame.titulo}
+                            className="mt-1 w-full max-h-48 object-contain rounded"
+                          />
+                        </div>
+                      )}
                       </div>
                     ) : (
                       <form onSubmit={handleSaveGame} className="space-y-4">

@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id}/show")
     public ResponseEntity<Game> getGameById(@PathVariable Long id) {
         return gameService.getGameById(id)
                 .map(game -> new ResponseEntity<>(game, HttpStatus.OK))
