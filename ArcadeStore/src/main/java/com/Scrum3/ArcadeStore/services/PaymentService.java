@@ -32,7 +32,7 @@ public class PaymentService {
             Payment existingPayment = optionalPayment.get();
             existingPayment.setPaymentMethod(paymentDetails.getPaymentMethod());
             existingPayment.setAmount(paymentDetails.getAmount());
-            existingPayment.setUser(paymentDetails.getUser());
+            existingPayment.setOrder(paymentDetails.getOrder());
             existingPayment.setExchange(paymentDetails.getExchange());
             return paymentRepository.save(existingPayment);
         } else {
