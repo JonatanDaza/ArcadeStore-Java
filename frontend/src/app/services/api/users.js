@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8085/api/users";
+const API_URL = "http://localhost:8085/api/users";
+
 export async function getAllUsers(token) {
   const res = await fetch(`${API_URL}/list`, {
     headers: {
@@ -10,14 +11,13 @@ export async function getAllUsers(token) {
   return res.json();
 }
 
-export async function cambiarRolUsuario(userId, newRole, token) {
+export async function cambiarRolUsuario(userId, token) {
   const res = await fetch(`${API_URL}/${userId}/role`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ role: newRole }),
   });
   if (!res.ok) throw new Error("No se pudo cambiar el rol");
   return res.text();
