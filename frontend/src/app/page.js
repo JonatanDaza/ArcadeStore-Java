@@ -15,21 +15,18 @@ const HomePage = () => {
   const [userName, setUserName] = useState("");
   const [userNick, setUserNick] = useState("");
   const [userId, setUserId] = useState(null);
-
   useEffect(() => {
-    // Simulación: obtener datos del usuario autenticado
-    const storedRole = localStorage.getItem("userRole");
-    const storedName = localStorage.getItem("userName");
-    const storedNick = localStorage.getItem("userNick");
-    const storedId = localStorage.getItem("userId");
-
-    setUserRole(storedRole);
-    setUserName(storedName || "Arcade");
-    setUserNick(storedNick || "ArcadeAdmin");
-    setUserId(storedId || 123);
-    setIsAuthenticated(!!storedRole);
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      setIsAuthenticated(true);
+      // Here you would typically decode the token to get user information
+      // For now, we'll just set some dummy data
+      setUserName("User Name");
+      setUserNick("UserNick");
+      setUserId(1);
+      setUserRole("USER");
+    }
   }, []);
-
 
   const featuredGames = [
     {
@@ -106,7 +103,8 @@ const HomePage = () => {
         )}
         {/* Juegos Recientes */}
         {recentGames.length > 0 && (
-          <RecentGames juegosRecientes={recentGames} />        )}
+          <RecentGames juegosRecientes={recentGames} />
+        )}
         {/* Service Section */}
         <section className="py-16 flex-1">
           <div className="max-w-6xl mx-auto px-4">

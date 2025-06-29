@@ -8,19 +8,15 @@ const GAMES_API_URL = `${API_BASE_URL}/api/games`;
 // Helper for headers with JWT
 const authHeaders = (token) => {
   if (!token) {
-    // Optionally throw an error or handle cases where token is missing
-    console.error("Authentication token is missing.");
-    // You might want to redirect to login or show an error to the user
+    throw new Error("Authentication token is missing");
   }
   return {
     headers: {
       "Content-Type": "application/json",
-      // Ensure the Authorization header is set only if a token exists
-      ...(token && { Authorization: `Bearer ${token}` }),
+      Authorization: `Bearer ${token}`,
     },
   };
 };
-
 export async function checkConnection(token) {
   try {
     // Assuming /api/games/all is an endpoint that doesn't require specific roles

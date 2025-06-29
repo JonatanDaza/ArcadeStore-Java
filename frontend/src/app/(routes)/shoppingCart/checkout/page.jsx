@@ -284,12 +284,16 @@ export default function CheckoutPage() {
             // Redirigir a página de confirmación
             router.push('checkout/confirm');
         } catch (error) {
-            alert('Error procesando el pago. Inténtalo de nuevo.');
+            // Provide more specific error messages
+            const errorMessage = error.response?.data?.message ||
+                                 error.message ||
+                                 'Error procesando el pago. Inténtalo de nuevo.';
+            alert(errorMessage);
+            console.error('Payment processing error:', error);
         } finally {
             setProcessing(false);
         }
     };
-
     if (loading) {
         return (
             <section className="w-full min-h-screen bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white py-10 flex items-center justify-center">

@@ -64,7 +64,6 @@ export default function Header() {
     
     // Redireccionar
     router.push("/");
-    window.location.reload();
   };
 
   // Cerrar dropdowns cuando se hace clic fuera
@@ -139,7 +138,7 @@ export default function Header() {
                   Contáctenos
                 </Link>
               </li>
-              {isAuthenticated && userRole?.toLowerCase() === "admin" && (
+              {isAuthenticated && userRole && userRole.toLowerCase() === "admin" && (
                 <li>
                   <Link
                     href="/dashboard"

@@ -39,12 +39,18 @@ export async function deactivateCategory(id, token) {
   return res.data;
 }
 
+export async function activateCategory(id, token) {
+  const res = await axios.patch(`${API_URL}/${id}/status?active=true`, {}, authHeaders(token));
+  return res.data;
+}
+
 const CategoryService = {
   checkConnection,
   getAllCategories,
   createCategory,
   updateCategory,
   deactivateCategory,
+  activateCategory,
 };
 
 export default CategoryService;

@@ -60,9 +60,8 @@ export default function ProfilePage() {
     if (storedId && urlUserId && storedId !== urlUserId) {
       router.replace(`/profile/${storedId}`);
     }
-    // if (!storedId) router.replace("/login");
+    if (!storedId) router.replace("/login");
   }, [urlUserId, router]);
-
   useEffect(() => {
     const loadUserData = async () => {
       if (!urlUserId) {
@@ -73,33 +72,9 @@ export default function ProfilePage() {
 
       try {
         setLoading(true);
-        const mockUsers = {
-          "123": {
-            id: "123",
-            name: "Juan Pérez",
-            email: "admin@arcade.com",
-            phone: "+57 300 123 4567",
-            address: "Calle 123 #45-67, Bogotá, Colombia"
-          },
-          "456": {
-            id: "456",
-            name: "María García",
-            email: "maria.garcia@email.com",
-            phone: "+57 310 987 6543",
-            address: "Carrera 45 #23-12, Medellín, Colombia"
-          },
-          "789": {
-            id: "789",
-            name: "Carlos López",
-            email: "carlos.lopez@email.com",
-            phone: "+57 320 456 7890",
-            address: "Avenida 68 #15-30, Cali, Colombia"
-          }
-        };
+        const token = localStorage.getItem("authToken");
+        const userData = await getUserById(urlUserId, token);
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const userData = mockUsers[urlUserId];
         if (userData) {
           setUserInfo(userData);
           setEditedInfo(userData);
@@ -117,7 +92,6 @@ export default function ProfilePage() {
 
     loadUserData();
   }, [urlUserId]);
-
   const handleEdit = () => {
     setIsEditing(true);
     setEditedInfo({ ...userInfo });

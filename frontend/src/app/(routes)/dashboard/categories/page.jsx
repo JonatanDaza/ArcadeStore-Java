@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import ShowModal from "@/components/modalShow";
+import { jwtDecode } from 'jwt-decode';
 
 export default function CategoriesPage() {
   // Estados para manejar los datos y la UI
@@ -24,19 +25,46 @@ export default function CategoriesPage() {
 
   const router = useRouter();
 
+  // Función para verificar si el token está expirado
+  const isTokenExpired = (token) => {
+    if (!token) return true;
+    try {
+      const decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      return decoded.exp < currentTime;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return true;
+    }
+  };
+
   // Función para cargar todas las categorías
   const loadCategories = useCallback(async () => {
     try {
       setError(null);
       const token = localStorage.getItem("authToken");
+      if (isTokenExpired(token)) {
+        toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        localStorage.removeItem("authToken");
+        router.push('/login');
+        return;
+      }
       const data = await CategoryService.getAllCategories(token);
       setCategories(Array.isArray(data) ? data : []);
     } catch (err) {
-      const errorMessage = err.message || 'Error desconocido al cargar categorías';
+      let errorMessage = 'Error desconocido al cargar categorías';
+      if (err.message && err.message.includes("Forbidden")) {
+        errorMessage = 'Acceso denegado: No tienes permiso para ver las categorías. Por favor, verifica tus credenciales o contacta al administrador.';
+        toast.error(errorMessage);
+        localStorage.removeItem("authToken");
+        router.push('/login');
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
       setError(errorMessage);
       setCategories([]);
     }
-  }, []);
+  }, [router]);
 
   // Función para verificar conexión y cargar datos
   const checkConnectionAndLoad = useCallback(async () => {
@@ -46,6 +74,12 @@ export default function CategoriesPage() {
       setError(null);
 
       const token = localStorage.getItem("authToken");
+      if (isTokenExpired(token)) {
+        toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        localStorage.removeItem("authToken");
+        router.push('/login');
+        return;
+      }
       const isConnected = await CategoryService.checkConnection(token);
 
       if (!isConnected) {
@@ -64,7 +98,7 @@ export default function CategoriesPage() {
     } finally {
       setLoading(false);
     }
-  }, [loadCategories]);
+  }, [loadCategories, router]);
 
   // Verificar conexión al montar el componente
   useEffect(() => {
@@ -75,9 +109,16 @@ export default function CategoriesPage() {
   const toggleCategoryStatus = useCallback(async (categoryId, currentStatus) => {
     try {
       setError(null);
+      const token = localStorage.getItem("authToken");
+      if (isTokenExpired(token)) {
+        toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        localStorage.removeItem("authToken");
+        router.push('/login');
+        return;
+      }
 
       if (currentStatus) {
-        const result = await CategoryService.deactivateCategory(categoryId);
+        const result = await CategoryService.deactivateCategory(categoryId, token);
 
         if (result?.success) {
           setCategories(prev =>
@@ -92,32 +133,35 @@ export default function CategoriesPage() {
           toast?.error(result?.message || 'Error al desactivar categoría');
         }
       } else {
-        const category = categories.find(cat => cat.id === categoryId);
-        if (!category) {
-          toast?.error('Categoría no encontrada');
-          return;
+        const result = await CategoryService.activateCategory(categoryId, token);
+
+        if (result?.success) {
+          setCategories(prev =>
+            prev.map(cat =>
+              cat.id === categoryId
+                ? { ...cat, active: true }
+                : cat
+            )
+          );
+          toast?.success('Categoría activada exitosamente');
+        } else {
+          toast?.error(result?.message || 'Error al activar categoría');
         }
-
-        const updatedCategory = await CategoryService.updateCategory(categoryId, {
-          ...category,
-          active: true
-        });
-
-        setCategories(prev =>
-          prev.map(cat =>
-            cat.id === categoryId
-              ? updatedCategory
-              : cat
-          )
-        );
-        toast?.success('Categoría activada exitosamente');
       }
     } catch (err) {
-      const errorMessage = err.message || 'Error desconocido al cambiar estado';
+      let errorMessage = 'Error desconocido al cambiar estado';
+      if (err.message && err.message.includes("Forbidden")) {
+        errorMessage = 'Acceso denegado: No tienes permiso para cambiar el estado de categorías.';
+        toast.error(errorMessage);
+        localStorage.removeItem("authToken");
+        router.push('/login');
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
       toast?.error(`Error al cambiar estado: ${errorMessage}`);
       console.error('Error toggling category status:', err);
     }
-  }, [categories]);
+  }, [router]);
 
   // Función para manejar la visualización de detalles
   const handleViewCategory = useCallback((category) => {
@@ -153,6 +197,12 @@ export default function CategoriesPage() {
       setIsSubmitting(true);
       setError(null);
       const token = localStorage.getItem("authToken");
+      if (isTokenExpired(token)) {
+        toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        localStorage.removeItem("authToken");
+        router.push('/login');
+        return;
+      }
 
       if (modalType === 'create') {
         await CategoryService.createCategory(categoryData, token);
@@ -165,14 +215,22 @@ export default function CategoriesPage() {
       handleCloseModal();
       await loadCategories();
     } catch (err) {
-      const errorMessage = err.message || 'Error desconocido al guardar';
+      let errorMessage = 'Error desconocido al guardar';
+      if (err.message && err.message.includes("Forbidden")) {
+        errorMessage = 'Acceso denegado: No tienes permiso para ' + (modalType === 'create' ? 'crear' : 'actualizar') + ' categorías.';
+        toast.error(errorMessage);
+        localStorage.removeItem("authToken");
+        router.push('/login');
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
       toast?.error(`Error al guardar: ${errorMessage}`);
       console.error('Error saving category:', err);
       throw err; // Re-throw to keep modal open on error
     } finally {
       setIsSubmitting(false);
     }
-  }, [modalType, selectedCategory, handleCloseModal, loadCategories]);
+  }, [modalType, selectedCategory, handleCloseModal, loadCategories, router]);
 
   // Función para acciones en cada fila
   const cellAcciones = useCallback(({ row }) => {

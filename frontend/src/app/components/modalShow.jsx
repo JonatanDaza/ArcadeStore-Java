@@ -164,7 +164,7 @@ export default function ShowModal({
 
   return (
     <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#23272e] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl shadow-black">
+      <div className="bg-[#23292e] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl shadow-black">
         {/* Header */}
         <div className="p-6 pb-0">
           <div className="flex justify-between items-center">

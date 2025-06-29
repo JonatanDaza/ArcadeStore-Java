@@ -193,11 +193,14 @@ export default function CreateModal({
             <label htmlFor="imagen">Imagen:</label>
             <input
               type="file"
-              id="imagen"
-              name="imagen"
+              id={name}
+              name={name}
+              onChange={(e) => handleFormChange(name, e.target.files[0])}
+              disabled={disabled || isSubmitting}
+              accept="image/*"
+              className={`w-full px-3 py-2 border ${errors[name] ? 'border-red-500' : 'border-gray-500'} rounded-md shadow-sm focus:outline-none`}
             />
-            </div>
-          );
+            </div>          );
         case 'textarea':
           return (
             <textarea
@@ -341,7 +344,7 @@ export default function CreateModal({
 
   return (
     <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#23272e] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl shadow-black">
+      <div className="bg-[#23292e] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl shadow-black">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">{title}</h2>
