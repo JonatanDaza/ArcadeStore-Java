@@ -10,6 +10,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jdbc.core.JdbcAggregateOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,23 +36,51 @@ public class GameService {
         return gameRepository.findById(id);
     }
 
-    public Game createGame(Game game) {
+    public Game createGame(
+            MultipartFile imagen,
+            String titulo,
+            String descripcion,
+            Double precio,
+            String requisitosMinimos,
+            String requisitosRecomendados,
+            Long categoryId,
+            Boolean active
+    ) {
+        Game game = new Game();
+        game.setTitulo(titulo);
+        game.setDescripcion(descripcion);
+        game.setPrecio(precio);
+        game.setRequisitosMinimos(requisitosMinimos);
+        game.setRequisitosRecomendados(requisitosRecomendados);
+        game.setActive(active != null ? active : true);
 
-        Long agreementId = game.getAgreement().getId();
-        Optional<Agreement> optionalAgreement = agreementRepository.findById(agreementId);
+        // Buscar y asignar categoría
+        Category category = getCategoryById(categoryId);
+        game.setCategory(category);
 
-        if (optionalAgreement.isPresent()) {
-            Agreement agreement = optionalAgreement.get();
+        // Guardar imagen y asignar ruta
+        if (imagen != null && !imagen.isEmpty()) {
+            String imagePath = saveImage(imagen); // Implementa este método para guardar la imagen
+            game.setImagePath(imagePath);
+        }
 
+        return gameRepository.save(game);
+    }
 
-            if (!agreement.isActive()) {
-                throw new IllegalStateException("No se pueden agregar juegos a un convenio desactivado.");
+    // Ejemplo simple de guardado de imagen (ajusta la ruta según tu proyecto)
+    private String saveImage(MultipartFile imagen) {
+        try {
+            String fileName = System.currentTimeMillis() + "_" + imagen.getOriginalFilename();
+            String uploadDir = "uploads/games/";
+            java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
+            if (!java.nio.file.Files.exists(uploadPath)) {
+                java.nio.file.Files.createDirectories(uploadPath);
             }
-
-
-            return gameRepository.save(game);
-        } else {
-            throw new EntityNotFoundException("Convenio no encontrado.");
+            java.nio.file.Path filePath = uploadPath.resolve(fileName);
+            imagen.transferTo(filePath.toFile());
+            return uploadDir + fileName;
+        } catch (Exception e) {
+            throw new RuntimeException("Error al guardar la imagen", e);
         }
     }
 
@@ -59,11 +88,17 @@ public class GameService {
         Optional<Game> optionalGame = gameRepository.findById(id);
         if (optionalGame.isPresent()) {
             Game existingGame = optionalGame.get();
-            existingGame.setName(gameDetails.getName());
-            existingGame.setDescription(gameDetails.getDescription());
+            existingGame.setTitulo(gameDetails.getTitulo());
+            existingGame.setDescripcion(gameDetails.getDescripcion());
+            existingGame.setPrecio(gameDetails.getPrecio());
             existingGame.setCategory(gameDetails.getCategory());
-            existingGame.setRequisiteMinimum(gameDetails.getRequisiteMinimum());
-            existingGame.setRequisiteRecommended(gameDetails.getRequisiteRecommended());
+            existingGame.setRequisitosMinimos(gameDetails.getRequisitosMinimos());
+            existingGame.setRequisitosRecomendados(gameDetails.getRequisitosRecomendados());
+            existingGame.setActive(gameDetails.isActive());
+            // Si quieres permitir actualizar la imagen:
+            if (gameDetails.getImagePath() != null) {
+                existingGame.setImagePath(gameDetails.getImagePath());
+            }
             return gameRepository.save(existingGame);
         } else {
             return null;

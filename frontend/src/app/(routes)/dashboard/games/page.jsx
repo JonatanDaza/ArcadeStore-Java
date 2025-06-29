@@ -169,17 +169,15 @@ export default function GamesPage() {
       // Transform data for API
       const apiData = new FormData();
       apiData.append('titulo', gameData.titulo);
-      apiData.append('descripcion', gameData.descripcion || '');
-      apiData.append('precio', Number(gameData.precio));
-      if (gameData.imagen && gameData.imagen instanceof File) {
-        apiData.append('imagen', gameData.imagen);
-      } else if (gameData.imagen && typeof gameData.imagen === 'string') {
+      apiData.append('descripcion', gameData.descripcion);
+      apiData.append('precio', gameData.precio);
+      apiData.append('requisitos_minimos', gameData.requisitos_minimos);
+      apiData.append('requisitos_recomendados', gameData.requisitos_recomendados);
+      apiData.append('categoryId', gameData.categoryId);
+      apiData.append('active', gameData.active);
+      if (gameData.imagen instanceof File) {
         apiData.append('imagen', gameData.imagen);
       }
-      apiData.append('requisitos_minimos', gameData.requisitos_minimos || '');
-      apiData.append('requisitos_recomendados', gameData.requisitos_recomendados || '');
-      apiData.append('categoryId', Number(gameData.categoryId));
-      apiData.append('active', Boolean(gameData.active));
 
       if (modalType === 'create') {
         const newGame = await GameService.createGame(apiData, token);
@@ -395,7 +393,7 @@ export default function GamesPage() {
       {
         name: 'imagen',
         label: 'Imagen',
-        type: 'file',
+        type: 'file', // <-- usa 'file', NO 'imagen'
         required: false,
         placeholder: 'Seleccionar imagen',
         helpText: 'Seleccione una imagen para el juego (opcional)'
