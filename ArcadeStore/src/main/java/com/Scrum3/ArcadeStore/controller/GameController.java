@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,9 +47,21 @@ import java.util.stream.Collectors;
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<Game> createGame(@RequestBody Game game) {
-        Game createdGame = gameService.createGame(game);
+    @PostMapping(value = "/create", consumes = "multipart/form-data")
+    public ResponseEntity<Game> createGame(
+            @RequestPart(value = "imagen", required = false) MultipartFile imagen,
+            @RequestPart("titulo") String titulo,
+            @RequestPart("descripcion") String descripcion,
+            @RequestPart("precio") Double precio,
+            @RequestPart("requisitos_minimos") String requisitosMinimos,
+            @RequestPart("requisitos_recomendados") String requisitosRecomendados,
+            @RequestPart("categoryId") Long categoryId,
+            @RequestPart("active") Boolean active
+    ) {
+        Game createdGame = gameService.createGame(
+                imagen, titulo, descripcion, precio,
+                requisitosMinimos, requisitosRecomendados, categoryId, active
+        );
         return new ResponseEntity<>(createdGame, HttpStatus.CREATED);
     }
 

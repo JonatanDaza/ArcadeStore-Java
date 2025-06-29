@@ -1,35 +1,27 @@
 import axios from "axios";
 
-// Make sure your environment variable is correctly set up for Next.js
-// NEXT_PUBLIC_API_URL should be in a .env.local file in your project root
+// Asegúrate de que tu variable de entorno esté configurada correctamente para Next.js
+// NEXT_PUBLIC_API_URL debe estar en un archivo .env.local en la raíz de tu proyecto
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8085';
 const GAMES_API_URL = `${API_BASE_URL}/api/games`;
 
-// Helper for headers with JWT
-const authHeaders = (token) => {
-  if (!token) {
-    // Optionally throw an error or handle cases where token is missing
-    console.error("Authentication token is missing.");
-    // You might want to redirect to login or show an error to the user
+// Helper para los encabezados con JWT.
+// ¡Es CRÍTICO que esta función NO establezca Content-Type cuando vas a enviar FormData!
+const getAuthHeaders = (token) => {
+  const headers = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
-  return {
-    headers: {
-      "Content-Type": "application/json",
-      // Ensure the Authorization header is set only if a token exists
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  };
+  // NO añadas 'Content-Type' aquí. Axios lo gestionará automáticamente para FormData.
+  return { headers };
 };
 
 export async function checkConnection(token) {
   try {
-    // Assuming /api/games/all is an endpoint that doesn't require specific roles
-    // or you're checking general API reachability.
-    const res = await axios.get(`${GAMES_API_URL}/all`, authHeaders(token));
-    return { connected: res.status === 200, authenticated: true }; // Assuming 200 means authenticated if a token was sent
+    const res = await axios.get(`${GAMES_API_URL}/all`, getAuthHeaders(token));
+    return { connected: res.status === 200, authenticated: true };
   } catch (error) {
     console.error("Connection check failed:", error);
-    // Differentiate between network error and auth error if needed
     if (error.response && error.response.status === 401) {
       return { connected: true, authenticated: false, error: "Unauthorized" };
     }
@@ -38,41 +30,52 @@ export async function checkConnection(token) {
 }
 
 export async function getAllGames(token) {
-  const res = await axios.get(`${GAMES_API_URL}/all`, authHeaders(token));
+  const res = await axios.get(`${GAMES_API_URL}/all`, getAuthHeaders(token));
   return res.data;
 }
 
 export async function createGame(gameData, token) {
-  const res = await axios.post(`${GAMES_API_URL}/create`, gameData, authHeaders(token));
+  console.log(gameData instanceof FormData); // Debe ser true
+  // Cuando envías 'gameData' (que es un FormData), Axios establecerá
+  // automáticamente 'Content-Type' a 'multipart/form-data'.
+  // NO debes establecerlo manualmente aquí.
+  const res = await axios.post(`${GAMES_API_URL}/create`, gameData, {
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    withCredentials: true, // Mantén esto si necesitas enviar cookies
+  });
   return res.data;
 }
 
 export async function updateGame(id, gameData, token) {
-  const res = await axios.put(`${GAMES_API_URL}/${id}/update`, gameData, authHeaders(token));
+  // Lo mismo aplica para el update: si 'gameData' es FormData,
+  // deja que Axios gestione el Content-Type.
+  const res = await axios.put(`${GAMES_API_URL}/${id}/update`, gameData, {
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    withCredentials: true,
+  });
   return res.data;
 }
 
-// Unified function for changing game status
 export async function changeGameStatus(id, activeStatus, token) {
-  // Use PATCH for partial updates, directly setting the 'active' status
-  const res = await axios.patch(`${GAMES_API_URL}/${id}/status?active=${activeStatus}`, {}, authHeaders(token));
-  return res.data; // Assuming your backend returns a success message or the updated object
-}
-
-// Added for highlighting based on your UI
-export async function highlightGame(id, highlightedStatus, token) {
-  // Assuming your backend has an endpoint for highlighting, often a PATCH request
-  const res = await axios.patch(`${GAMES_API_URL}/${id}/highlight?highlighted=${highlightedStatus}`, {}, authHeaders(token));
+  const res = await axios.patch(`${GAMES_API_URL}/${id}/status?active=${activeStatus}`, {}, getAuthHeaders(token));
   return res.data;
 }
 
+export async function highlightGame(id, highlightedStatus, token) {
+  const res = await axios.patch(`${GAMES_API_URL}/${id}/highlight?highlighted=${highlightedStatus}`, {}, getAuthHeaders(token));
+  return res.data;
+}
 
 const GameService = {
   checkConnection,
   getAllGames,
   createGame,
   updateGame,
-  changeGameStatus, // Use the unified function
+  changeGameStatus,
   highlightGame,
 };
 

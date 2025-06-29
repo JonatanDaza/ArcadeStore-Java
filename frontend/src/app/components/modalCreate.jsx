@@ -179,7 +179,6 @@ export default function CreateModal({
     } = field;
 
     const commonProps = {
-      value: formData[name] || '',
       onChange: (e) => handleFormChange(name, e.target.value),
       disabled: disabled || isSubmitting,
       className: `w-full px-3 py-2 border ${errors[name] ? 'border-red-500' : 'border-gray-500'} rounded-md shadow-sm focus:outline-none`
@@ -187,16 +186,17 @@ export default function CreateModal({
 
     const renderInput = () => {
       switch (type) {
-        case 'imagen':
+        case 'file':
           return (
-            <div>
-            <label htmlFor="imagen">Imagen:</label>
             <input
+              id={name}
+              name={name}
               type="file"
-              id="imagen"
-              name="imagen"
+              accept="image/*"
+              onChange={e => handleFormChange(name, e.target.files[0])}
+              disabled={disabled || isSubmitting}
+              className={`w-full px-3 py-2 border ${errors[name] ? 'border-red-500' : 'border-gray-500'} rounded-md shadow-sm focus:outline-none`}
             />
-            </div>
           );
         case 'textarea':
           return (
