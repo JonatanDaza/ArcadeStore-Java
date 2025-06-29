@@ -33,8 +33,8 @@ public class ExchangeService {
             existingExchange.setTradeStatus(exchangeDetails.getTradeStatus());
             existingExchange.setTradeDate(exchangeDetails.getTradeDate());
             existingExchange.setAdditionalCost(exchangeDetails.getAdditionalCost());
-            existingExchange.setUser(exchangeDetails.getUser()); // Necesitarás un UserRepository existente
-            existingExchange.setProduct(exchangeDetails.getProduct()); // Necesitarás un Product existente
+            existingExchange.setUser(exchangeDetails.getUser());
+            existingExchange.setGame(exchangeDetails.getGame()); // <-- CAMBIA ESTO
             return exchangeRepository.save(existingExchange);
         } else {
             return null;

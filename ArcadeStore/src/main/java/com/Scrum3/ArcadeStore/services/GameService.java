@@ -47,11 +47,11 @@ public class GameService {
             Boolean active
     ) {
         Game game = new Game();
-        game.setTitulo(titulo);
-        game.setDescripcion(descripcion);
-        game.setPrecio(precio);
-        game.setRequisitosMinimos(requisitosMinimos);
-        game.setRequisitosRecomendados(requisitosRecomendados);
+        game.setTitle(titulo);
+        game.setDescription(descripcion);
+        game.setPrice(precio);
+        game.setRequisiteMinimum(requisitosMinimos);
+        game.setRequisiteRecommended(requisitosRecomendados);
         game.setActive(active != null ? active : true);
 
         // Buscar y asignar categoría
@@ -88,14 +88,13 @@ public class GameService {
         Optional<Game> optionalGame = gameRepository.findById(id);
         if (optionalGame.isPresent()) {
             Game existingGame = optionalGame.get();
-            existingGame.setTitulo(gameDetails.getTitulo());
-            existingGame.setDescripcion(gameDetails.getDescripcion());
-            existingGame.setPrecio(gameDetails.getPrecio());
+            existingGame.setTitle(gameDetails.getTitle());
+            existingGame.setDescription(gameDetails.getDescription());
+            existingGame.setPrice(gameDetails.getPrice());
             existingGame.setCategory(gameDetails.getCategory());
-            existingGame.setRequisitosMinimos(gameDetails.getRequisitosMinimos());
-            existingGame.setRequisitosRecomendados(gameDetails.getRequisitosRecomendados());
+            existingGame.setRequisiteMinimum(gameDetails.getRequisiteMinimum());
+            existingGame.setRequisiteRecommended(gameDetails.getRequisiteRecommended());
             existingGame.setActive(gameDetails.isActive());
-            // Si quieres permitir actualizar la imagen:
             if (gameDetails.getImagePath() != null) {
                 existingGame.setImagePath(gameDetails.getImagePath());
             }

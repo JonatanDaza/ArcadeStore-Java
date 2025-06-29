@@ -46,8 +46,4 @@ public class Agreement {
 
     @OneToMany(mappedBy = "agreement", cascade = CascadeType.ALL)
     private List<Game> games;
-
-    public void set_Active(boolean b) {
-
-    }
 }
