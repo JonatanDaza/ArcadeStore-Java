@@ -21,15 +21,15 @@ public class Game {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String titulo; // <-- Nuevo campo
-    private String descripcion; // <-- Nuevo campo
-    private Double precio; // <-- Nuevo campo
+     @Column(name = "title", length = 255, nullable = false)
+    private String title;
 
-    @Column(name = "requisite_minimum", columnDefinition = "TEXT")
-    private String requisitosMinimos;
+    @Column(name = "price", nullable = false)
+    private Double price; 
 
-    @Column(name = "requisite_recommended", columnDefinition = "TEXT")
-    private String requisitosRecomendados;
+     @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
 
     @Column(name = "image_path")
     private String imagePath;
@@ -40,9 +40,11 @@ public class Game {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @ManyToOne
-    @JoinColumn(name = "agreement_id")
-    private Agreement agreement;
+    @Column(name = "requisite_minimum", columnDefinition = "TEXT")
+    private String requisiteMinimum;
+
+    @Column(name = "requisite_recommended", columnDefinition = "TEXT")
+    private String requisiteRecommended;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -51,6 +53,10 @@ public class Game {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "agreement_id")
+    private Agreement agreement;
 
     public void set_active(boolean active) {
         this.active = active;
