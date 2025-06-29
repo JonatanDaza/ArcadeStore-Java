@@ -118,9 +118,8 @@ export default function CategoriesPage() {
       }
 
       if (currentStatus) {
-        const result = await CategoryService.deactivateCategory(categoryId, token);
-
-        if (result?.success) {
+        try {
+          await CategoryService.deactivateCategory(categoryId, token);
           setCategories(prev =>
             prev.map(cat =>
               cat.id === categoryId
@@ -129,13 +128,12 @@ export default function CategoriesPage() {
             )
           );
           toast?.success('Categoría desactivada exitosamente');
-        } else {
-          toast?.error(result?.message || 'Error al desactivar categoría');
+        } catch (err) {
+          toast?.error('Error al desactivar categoría');
         }
       } else {
-        const result = await CategoryService.activateCategory(categoryId, token);
-
-        if (result?.success) {
+        try {
+          await CategoryService.activateCategory(categoryId, token);
           setCategories(prev =>
             prev.map(cat =>
               cat.id === categoryId
@@ -144,8 +142,8 @@ export default function CategoriesPage() {
             )
           );
           toast?.success('Categoría activada exitosamente');
-        } else {
-          toast?.error(result?.message || 'Error al activar categoría');
+        } catch (err) {
+          toast?.error('Error al activar categoría');
         }
       }
     } catch (err) {
