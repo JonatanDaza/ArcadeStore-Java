@@ -9,32 +9,30 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.math.BigDecimal;
 
 @Entity
-@Table(name = "payments")
+@Table(name = "orders")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Payment {
+public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "payment_method", length = 50, nullable = false)
-    private String paymentMethod;
+    @Column(name = "order_date", nullable = false)
+    private LocalDateTime orderDate;
 
-    @Column(name = "total_payment", precision = 10, scale = 2, nullable = false) // Mapped to 'total_payment'
-    private BigDecimal amount;
+    @Column(name = "order_status", length = 50, nullable = false)
+    private String orderStatus;
+
+    @Column(name = "product_quantity", nullable = false)
+    private int productQuantity;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
-    private Order order;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "exchange_id")
-    private Exchange exchange;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
