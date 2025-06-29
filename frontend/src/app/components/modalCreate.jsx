@@ -18,7 +18,12 @@ export default function CreateModal({
     const initialFormData = {};
     fields.forEach(field => {
       if (initialData[field.name] !== undefined) {
-        initialFormData[field.name] = initialData[field.name];
+        // Para campos de relación como categoryId, usar el ID
+        if (field.name === 'categoryId' && initialData.category) {
+          initialFormData[field.name] = initialData.category.id;
+        } else {
+          initialFormData[field.name] = initialData[field.name];
+        }
       } else if (field.defaultValue !== undefined) {
         initialFormData[field.name] = field.defaultValue;
       } else {
@@ -26,6 +31,7 @@ export default function CreateModal({
         switch (field.type) {
           case 'checkbox':
             initialFormData[field.name] = false;
+            break;
           case 'number':
             initialFormData[field.name] = '';
             break;
@@ -64,14 +70,16 @@ export default function CreateModal({
           newErrors[field.name] = field.errorMessage || `${field.label} es requerido`;
           return;
         }
-        // También corrige la validación para campos 'imagen':
-        if (field.type === 'imagen' && field.required) {
+
+        // Validación para campos de archivo
+        if (field.type === 'file' && field.required) {
           // Solo requerir archivo si no hay imagen previa en modo edición
           if (!(value instanceof File) && !initialData[field.name]) {
-            newErrors[field.name] = field.errorMessage || `Seleccione una imagen para ${field.label}`;
+            newErrors[field.name] = field.errorMessage || `Seleccione un archivo para ${field.label}`;
             return;
           }
         }
+
         // Validaciones específicas por tipo
         if (field.type === 'text' || field.type === 'textarea') {
           if (field.minLength && value.trim().length < field.minLength) {
@@ -131,7 +139,7 @@ export default function CreateModal({
           case 'textarea':
             value = typeof value === 'string' ? value.trim() : value;
             break;
-          case 'imagen':
+          case 'file':
             value = value instanceof File ? value : null;
             break;
           case 'number':
@@ -153,10 +161,13 @@ export default function CreateModal({
         processedData[field.name] = value;
       });
 
+      console.log('Datos procesados para enviar:', processedData);
+
       await onSave(processedData);
       onClose();
     } catch (err) {
-      alert(`Error al crear: ${err.message || 'Error desconocido'}`);
+      console.error('Error en handleSubmit:', err);
+      alert(`Error al guardar: ${err.message || 'Error desconocido'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -179,9 +190,10 @@ export default function CreateModal({
     } = field;
 
     const commonProps = {
+      value: formData[name] || '',
       onChange: (e) => handleFormChange(name, e.target.value),
       disabled: disabled || isSubmitting,
-      className: `w-full px-3 py-2 border ${errors[name] ? 'border-red-500' : 'border-gray-500'} rounded-md shadow-sm focus:outline-none`
+      className: `w-full px-3 py-2 border ${errors[name] ? 'border-red-500' : 'border-gray-500'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`
     };
 
     const renderInput = () => {
@@ -195,9 +207,10 @@ export default function CreateModal({
               accept="image/*"
               onChange={e => handleFormChange(name, e.target.files[0])}
               disabled={disabled || isSubmitting}
-              className={`w-full px-3 py-2 border ${errors[name] ? 'border-red-500' : 'border-gray-500'} rounded-md shadow-sm focus:outline-none`}
+              className={`w-full px-3 py-2 border ${errors[name] ? 'border-red-500' : 'border-gray-500'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
             />
           );
+
         case 'textarea':
           return (
             <textarea
@@ -210,11 +223,13 @@ export default function CreateModal({
 
         case 'select':
           return (
-            <select {...commonProps}>
-              <option value="" className="text-white bg-[#23292e]">Seleccione una opción</option>
+            <select 
+              {...commonProps}
+              value={formData[name] || ''}
+            >
+              <option value="">Seleccione una opción</option>
               {options.map((option) => (
                 <option
-                  className="text-white bg-[#23292e]"
                   key={option.value}
                   value={option.value}
                 >
@@ -315,7 +330,7 @@ export default function CreateModal({
     return (
       <div key={name}>
         <label className="block text-1xl font-medium text-[#7fd1fc] mb-1">
-          {label} {required}
+          {label} {required && '*'}
         </label>
         {renderInput()}
         {errors[name] && (
@@ -341,15 +356,15 @@ export default function CreateModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-[#23292e] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl shadow-black">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">{title}</h2>
+            <h2 className="text-2xl font-bold text-white">{title}</h2>
             <button
               onClick={onClose}
               disabled={isSubmitting}
-              className="text-white hover:text-black text-3xl font-light transition-colors duration-100"
+              className="text-white hover:text-gray-300 text-3xl font-light transition-colors duration-100"
             >
               ×
             </button>
@@ -362,14 +377,14 @@ export default function CreateModal({
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting || !isFormValid()}
-                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting ? 'Guardando...' : 'Guardar'}
               </button>
               <button
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="flex-1 bg-[#fff] text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
+                className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 transition-colors"
               >
                 Cancelar
               </button>

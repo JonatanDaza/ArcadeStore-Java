@@ -1,69 +1,160 @@
 package com.Scrum3.ArcadeStore.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "games")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class Game {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-     @Column(name = "title", length = 255, nullable = false)
+    
+    @Column(nullable = false)
     private String title;
-
-    @Column(name = "price", nullable = false)
-    private Double price; 
-
-     @Column(name = "description", columnDefinition = "TEXT")
+    
+    @Column(length = 1000)
     private String description;
-
-
+    
+    @Column(nullable = false)
+    private Double price;
+    
     @Column(name = "image_path")
     private String imagePath;
-
-    private boolean active = true;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
-
-    @Column(name = "requisite_minimum", columnDefinition = "TEXT")
+    
+    @Column(name = "requisite_minimum", length = 500)
     private String requisiteMinimum;
-
-    @Column(name = "requisite_recommended", columnDefinition = "TEXT")
+    
+    @Column(name = "requisite_recommended", length = 500)
     private String requisiteRecommended;
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @ManyToOne
+    
+    @Column(nullable = false)
+    private boolean active = true;
+    
+    @Column(nullable = false)
+    private boolean highlighted = false;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id", nullable = false)
+    @JsonIgnoreProperties("games") // Evitar referencia circular
+    private Category category;
+    
+    // Relación con Agreement (opcional)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agreement_id")
+    @JsonIgnoreProperties("games") // Evitar referencia circular
     private Agreement agreement;
-
-    public void set_active(boolean active) {
+    
+    // Constructores
+    public Game() {}
+    
+    public Game(String title, String description, Double price, Category category) {
+        this.title = title;
+        this.description = description;
+        this.price = price;
+        this.category = category;
+    }
+    
+    // Getters y Setters
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public String getTitle() {
+        return title;
+    }
+    
+    public void setTitle(String title) {
+        this.title = title;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+    
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    
+    public Double getPrice() {
+        return price;
+    }
+    
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+    
+    public String getImagePath() {
+        return imagePath;
+    }
+    
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
+    
+    public String getRequisiteMinimum() {
+        return requisiteMinimum;
+    }
+    
+    public void setRequisiteMinimum(String requisiteMinimum) {
+        this.requisiteMinimum = requisiteMinimum;
+    }
+    
+    public String getRequisiteRecommended() {
+        return requisiteRecommended;
+    }
+    
+    public void setRequisiteRecommended(String requisiteRecommended) {
+        this.requisiteRecommended = requisiteRecommended;
+    }
+    
+    public boolean isActive() {
+        return active;
+    }
+    
+    public void setActive(boolean active) {
         this.active = active;
     }
-
-    public static boolean is_active(Object o) {
-        return false;
+    
+    public boolean isHighlighted() {
+        return highlighted;
     }
-
+    
+    public void setHighlighted(boolean highlighted) {
+        this.highlighted = highlighted;
+    }
+    
+    public Category getCategory() {
+        return category;
+    }
+    
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+    
+    public Agreement getAgreement() {
+        return agreement;
+    }
+    
+    public void setAgreement(Agreement agreement) {
+        this.agreement = agreement;
+    }
+    
+    @Override
+    public String toString() {
+        return "Game{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", price=" + price +
+                ", active=" + active +
+                ", highlighted=" + highlighted +
+                ", category=" + (category != null ? category.getName() : "null") +
+                '}';
+    }
 }

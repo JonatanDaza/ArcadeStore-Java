@@ -8,12 +8,17 @@ import com.Scrum3.ArcadeStore.entities.Game;
 import com.Scrum3.ArcadeStore.Repository.GameRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jdbc.core.JdbcAggregateOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class GameService {
@@ -22,10 +27,23 @@ public class GameService {
     private final GameRepository gameRepository;
     private final AgreementRepository agreementRepository;
 
+    // Directorio donde se guardarán las imágenes
+    private final String uploadDir = "uploads/games/";
+
     public GameService(CategoryRepository categoryRepository, GameRepository gameRepository, AgreementRepository agreementRepository) {
         this.categoryRepository = categoryRepository;
         this.gameRepository = gameRepository;
         this.agreementRepository = agreementRepository;
+        
+        // Crear directorio si no existe
+        try {
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("No se pudo crear el directorio de uploads", e);
+        }
     }
 
     public List<Game> getAllGames() {
@@ -46,41 +64,57 @@ public class GameService {
             Long categoryId,
             Boolean active
     ) {
-        Game game = new Game();
-        game.setTitle(titulo);
-        game.setDescription(descripcion);
-        game.setPrice(precio);
-        game.setRequisiteMinimum(requisitosMinimos);
-        game.setRequisiteRecommended(requisitosRecomendados);
-        game.setActive(active != null ? active : true);
+        try {
+            Game game = new Game();
+            game.setTitle(titulo);
+            game.setDescription(descripcion);
+            game.setPrice(precio);
+            game.setRequisiteMinimum(requisitosMinimos);
+            game.setRequisiteRecommended(requisitosRecomendados);
+            game.setActive(active != null ? active : true);
 
-        // Buscar y asignar categoría
-        Category category = getCategoryById(categoryId);
-        game.setCategory(category);
+            // Buscar y asignar categoría
+            Category category = getCategoryById(categoryId);
+            game.setCategory(category);
 
-        // Guardar imagen y asignar ruta
-        if (imagen != null && !imagen.isEmpty()) {
-            String imagePath = saveImage(imagen); // Implementa este método para guardar la imagen
-            game.setImagePath(imagePath);
+            // Guardar imagen si se proporciona
+            if (imagen != null && !imagen.isEmpty()) {
+                String imagePath = saveImage(imagen);
+                game.setImagePath(imagePath);
+            }
+
+            return gameRepository.save(game);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al crear el juego: " + e.getMessage(), e);
         }
-
-        return gameRepository.save(game);
     }
 
-    // Ejemplo simple de guardado de imagen (ajusta la ruta según tu proyecto)
     private String saveImage(MultipartFile imagen) {
         try {
-            String fileName = System.currentTimeMillis() + "_" + imagen.getOriginalFilename();
-            String uploadDir = "app/public/images";
-            java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
-            if (!java.nio.file.Files.exists(uploadPath)) {
-                java.nio.file.Files.createDirectories(uploadPath);
+            // Generar nombre único para el archivo
+            String originalFilename = imagen.getOriginalFilename();
+            String fileExtension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
             }
-            java.nio.file.Path filePath = uploadPath.resolve(fileName);
-            imagen.transferTo(filePath.toFile());
-            return uploadDir + fileName;
-        } catch (Exception e) {
-            throw new RuntimeException("Error al guardar la imagen", e);
+            
+            String fileName = UUID.randomUUID().toString() + fileExtension;
+            Path uploadPath = Paths.get(uploadDir);
+            
+            // Crear directorio si no existe
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+            
+            Path filePath = uploadPath.resolve(fileName);
+            
+            // Copiar archivo
+            Files.copy(imagen.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            
+            return fileName; // Solo devolver el nombre del archivo, no la ruta completa
+            
+        } catch (IOException e) {
+            throw new RuntimeException("Error al guardar la imagen: " + e.getMessage(), e);
         }
     }
 
@@ -104,24 +138,81 @@ public class GameService {
         }
     }
 
+    public Game updateGameWithMultipart(
+            Long id,
+            MultipartFile imagen,
+            String titulo,
+            String descripcion,
+            String precio,
+            String requisitosMinimos,
+            String requisitosRecomendados,
+            String categoryId,
+            String active
+    ) {
+        try {
+            Optional<Game> optionalGame = gameRepository.findById(id);
+            if (!optionalGame.isPresent()) {
+                return null;
+            }
+
+            Game existingGame = optionalGame.get();
+
+            // Actualizar campos si se proporcionan
+            if (titulo != null) existingGame.setTitle(titulo);
+            if (descripcion != null) existingGame.setDescription(descripcion);
+            if (precio != null) existingGame.setPrice(Double.parseDouble(precio));
+            if (requisitosMinimos != null) existingGame.setRequisiteMinimum(requisitosMinimos);
+            if (requisitosRecomendados != null) existingGame.setRequisiteRecommended(requisitosRecomendados);
+            if (active != null) existingGame.setActive(Boolean.parseBoolean(active));
+
+            // Actualizar categoría si se proporciona
+            if (categoryId != null) {
+                Category category = getCategoryById(Long.parseLong(categoryId));
+                existingGame.setCategory(category);
+            }
+
+            // Actualizar imagen si se proporciona
+            if (imagen != null && !imagen.isEmpty()) {
+                String imagePath = saveImage(imagen);
+                existingGame.setImagePath(imagePath);
+            }
+
+            return gameRepository.save(existingGame);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al actualizar el juego: " + e.getMessage(), e);
+        }
+    }
+
     public Category getCategoryById(Long categoryId) {
         return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + categoryId));
     }
+
     public boolean desactivarJuegoSINoTieneCategoriaActiva(Long id) {
-        Game game = gameRepository.findById(id).orElseThrow();
-        boolean tieneJuegosActivos = gameRepository.existsByCategoryIdAndActiveTrue(game.getCategory().getId());
-        if (!tieneJuegosActivos) {
-            game.setActive(false);
-            gameRepository.save(game);
-            return true;
+        try {
+            Game game = gameRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Juego no encontrado con ID: " + id));
+            
+            boolean tieneJuegosActivos = gameRepository.existsByCategoryIdAndActiveTrue(game.getCategory().getId());
+            if (!tieneJuegosActivos) {
+                game.setActive(false);
+                gameRepository.save(game);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            throw new RuntimeException("Error al desactivar juego: " + e.getMessage(), e);
         }
-        return false;
     }
 
     public void activarJuego(Long id) {
-        Game game = gameRepository.findById(id).orElseThrow();
-        game.setActive(true);
-        gameRepository.save(game);
+        try {
+            Game game = gameRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Juego no encontrado con ID: " + id));
+            game.setActive(true);
+            gameRepository.save(game);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al activar juego: " + e.getMessage(), e);
+        }
     }
 }

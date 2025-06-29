@@ -27,12 +27,53 @@ export default function GamesPage() {
   // Load categories for the dropdown
   const loadCategories = useCallback(async () => {
     try {
+      console.log('🔄 Iniciando carga de categorías...');
+      
       const token = localStorage.getItem("authToken");
+      console.log('🔑 Token encontrado:', token ? 'Sí' : 'No');
+      
+      // Verificar conexión primero
+      console.log('📡 Verificando conexión con categorías...');
+      const isConnected = await CategoryService.checkConnection(token);
+      console.log('📡 Conexión con categorías:', isConnected ? 'OK' : 'FALLO');
+      
+      if (!isConnected) {
+        throw new Error('No se pudo conectar al servicio de categorías');
+      }
+
+      console.log('📦 Obteniendo categorías...');
       const categoriesData = await CategoryService.getAllCategories(token);
-      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      
+      console.log('📦 Datos de categorías recibidos:', categoriesData);
+      console.log('📦 Tipo de datos:', typeof categoriesData);
+      console.log('📦 Es array:', Array.isArray(categoriesData));
+      console.log('📦 Longitud:', categoriesData?.length);
+      
+      if (Array.isArray(categoriesData)) {
+        setCategories(categoriesData);
+        console.log('✅ Categorías establecidas correctamente:', categoriesData.length, 'categorías');
+        
+        // Log detallado de cada categoría
+        categoriesData.forEach((cat, index) => {
+          console.log(`📂 Categoría ${index + 1}:`, {
+            id: cat.id,
+            name: cat.name,
+            active: cat.active
+          });
+        });
+      } else {
+        console.warn('⚠️ Los datos de categorías no son un array:', categoriesData);
+        setCategories([]);
+      }
     } catch (err) {
-      console.error('Error loading categories:', err);
+      console.error('❌ Error loading categories:', err);
+      console.error('❌ Error details:', {
+        message: err.message,
+        stack: err.stack,
+        response: err.response
+      });
       setCategories([]);
+      toast?.error(`Error al cargar categorías: ${err.message}`);
     }
   }, []);
 
@@ -45,8 +86,25 @@ export default function GamesPage() {
 
       const token = localStorage.getItem("authToken");
 
-      // Check connection first
-      const isConnected = await GameService.checkConnection(token);
+      // Check connection first - Usar try/catch para manejar el error
+      let isConnected = false;
+      try {
+        console.log('🔍 Verificando GameService:', GameService);
+        console.log('🔍 Métodos disponibles:', Object.getOwnPropertyNames(GameService));
+        
+        if (typeof GameService.checkConnection === 'function') {
+          isConnected = await GameService.checkConnection(token);
+        } else {
+          console.warn('⚠️ checkConnection no está disponible, intentando conexión directa');
+          // Intentar conexión directa
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8085'}/api/games/health`);
+          isConnected = response.ok;
+        }
+      } catch (connectionError) {
+        console.error('❌ Error al verificar conexión:', connectionError);
+        isConnected = false;
+      }
+
       if (!isConnected) {
         setConnectionStatus('disconnected');
         setError('No se pudo conectar al servidor. Verifica que el backend esté ejecutándose.');
@@ -57,7 +115,31 @@ export default function GamesPage() {
 
       // Load games and categories
       const gamesData = await GameService.getAllGames(token);
-      setGames(Array.isArray(gamesData) ? gamesData : []);
+      console.log('🎮 Datos de juegos recibidos del backend:', gamesData);
+      
+      // Mapear los datos del backend (inglés) al formato esperado por el frontend (español)
+      const mappedGames = Array.isArray(gamesData) ? gamesData.map(game => ({
+        id: game.id,
+        titulo: game.title,
+        descripcion: game.description,
+        precio: game.price,
+        imagen: game.imagePath,
+        requisitos_minimos: game.requisiteMinimum,
+        requisitos_recomendados: game.requisiteRecommended,
+        active: game.active,
+        highlighted: game.highlighted,
+        category: game.category,
+        // Mantener también los campos originales para compatibilidad
+        title: game.title,
+        description: game.description,
+        price: game.price,
+        imagePath: game.imagePath,
+        requisiteMinimum: game.requisiteMinimum,
+        requisiteRecommended: game.requisiteRecommended
+      })) : [];
+
+      console.log('🎮 Juegos mapeados para el frontend:', mappedGames);
+      setGames(mappedGames);
 
       await loadCategories();
     } catch (err) {
@@ -88,13 +170,13 @@ export default function GamesPage() {
         setGames(prevGames =>
           prevGames.map(game =>
             game.id === gameId
-              ? { ...game, active: newStatus, estado: newStatus ? "Activo" : "Inactivo" }
+              ? { ...game, active: newStatus }
               : game
           )
         );
         toast?.success(`Juego ${newStatus ? 'activado' : 'desactivado'} exitosamente`);
       } else {
-        toast?.error(result?.message || "Error al cambiar estado del juego");
+        toast?.error("Error al cambiar estado del juego");
       }
     } catch (err) {
       const errorMessage = err.message || 'Error desconocido al cambiar estado';
@@ -122,7 +204,7 @@ export default function GamesPage() {
         );
         toast?.success(`Juego ${newHighlighted ? 'destacado' : 'quitado de destacados'} exitosamente`);
       } else {
-        toast?.error(result?.message || "Error al cambiar estado de destacado");
+        toast?.error("Error al cambiar estado de destacado");
       }
     } catch (err) {
       const errorMessage = err.message || 'Error desconocido al destacar juego';
@@ -140,17 +222,41 @@ export default function GamesPage() {
 
   // Function to handle editing game
   const handleEditGame = useCallback((game) => {
-    setSelectedGame(game);
+    // Preparar datos para edición - mapear de vuelta al formato del modal
+    const gameForEdit = {
+      id: game.id,
+      titulo: game.titulo || game.title,
+      descripcion: game.descripcion || game.description,
+      precio: game.precio || game.price,
+      imagen: game.imagen || game.imagePath,
+      requisitos_minimos: game.requisitos_minimos || game.requisiteMinimum,
+      requisitos_recomendados: game.requisitos_recomendados || game.requisiteRecommended,
+      categoryId: game.category?.id,
+      active: game.active,
+      category: game.category
+    };
+    
+    console.log('✏️ Juego preparado para edición:', gameForEdit);
+    setSelectedGame(gameForEdit);
     setModalType('edit');
     setShowModal(true);
   }, []);
 
   // Function to create new game
   const handleCreateGame = useCallback(() => {
+    console.log('🎮 Creando nuevo juego...');
+    console.log('📂 Categorías disponibles:', categories);
+    console.log('📂 Cantidad de categorías:', categories.length);
+    
+    if (categories.length === 0) {
+      toast?.error('No hay categorías disponibles. Por favor, crea una categoría primero.');
+      return;
+    }
+    
     setSelectedGame(null);
     setModalType('create');
     setShowModal(true);
-  }, []);
+  }, [categories]);
 
   // Function to close modal
   const handleCloseModal = useCallback(() => {
@@ -166,33 +272,77 @@ export default function GamesPage() {
       setError(null);
       const token = localStorage.getItem("authToken");
 
+      console.log('💾 Datos del juego a guardar:', gameData);
+
       // Transform data for API
       const apiData = new FormData();
-      apiData.append('titulo', gameData.titulo);
-      apiData.append('descripcion', gameData.descripcion);
-      apiData.append('precio', gameData.precio);
-      apiData.append('requisitos_minimos', gameData.requisitos_minimos);
-      apiData.append('requisitos_recomendados', gameData.requisitos_recomendados);
-      apiData.append('categoryId', gameData.categoryId);
-      apiData.append('active', gameData.active);
+      apiData.append('titulo', gameData.titulo || '');
+      apiData.append('descripcion', gameData.descripcion || '');
+      apiData.append('precio', gameData.precio?.toString() || '0');
+      apiData.append('requisitos_minimos', gameData.requisitos_minimos || '');
+      apiData.append('requisitos_recomendados', gameData.requisitos_recomendados || '');
+      apiData.append('categoryId', gameData.categoryId?.toString() || '');
+      apiData.append('active', gameData.active?.toString() || 'true');
+      
       if (gameData.imagen instanceof File) {
         apiData.append('imagen', gameData.imagen);
       }
 
       if (modalType === 'create') {
         const newGame = await GameService.createGame(apiData, token);
-        setGames(prevGames => [...prevGames, {
-          ...newGame,
-          estado: newGame.active ? "Activo" : "Inactivo"
-        }]);
+        console.log('✅ Juego creado:', newGame);
+        
+        // Mapear el juego creado al formato del frontend
+        const mappedNewGame = {
+          id: newGame.id,
+          titulo: newGame.title,
+          descripcion: newGame.description,
+          precio: newGame.price,
+          imagen: newGame.imagePath,
+          requisitos_minimos: newGame.requisiteMinimum,
+          requisitos_recomendados: newGame.requisiteRecommended,
+          active: newGame.active,
+          highlighted: newGame.highlighted,
+          category: newGame.category,
+          // Mantener también los campos originales
+          title: newGame.title,
+          description: newGame.description,
+          price: newGame.price,
+          imagePath: newGame.imagePath,
+          requisiteMinimum: newGame.requisiteMinimum,
+          requisiteRecommended: newGame.requisiteRecommended
+        };
+        
+        setGames(prevGames => [...prevGames, mappedNewGame]);
         toast?.success('Juego creado exitosamente');
       } else if (modalType === 'edit' && selectedGame) {
         const updatedGame = await GameService.updateGame(selectedGame.id, apiData, token);
+        console.log('✅ Juego actualizado:', updatedGame);
+        
+        // Mapear el juego actualizado al formato del frontend
+        const mappedUpdatedGame = {
+          id: updatedGame.id,
+          titulo: updatedGame.title,
+          descripcion: updatedGame.description,
+          precio: updatedGame.price,
+          imagen: updatedGame.imagePath,
+          requisitos_minimos: updatedGame.requisiteMinimum,
+          requisitos_recomendados: updatedGame.requisiteRecommended,
+          active: updatedGame.active,
+          highlighted: updatedGame.highlighted,
+          category: updatedGame.category,
+          // Mantener también los campos originales
+          title: updatedGame.title,
+          description: updatedGame.description,
+          price: updatedGame.price,
+          imagePath: updatedGame.imagePath,
+          requisiteMinimum: updatedGame.requisiteMinimum,
+          requisiteRecommended: updatedGame.requisiteRecommended
+        };
+        
         setGames(prevGames =>
           prevGames.map(game =>
-            game.id === selectedGame.id
-              ? { ...game, ...updatedGame, estado: updatedGame.active ? "Activo" : "Inactivo" }
-              : game
+            game.id === selectedGame.id ? mappedUpdatedGame : game
           )
         );
         toast?.success('Juego actualizado exitosamente');
@@ -216,22 +366,28 @@ export default function GamesPage() {
 
   function cellImagenTitulo({ row }) {
     const game = row.original;
-    const imagePath = game.imagen ? `http://localhost:8085/images/${game.imagen}` : '/images/default-game.png';
+    // Usar tanto imagen como imagePath para compatibilidad
+    const imagePath = game.imagen || game.imagePath 
+      ? `http://localhost:8085/images/${game.imagen || game.imagePath}` 
+      : '/images/default-game.png';
 
     return (
       <div className="flex items-center gap-2">
         <img
           src={imagePath}
-          alt={game.titulo || 'Game Image'}
-          className="w-24 h-auto object-cover rounded"
+          alt={game.titulo || game.title || 'Game Image'}
+          className="w-24 h-16 object-cover rounded"
+          onError={(e) => {
+            e.target.src = '/images/default-game.png';
+          }}
         />
-        <span className="font-medium text-gray-800">{game.titulo}</span>
+        <span className="font-medium text-gray-800">{game.titulo || game.title}</span>
       </div>
     );
   }
 
   function cellPrecio({ row }) {
-    const precio = row.original.precio;
+    const precio = row.original.precio || row.original.price;
     return (
       <span className="font-semibold text-green-600">
         ${typeof precio === 'number' ? precio.toLocaleString('es-CO') : precio}
@@ -240,7 +396,7 @@ export default function GamesPage() {
   }
 
   function cellDescripcion({ row }) {
-    const descripcion = row.original.descripcion;
+    const descripcion = row.original.descripcion || row.original.description;
     return (
       <div className="max-w-xs">
         <p className="truncate" title={descripcion}>
@@ -357,6 +513,20 @@ export default function GamesPage() {
 
   // Configuration for modal fields
   const getModalFields = () => {
+    console.log('🔧 Generando campos del modal...');
+    console.log('🔧 Categorías para el select:', categories);
+    console.log('🔧 Cantidad de categorías:', categories.length);
+    
+    const categoryOptions = categories.map(cat => {
+      console.log('🏷️ Mapeando categoría:', cat);
+      return {
+        value: cat.id,
+        label: cat.name
+      };
+    });
+    
+    console.log('🔧 Opciones del select generadas:', categoryOptions);
+    
     return [
       {
         name: 'titulo',
@@ -393,10 +563,11 @@ export default function GamesPage() {
       {
         name: 'imagen',
         label: 'Imagen',
-        type: 'file', // <-- usa 'file', NO 'imagen'
+        type: 'file',
         required: false,
+        accept: 'image/*',
         placeholder: 'Seleccionar imagen',
-        helpText: 'Seleccione una imagen para el juego (opcional)'
+        helpText: 'Seleccione una imagen para el juego (JPG, PNG, GIF - máximo 5MB)'
       },
       {
         name: 'requisitos_minimos',
@@ -423,10 +594,7 @@ export default function GamesPage() {
         label: 'Categoría',
         type: 'select',
         required: true,
-        options: categories.map(cat => ({
-          value: cat.id,
-          label: cat.name
-        })),
+        options: categoryOptions,
         errorMessage: 'La categoría es requerida',
         helpText: 'Seleccione la categoría del juego'
       },
@@ -435,7 +603,8 @@ export default function GamesPage() {
         label: 'Juego activo',
         type: 'checkbox',
         required: false,
-        defaultValue: true
+        defaultValue: true,
+        helpText: 'Marque si el juego debe estar activo'
       }
     ];
   };
@@ -445,20 +614,23 @@ export default function GamesPage() {
     {
       name: 'titulo',
       label: 'Título',
-      type: 'text'
+      type: 'text',
+      getValue: (data) => data.titulo || data.title
     },
     {
       name: 'descripcion',
       label: 'Descripción',
       type: 'textarea',
       fullWidth: true,
-      maxDisplayLength: 200
+      maxDisplayLength: 200,
+      getValue: (data) => data.descripcion || data.description
     },
     {
       name: 'precio',
       label: 'Precio',
       type: 'currency',
-      currency: 'COP'
+      currency: 'COP',
+      getValue: (data) => data.precio || data.price
     },
     {
       name: 'categoria',
@@ -470,13 +642,15 @@ export default function GamesPage() {
       name: 'requisitos_minimos',
       label: 'Requisitos Mínimos',
       type: 'textarea',
-      maxDisplayLength: 150
+      maxDisplayLength: 150,
+      getValue: (data) => data.requisitos_minimos || data.requisiteMinimum
     },
     {
       name: 'requisitos_recomendados',
       label: 'Requisitos Recomendados',
       type: 'textarea',
-      maxDisplayLength: 150
+      maxDisplayLength: 150,
+      getValue: (data) => data.requisitos_recomendados || data.requisiteRecommended
     },
     {
       name: 'active',
@@ -495,53 +669,12 @@ export default function GamesPage() {
     {
       name: 'imagen',
       label: 'Imagen',
-      type: 'imagen',
-      required: false,
-      errorMessage: 'Seleccione una imagen válida',
-      helpText: 'Seleccione una imagen para el juego (JPG, PNG, GIF)'
+      type: 'image',
+      baseUrl: 'http://localhost:8085/images/',
+      defaultImage: '/images/default-game.png',
+      getValue: (data) => data.imagen || data.imagePath
     }
   ];
-
-  // Connection status component
-  const ConnectionStatus = () => {
-    const statusConfig = {
-      checking: {
-        color: 'bg-yellow-100 border-yellow-400 text-yellow-700',
-        text: 'Verificando conexión...'
-      },
-      connected: {
-        color: 'bg-green-100 border-green-400 text-green-700',
-        text: 'Conectado al servidor'
-      },
-      disconnected: {
-        color: 'bg-red-100 border-red-400 text-red-700',
-        text: 'Sin conexión al servidor'
-      },
-      error: {
-        color: 'bg-red-100 border-red-400 text-red-700',
-        text: 'Error de conexión'
-      }
-    };
-
-    const config = statusConfig[connectionStatus] || statusConfig.error;
-
-    return (
-      <div className={`${config.color} border px-4 py-3 rounded mb-4`}>
-        <div className="flex items-center justify-between">
-          <span>{config.text}</span>
-          {connectionStatus !== 'connected' && (
-            <button
-              onClick={loadGames}
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Conectando...' : 'Reconectar'}
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   // Game statistics
   const gameStats = {
@@ -562,7 +695,55 @@ export default function GamesPage() {
               <h1 className="text-xl lg:text-2xl font-bold custom_heading">
                 Lista de Juegos
               </h1>
+              <div className="flex gap-2">
+                <button
+                  onClick={loadGames}
+                  disabled={loading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Cargando...' : 'Actualizar'}
+                </button>
+                <button
+                  onClick={loadCategories}
+                  disabled={loading}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Cargando...' : 'Recargar Categorías'}
+                </button>
+                <button
+                  onClick={handleCreateGame}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
+                >
+                  Nuevo Juego
+                </button>
+              </div>
             </div>
+
+            {/* Connection Status */}
+            {connectionStatus !== 'connected' && (
+              <div className={`border px-4 py-3 rounded mb-4 ${
+                connectionStatus === 'checking' 
+                  ? 'bg-yellow-100 border-yellow-400 text-yellow-700'
+                  : 'bg-red-100 border-red-400 text-red-700'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <span>
+                    {connectionStatus === 'checking' 
+                      ? 'Verificando conexión...' 
+                      : 'Sin conexión al servidor'}
+                  </span>
+                  {connectionStatus !== 'checking' && (
+                    <button
+                      onClick={loadGames}
+                      disabled={loading}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? 'Conectando...' : 'Reconectar'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Loading state */}
             {loading && (
@@ -602,25 +783,42 @@ export default function GamesPage() {
 
             {/* Games table */}
             {!loading && !error && connectionStatus === 'connected' && (
-              <div className="overflow-x-auto rounded-lg shadow-lg">
-                <Table
-                  columns={columns}
-                  data={games}
-                  emptyMessage="No hay juegos disponibles"
-                  showAddButton={true}
-                  onAdd={handleCreateGame}
-                />
-              </div>
-            )}
+              <>
+                <div className="overflow-x-auto rounded-lg shadow-lg">
+                  <Table
+                    columns={columns}
+                    data={games}
+                    emptyMessage="No hay juegos disponibles"
+                    showAddButton={true}
+                    onAdd={handleCreateGame}
+                  />
+                </div>
 
-            {/* Additional information */}
-            {!loading && !error && games.length > 0 && (
-              <div className="mt-4 text-sm text-gray-300">
-                Total de juegos: {gameStats.total} |
-                Activos: {gameStats.active} |
-                Inactivos: {gameStats.inactive} |
-                Destacados: {gameStats.highlighted}
-              </div>
+                {/* Game statistics */}
+                {games.length > 0 && (
+                  <div className="mt-4 p-4 bg-gray-800 rounded-lg">
+                    <h3 className="text-lg font-semibold text-white mb-2">Estadísticas</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-400">{gameStats.total}</div>
+                        <div className="text-gray-300">Total</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-400">{gameStats.active}</div>
+                        <div className="text-gray-300">Activos</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-red-400">{gameStats.inactive}</div>
+                        <div className="text-gray-300">Inactivos</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-yellow-400">{gameStats.highlighted}</div>
+                        <div className="text-gray-300">Destacados</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </main>
@@ -636,6 +834,7 @@ export default function GamesPage() {
           title={modalType === 'create' ? 'Nuevo Juego' : 'Editar Juego'}
           fields={getModalFields()}
           initialData={selectedGame || {}}
+          isSubmitting={isSubmitting}
         />
       )}
       {showModal && modalType === 'view' && (
