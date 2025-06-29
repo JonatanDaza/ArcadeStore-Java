@@ -36,8 +36,8 @@ public class Exchange {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false) // FK column in the 'exchanges' table
-    private Product product;
+    @JoinColumn(name = "game_id", nullable = false) // FK column in the 'exchanges' table
+    private Game game;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

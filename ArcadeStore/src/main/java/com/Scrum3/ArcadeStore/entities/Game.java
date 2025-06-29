@@ -33,10 +33,6 @@ public class Game {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inventory_id", unique = true)
-    private Inventory inventory;
-
     @Column(name = "requisite_minimum", columnDefinition = "TEXT")
     private String requisiteMinimum;
 
