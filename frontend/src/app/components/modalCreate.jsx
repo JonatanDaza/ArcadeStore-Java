@@ -211,9 +211,10 @@ export default function CreateModal({
         case 'select':
           return (
             <select {...commonProps}>
-              <option value="">Seleccione una opción</option>
+              <option value="" className="text-white bg-[#23292e]">Seleccione una opción</option>
               {options.map((option) => (
                 <option
+                  className="text-white bg-[#23292e]"
                   key={option.value}
                   value={option.value}
                 >
@@ -363,7 +364,7 @@ export default function CreateModal({
                 disabled={isSubmitting || !isFormValid()}
                 className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Guardando...' : 'Crear'}
+                {isSubmitting ? 'Guardando...' : 'Guardar'}
               </button>
               <button
                 onClick={onClose}

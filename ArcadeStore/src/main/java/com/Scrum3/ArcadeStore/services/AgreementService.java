@@ -3,6 +3,8 @@ package com.Scrum3.ArcadeStore.services;
 import com.Scrum3.ArcadeStore.entities.Agreement;
 import  com.Scrum3.ArcadeStore.Repository.GameRepository;
 import com.Scrum3.ArcadeStore.Repository.AgreementRepository;
+import com.Scrum3.ArcadeStore.entities.Game;
+import jakarta.persistence.Id;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +17,9 @@ public class AgreementService<id> {
 
     @Autowired
     private AgreementRepository agreementRepository;
+    @Autowired
     private GameRepository gameRepository;
+
 
     public List<Agreement> getAllAgreements() {
         return agreementRepository.findAll();
@@ -44,9 +48,25 @@ public class AgreementService<id> {
         }
 
     }
+    public Game getGameById(Long gameId) {
+        return gameRepository.findById(gameId)
+                .orElseThrow(() -> new RuntimeException("Juego no encontrado"));
+    }
+    public boolean desactivarConvenioSINoTieneJuegoActivo(Long id) {
+        Agreement agreement = agreementRepository.findById(id).orElseThrow();
+        boolean tieneConveniosActivos = gameRepository.existsByAgreementIdAndActiveTrue(id);
+        if (!tieneConveniosActivos) {
+            agreement.setActive(false);
+            agreementRepository.save(agreement);
+            return true;
+        }
+        return false;
+    }
 
-    public boolean desactiveAgreement(Long id) {
-            return false;
+    public void activarConvenio(Long id) {
+        Agreement agreement = agreementRepository.findById(id).orElseThrow();
+        agreement.setActive(true);
+        agreementRepository.save(agreement);
     }
 }
 

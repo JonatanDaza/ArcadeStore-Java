@@ -54,7 +54,7 @@ public class Game {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "agreement_id")
     private Agreement agreement;
 
@@ -65,4 +65,5 @@ public class Game {
     public static boolean is_active(Object o) {
         return false;
     }
+
 }

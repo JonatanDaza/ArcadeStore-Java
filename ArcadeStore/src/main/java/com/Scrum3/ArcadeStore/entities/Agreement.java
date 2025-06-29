@@ -44,6 +44,8 @@ public class Agreement {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "agreement", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "agreement")
     private List<Game> games;
+
+    public List<Game> getGames() {return games;}
 }
