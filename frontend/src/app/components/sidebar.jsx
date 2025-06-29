@@ -47,7 +47,7 @@ export default function Sidebar() {
             match: (path) => path.startsWith("/dashboard/exchanges"),
         },
         {
-            href: "/dashboard/sold",
+            href: "/dashboard/sale",
             label: "Ventas",
             icon: <CurrencyDollarIcon className="h-5 w-5" />,
             match: (path) => path.startsWith("/dashboard/sold"),

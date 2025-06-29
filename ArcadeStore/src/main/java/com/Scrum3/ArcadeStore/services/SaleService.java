@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -52,4 +53,11 @@ public class SaleService {
 
         return false;
     }
+    public List<Sale> getSalesWithFilters(Map<String, Object> filters) {
+        // Implement logic to filter sales based on the provided filters
+        // This is a placeholder implementation; actual filtering logic will depend on the requirements
+        return saleRepository.findAll(); // Replace with actual filtering logic
+    }
+
+
 }

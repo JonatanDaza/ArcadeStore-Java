@@ -8,11 +8,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     try {
       const res = await fetch("http://localhost:8085/auth/login", {
@@ -80,13 +82,20 @@ export default function LoginPage() {
                 className="w-full px-4 py-2 rounded bg-[#444] text-white border border-[#555] focus:outline-none focus:ring-2 focus:ring-[#06174d]"
               />
             </div>
+            {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+            {success && <div className="text-green-500 text-sm text-center">{success}</div>}
+            <div className="text-center text-sm mt-2">
+              ¿Tienes una cuenta?{" "}
+              <a href="/register" className="text-[#61dafb] hover:underline">
+                Registrate aquí
+              </a>
+            </div>
             <button
               type="submit"
               className="w-full bg-black text-white py-2 rounded hover:bg-[#06174d] transition font-bold"
             >
               Iniciar sesión
             </button>
-            {error && <div className="text-red-500 text-sm text-center">{error}</div>}
           </form>
         </div>
       </main>

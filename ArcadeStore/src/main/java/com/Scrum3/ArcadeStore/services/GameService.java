@@ -71,7 +71,7 @@ public class GameService {
     private String saveImage(MultipartFile imagen) {
         try {
             String fileName = System.currentTimeMillis() + "_" + imagen.getOriginalFilename();
-            String uploadDir = "uploads/games/";
+            String uploadDir = "app/public/images";
             java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
             if (!java.nio.file.Files.exists(uploadPath)) {
                 java.nio.file.Files.createDirectories(uploadPath);
