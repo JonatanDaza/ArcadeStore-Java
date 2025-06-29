@@ -27,7 +27,7 @@ export async function checkConnection(token) {
     return { connected: false, authenticated: false, error: error.message || "Network Error" };
   }
 }
-
+//asa
 export async function getAllGames(token) {
   const res = await axios.get(`${GAMES_API_URL}/all`, getAuthHeaders(token));
   return res.data;
