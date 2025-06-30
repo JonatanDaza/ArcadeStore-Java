@@ -228,7 +228,6 @@ export default function DashboardPage() {
 
   // Datos para el gráfico de dona
   const donutData = [
-    { label: 'Activos', value: stats.active_games },
     { label: 'De Pago', value: stats.paid_games },
     { label: 'Gratuitos', value: stats.free_games }
   ];
@@ -336,7 +335,7 @@ export default function DashboardPage() {
                         ></div>
                         <span className="text-white">{item.label}</span>
                       </div>
-                      <span className="text-white font-medium">{item.value}</span>
+                      <span className="text-white font-bold">{item.value}</span>
                     </div>
                   ))}
                 </div>
