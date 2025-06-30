@@ -19,9 +19,9 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     List<Game> findByActiveTrueAndHighlightedTrue();
     List<Game> findByActiveTrueAndCategoryId(Long categoryId);
     List<Game> findByActiveTrueAndPrice(Double price);
-    List<Game> findByActiveTrueAndPriceGreaterThan(Double price); // NUEVO: Para juegos de pago
+    List<Game> findByActiveTrueAndPriceGreaterThan(Double price);
     List<Game> findTop6ByActiveTrueOrderByIdDesc();
-    
+
     // Métodos adicionales para administración
     List<Game> findByActive(boolean active);
     List<Game> findByHighlighted(boolean highlighted);

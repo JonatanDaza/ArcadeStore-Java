@@ -31,7 +31,7 @@ public class Game {
     
     @Column(nullable = false)
     private boolean active = true;
-    
+
     @Column(nullable = false)
     private boolean highlighted = false;
     

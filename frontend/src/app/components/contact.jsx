@@ -26,7 +26,7 @@ export default function Contact() {
   return (
     <div className="flex flex-col min-h-auto">
       <main className="flex-1 font-poppins text-white flex flex-col items-center justify-center">
-        <div className="border border-black rounded-lg shadow-lg p-4 w-lg max-w-lg bg-gradient-to-b from-[#06174d] via-[#06174d] to-[#06174d]">
+        <div className="border border-black rounded-lg shadow-lg p-4 w-lg max-w-lg bg-gradient-to-br from-gray-800 via-gray-950 to-gray-900">
           <h1 className="text-3xl font-bold p-1 text-center">Contáctenos</h1>
           {enviado ? (
             <div className="text-green-400 text-center mb-4">¡Mensaje enviado correctamente!</div>
@@ -82,7 +82,7 @@ export default function Contact() {
               </div>
               <button
                 type="submit"
-                className="w-full bg-black text-white py-2 rounded hover:bg-[#3a6aff] hover:text-black transition font-bold"
+                className="w-full p-3 hover:text-black font-bold inline-block bg-gray-800 hover:bg-[#3a6aff] text-white rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 Enviar mensaje
               </button>

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -166,17 +167,35 @@ public class GameController {
     public ResponseEntity<List<GameDTO>> getFeaturedGames() {
         try {
             System.out.println("🌟 Buscando juegos destacados...");
-            
+
             List<GameDTO> featuredGames = gameRepository.findByActiveTrueAndHighlightedTrue().stream()
                     .map(GameDTO::new)
                     .collect(Collectors.toList());
-            
+
             System.out.println("🌟 Juegos destacados encontrados: " + featuredGames.size());
             return new ResponseEntity<>(featuredGames, HttpStatus.OK);
         } catch (Exception e) {
             System.err.println("❌ Error in getFeaturedGames: " + e.getMessage());
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PatchMapping("/{id}/highlight")
+    public ResponseEntity<?> highlightGame(@PathVariable Long id, @RequestParam boolean highlighted) {
+        try {
+            Optional<Game> gameOptional = gameRepository.findById(id);
+            if (gameOptional.isEmpty()) {
+                return new ResponseEntity<>("Juego no encontrado", HttpStatus.NOT_FOUND);
+            }
+
+            Game game = gameOptional.get();
+            game.setHighlighted(highlighted);
+            gameRepository.save(game);
+
+            return new ResponseEntity<>("Juego actualizado exitosamente", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error al actualizar juego: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

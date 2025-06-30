@@ -12,7 +12,7 @@ import ShowModal from "@/components/modalShow";
 // Import the GameService
 import GameService from "app/services/api/games";
 import CategoryService from "app/services/api/categories";
-import AgreementService from "app/services/api/agreements"; // NUEVO: Importar servicio de convenios
+import AgreementService from "app/services/api/agreements";
 
 export default function GamesPage() {
   const [games, setGames] = useState([]);
