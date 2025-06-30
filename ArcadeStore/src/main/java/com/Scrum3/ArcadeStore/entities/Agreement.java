@@ -1,5 +1,6 @@
 package com.Scrum3.ArcadeStore.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "agreements") // Mapped to the 'agreements' table in your database
+@Table(name = "agreements")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,13 +28,13 @@ public class Agreement {
 
     private boolean active = true;
 
-    @Column(name = "details", length = 100, nullable = false) // Mapped to 'agreement_type'
+    @Column(name = "details", length = 100, nullable = false)
     private String details;
 
-    @Column(name = "start_date", nullable = false) // Mapped to 'start_date'
+    @Column(name = "start_date", nullable = false)
     private LocalDateTime startDate;
 
-    @Column(name = "end_date") // Mapped to 'end_date' (can be nullable in DB)
+    @Column(name = "end_date")
     private LocalDateTime endDate;
 
     @CreationTimestamp
@@ -44,6 +45,22 @@ public class Agreement {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "agreement", cascade = CascadeType.ALL)
+    // CORREGIDO: Usar JsonIgnoreProperties para evitar serialización circular
+    @OneToMany(mappedBy = "agreement", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"agreement", "category", "hibernateLazyInitializer", "handler"})
     private List<Game> games;
+
+    public List<Game> getGames() {
+        return games;
+    }
+    
+    @Override
+    public String toString() {
+        return "Agreement{" +
+                "id=" + id +
+                ", companyName='" + companyName + '\'' +
+                ", active=" + active +
+                ", details='" + details + '\'' +
+                '}';
+    }
 }

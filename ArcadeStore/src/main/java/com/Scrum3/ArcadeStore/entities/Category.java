@@ -1,56 +1,115 @@
-// Ubicación: src/main/java/com/Scrum3/ArcadeStore/entities/Category.java
-
 package com.Scrum3.ArcadeStore.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "categories") // Mapeado a la tabla 'categories' en tu base de datos
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Table(name = "categories")
 public class Category {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
-
-    @Column(name = "category_name", length = 45, nullable = false) // Mapeado a 'category_name'
+    
+    @Column(nullable = false, unique = true)
     private String name;
-
-    @Column(name = "description", columnDefinition = "TEXT") // Mapeado a 'description'
+    
+    @Column(length = 500)
     private String description;
-
-    // --- CAMBIO CLAVE AQUÍ ---
-    // Eliminamos 'columnDefinition = "TINYINT(1)"'.
-    // Hibernate ahora mapeará 'Boolean active' a 'BOOLEAN' en PostgreSQL automáticamente.
-    @Column(name = "is_active") // Mapeado a 'is_active' (ahora correctamente BOOLEAN en PostgreSQL)
-    private Boolean active; // Mantenlo como 'Boolean' si puede ser nulo, o 'boolean' si siempre es verdadero/falso
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    
+    @Column(nullable = false)
+    private boolean active = true;
+    
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
+    
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "category")
+    
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore // Evitar referencia circular completamente
     private List<Game> games;
-
+    
+    // Constructores
+    public Category() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public Category(String name, String description, boolean active) {
+        this();
+        this.name = name;
+        this.description = description;
+        this.active = active;
+    }
+    
+    // Getters y Setters
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+    
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    
+    public boolean isActive() {
+        return active;
+    }
+    
+    public void setActive(boolean active) {
+        this.active = active;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+    
     public List<Game> getGames() {
         return games;
     }
-
+    
+    public void setGames(List<Game> games) {
+        this.games = games;
+    }
+    
+    @Override
+    public String toString() {
+        return "Category{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", active=" + active +
+                '}';
+    }
 }
-

@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from "react";
 
 export default function GameFilters({ categorias = [], onFilter }) {
@@ -21,18 +23,11 @@ export default function GameFilters({ categorias = [], onFilter }) {
     setCategoria("");
     setMasDe("");
     setMenosDe("");
-    onFilter({ search: "", categoria: ""//, masDe: "", menosDe: "" 
-    });
-  };
-
-  const clearPrice = () => {
-    setMasDe("");
-    setMenosDe("");
-    // El useEffect ya aplicará el filtro automáticamente
+    onFilter({ search: "", categoria: "", masDe: "", menosDe: "" });
   };
 
   return (
-    <div className="w-[600px] bg-[#2b2b2b] text-white border-b border-[#333] rounded-lg p-3 flex flex-wrap gap-4 items-center justify-between shadow-lg mb-6">
+    <div className="w-full max-w-4xl mx-auto bg-[#2b2b2b] text-white border-b border-[#333] rounded-lg p-3 flex flex-wrap gap-4 items-center justify-between shadow-lg mb-6">
       {/* Barra de búsqueda */}
       <div className="flex flex-row items-center gap-2 flex-1 min-w-[200px]">
         <input
@@ -43,6 +38,7 @@ export default function GameFilters({ categorias = [], onFilter }) {
           onChange={e => setSearch(e.target.value)}
         />
       </div>
+      
       {/* Filtro por categoría */}
       <div className="flex flex-row items-center gap-2">
         <label className="text-[#ddd] whitespace-nowrap">Categoría:</label>
@@ -53,16 +49,19 @@ export default function GameFilters({ categorias = [], onFilter }) {
         >
           <option value="">Todas</option>
           {categorias.map(cat => (
-            <option key={cat.id} value={cat.id}>{cat.nombre_categoria}</option>
+            <option key={cat.id} value={cat.id}>
+              {cat.name || cat.nombre_categoria}
+            </option>
           ))}
         </select>
       </div>
+      
       {/* Filtro por precio */}
-      {/* <div className="flex flex-row items-center gap-2">
+      <div className="flex flex-row items-center gap-2">
         <label className="text-[#ddd] whitespace-nowrap">Más de:</label>
         <input
           type="number"
-          placeholder="Más de..."
+          placeholder="0"
           className="w-24 px-2 py-2 rounded bg-[#444] text-white border border-[#555]"
           value={masDe}
           onChange={e => setMasDe(e.target.value)}
@@ -70,12 +69,13 @@ export default function GameFilters({ categorias = [], onFilter }) {
         <label className="text-[#ddd] whitespace-nowrap">Menos de:</label>
         <input
           type="number"
-          placeholder="Menos de..."
+          placeholder="999999"
           className="w-24 px-2 py-2 rounded bg-[#444] text-white border border-[#555]"
           value={menosDe}
           onChange={e => setMenosDe(e.target.value)}
         />
-      </div> */}
+      </div>
+      
       {/* Botón limpiar */}
       {(search || categoria || masDe || menosDe) && (
         <button

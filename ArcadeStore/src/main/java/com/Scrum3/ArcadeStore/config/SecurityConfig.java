@@ -33,6 +33,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/games/public/**").permitAll() // Rutas públicas para la tienda
+                        .requestMatchers("/api/games/health").permitAll() // Health check público
+                        .requestMatchers("/images/**").permitAll() // Imágenes públicas
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
@@ -75,7 +78,7 @@ public class SecurityConfig {
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", configuration); // CORREGIDO: usar configuration en lugar de source
         return source;
     }
 

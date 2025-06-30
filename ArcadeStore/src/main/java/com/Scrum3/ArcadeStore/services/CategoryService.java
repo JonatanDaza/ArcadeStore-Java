@@ -1,8 +1,8 @@
 package com.Scrum3.ArcadeStore.services;
 
+import com.Scrum3.ArcadeStore.Repository.CategoryRepository;
 import com.Scrum3.ArcadeStore.Repository.GameRepository;
 import com.Scrum3.ArcadeStore.entities.Category;
-import com.Scrum3.ArcadeStore.Repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +14,7 @@ public class CategoryService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+    
     @Autowired
     private GameRepository gameRepository;
 
@@ -26,7 +27,6 @@ public class CategoryService {
     }
 
     public Category createCategory(Category category) {
-        // Aquí podrías añadir lógica de negocio adicional antes de guardar
         return categoryRepository.save(category);
     }
 
@@ -36,30 +36,40 @@ public class CategoryService {
             Category existingCategory = optionalCategory.get();
             existingCategory.setName(categoryDetails.getName());
             existingCategory.setDescription(categoryDetails.getDescription());
-            existingCategory.setActive(categoryDetails.getActive());
-            // createdAt no debería actualizarse, updatedAt lo hace automáticamente
+            existingCategory.setActive(categoryDetails.isActive()); // ✅ Cambiado de getActive() a isActive()
             return categoryRepository.save(existingCategory);
         } else {
-            return null; // O lanzar una excepción ResourceNotFoundException
+            return null;
         }
     }
 
     public boolean desactivarCategoriaSiNoTieneJuegosActivos(Long id) {
-        Category category = categoryRepository.findById(id).orElseThrow();
-        boolean tieneJuegosActivos = gameRepository.existsByCategoryIdAndActiveTrue(id);
-
-        if (!tieneJuegosActivos) {
-            category.setActive(false);
-            categoryRepository.save(category);
-            return true;
+        try {
+            Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
+            
+            // Verificar si la categoría tiene juegos activos
+            boolean tieneJuegosActivos = gameRepository.existsByCategoryIdAndActiveTrue(id);
+            
+            if (!tieneJuegosActivos) {
+                category.setActive(false);
+                categoryRepository.save(category);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            throw new RuntimeException("Error al desactivar categoría: " + e.getMessage(), e);
         }
-        return false;
     }
 
     public void activarCategoria(Long id) {
-        Category category = categoryRepository.findById(id).orElseThrow();
-        category.setActive(true);
-        categoryRepository.save(category);
+        try {
+            Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
+            category.setActive(true);
+            categoryRepository.save(category);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al activar categoría: " + e.getMessage(), e);
+        }
     }
-
 }

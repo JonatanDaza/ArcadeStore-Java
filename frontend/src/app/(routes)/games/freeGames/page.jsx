@@ -1,112 +1,188 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "react-hot-toast";
 import Header from "app/components/header";
 import Footer from "app/components/footer";
-import GamesGallery from "app/components/GamesGallery";
+import GameGrid from "app/components/GameGrid";
 import GameFilters from "app/components/GameFilters";
-// import PaginationGames from "@/components/paginationGames";
-
-// Simulación de datos (reemplaza por fetch real)
-const categorias = [
-  { id: 1, nombre_categoria: "Accion" },
-  { id: 2, nombre_categoria: "Aventura" },
-  { id: 3, nombre_categoria: "Estrategia" },
-];
-
-// Datos de juegos - solo juegos gratuitos (precio 0 o marcados como free-to-play)
-const juegosGratisData = [
-  {
-    id: 4,
-    titulo: "Fortnite",
-    descripcion: "Battle Royale gratuito con construcción",
-    image: "fornite.jpeg",
-    categoria: { nombre_categoria: "Accion" },
-    precio: 0, // Gratuito
-    esFreeToPlay: true,
-  },
-  // {
-  //   id: 2,
-  //   titulo: "League of Legends",
-  //   descripcion: "MOBA competitivo gratuito",
-  //   image: "lol.png",
-  //   categoria: { nombre_categoria: "Estrategia" },
-  //   precio: 0, // Gratuito
-  //   esFreeToPlay: true,
-  // },
-  // {
-  //   id: 3,
-  //   titulo: "Genshin Impact",
-  //   descripcion: "RPG de mundo abierto gratuito",
-  //   image: "genshin.png",
-  //   categoria: { nombre_categoria: "Aventura" },
-  //   precio: 0, // Gratuito
-  //   esFreeToPlay: true,
-  // },
-  // {
-  //   id: 4,
-  //   titulo: "Apex Legends",
-  //   descripcion: "Battle Royale gratuito con héroes",
-  //   image: "apex.png",
-  //   categoria: { nombre_categoria: "Accion" },
-  //   precio: 0, // Gratuito
-  //   esFreeToPlay: true,
-  // },
-  // {
-  //   id: 5,
-  //   titulo: "Valorant",
-  //   descripcion: "Shooter táctico competitivo gratuito",
-  //   image: "valorant.png",
-  //   categoria: { nombre_categoria: "Accion" },
-  //   precio: 0, // Gratuito
-  //   esFreeToPlay: true,
-  // },
-];
+import PublicGameService from "app/services/api/publicGames";
+import CategoryService from "app/services/api/categories";
 
 export default function FreeGamesPage() {
+  const [freeGames, setFreeGames] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filtros, setFiltros] = useState({
     search: "",
     categoria: "",
     masDe: "",
     menosDe: "",
   });
-  const [page, setPage] = useState(1);
-  const pageSize = 8;
 
-  // Filtrar solo juegos gratuitos y aplicar filtros adicionales
-  const juegosFiltrados = juegosGratisData.filter(juego => {
-    // Primero verificar que el juego sea gratuito
-    const esGratuito = juego.precio === 0 || juego.esFreeToPlay === true;
+  // Cargar juegos gratuitos del backend
+  const loadFreeGames = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log('🆓 Cargando juegos gratuitos...');
+
+      // Verificar conexión
+      const isConnected = await PublicGameService.checkConnection();
+      if (!isConnected) {
+        throw new Error('No se pudo conectar al servidor');
+      }
+
+      // Cargar juegos gratuitos
+      const freeGamesData = await PublicGameService.getFreeGames();
+      console.log('🆓 Juegos gratuitos recibidos:', freeGamesData);
+      
+      setFreeGames(freeGamesData || []);
+
+    } catch (err) {
+      setError(err.message || 'Error al cargar juegos gratuitos');
+      console.error('Error loading free games:', err);
+      setFreeGames([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Cargar categorías
+  const loadCategories = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        const categoriesData = await CategoryService.getAllCategories(token);
+        setCategorias(categoriesData || []);
+      } else {
+        setCategorias([
+          { id: 1, name: "Accion" },
+          { id: 2, name: "Aventura" },
+          { id: 3, name: "Estrategia" },
+        ]);
+      }
+    } catch (err) {
+      console.warn('No se pudieron cargar las categorías:', err);
+      setCategorias([
+        { id: 1, name: "Accion" },
+        { id: 2, name: "Aventura" },
+        { id: 3, name: "Estrategia" },
+      ]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadFreeGames();
+    loadCategories();
+  }, [loadFreeGames, loadCategories]);
+
+  // Agregar al carrito
+  const handleAddToCart = useCallback((game) => {
+    try {
+      const existingCart = JSON.parse(localStorage.getItem('shoppingCart') || '[]');
+      const existingItemIndex = existingCart.findIndex(item => item.id === game.id);
+      
+      if (existingItemIndex !== -1) {
+        existingCart[existingItemIndex].quantity += 1;
+      } else {
+        const cartItem = {
+          id: game.id,
+          title: game.title,
+          price: game.price,
+          image: game.imagePath,
+          category: game.category?.name,
+          quantity: 1
+        };
+        existingCart.push(cartItem);
+      }
+      
+      localStorage.setItem('shoppingCart', JSON.stringify(existingCart));
+      
+      if (game.price === 0) {
+        toast.success('¡Juego gratuito añadido a la biblioteca!');
+      } else {
+        toast.success('¡Juego agregado al carrito!');
+      }
+      
+    } catch (error) {
+      toast.error('Error al agregar al carrito');
+      console.error('Error adding to cart:', error);
+    }
+  }, []);
+
+  // Filtrar juegos gratuitos
+  const filteredGames = freeGames.filter(game => {
+    const matchSearch = !filtros.search || 
+      game.title?.toLowerCase().includes(filtros.search.toLowerCase()) ||
+      game.description?.toLowerCase().includes(filtros.search.toLowerCase());
     
-    if (!esGratuito) return false; // Si no es gratuito, excluirlo
+    const matchCategoria = !filtros.categoria || 
+      game.category?.id?.toString() === filtros.categoria.toString();
     
-    // Aplicar filtros adicionales solo a juegos gratuitos
-    const matchSearch = !filtros.search || juego.titulo.toLowerCase().includes(filtros.search.toLowerCase());
-    const categoriaSeleccionada = categorias.find(cat => String(cat.id) === String(filtros.categoria))?.nombre_categoria;
-    const matchCategoria = !filtros.categoria || juego.categoria?.nombre_categoria === categoriaSeleccionada;
-    
-    // Para juegos gratuitos, los filtros de precio no son tan relevantes, pero los mantenemos
-    const matchMasDe = !filtros.masDe || juego.precio >= Number(filtros.masDe);
-    const matchMenosDe = !filtros.menosDe || juego.precio <= Number(filtros.menosDe);
+    const matchMasDe = !filtros.masDe || game.price >= Number(filtros.masDe);
+    const matchMenosDe = !filtros.menosDe || game.price <= Number(filtros.menosDe);
     
     return matchSearch && matchCategoria && matchMasDe && matchMenosDe;
   });
 
+  console.log('🔍 Juegos gratuitos filtrados:', filteredGames);
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-1 font-poppins text-white flex flex-row bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-5 m-0">
-        <div className="flex-1 px-4">
-          <GameFilters categorias={categorias} onFilter={setFiltros} />
-          <GamesGallery juegos={juegosFiltrados} titulo="Juegos Gratuitos Disponibles" />
-          {juegosFiltrados.length === 0 && (
-            <div className="text-center text-gray-400 mt-8">
-              <p>No se encontraron juegos gratuitos con los filtros aplicados.</p>
+      <main className="flex-1 font-poppins text-white bg-gradient-to-b from-[#06174d] via-black to-[#06174d]">
+        
+        {/* Hero Section */}
+        <section className="py-12 px-4">
+          <div className="max-w-7xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              Juegos Gratuitos
+            </h1>
+            <p className="text-xl text-gray-300 mb-8">
+              Descubre increíbles juegos sin costo alguno
+            </p>
+          </div>
+        </section>
+
+        <div className="max-w-7xl mx-auto px-4 pb-12">
+          {/* Estado de conexión */}
+          {error && (
+            <div className="bg-red-900/20 border border-red-500 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-red-400 font-bold mb-2">Error de conexión</h3>
+                  <p className="text-gray-300 text-sm">{error}</p>
+                </div>
+                <button
+                  onClick={loadFreeGames}
+                  disabled={loading}
+                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                >
+                  {loading ? 'Cargando...' : 'Reintentar'}
+                </button>
+              </div>
             </div>
           )}
+
+          <GameFilters categorias={categorias} onFilter={setFiltros} />
+          
+          {/* Información de debug */}
+          <div className="mb-6 text-sm text-gray-400">
+            <p>Juegos gratuitos disponibles: {freeGames.length}</p>
+            <p>Mostrando: {filteredGames.length} juegos</p>
+          </div>
+          
+          <GameGrid
+            games={filteredGames}
+            onAddToCart={handleAddToCart}
+            loading={loading}
+            error={error}
+          />
         </div>
       </main>
-      {/* <PaginationGames/> */}
       <Footer />
     </div>
   );
