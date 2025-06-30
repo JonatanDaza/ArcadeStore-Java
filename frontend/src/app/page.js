@@ -7,6 +7,7 @@ import Footer from "./components/footer";
 import CarouselClientes from "./components/carouselClients";
 import GameCarousel from "./components/carouselGames";
 import RecentGames from "./components/recentGames";
+import Contact from "./components/caontact";
 
 const HomePage = () => {
   // Obtener el rol del usuario desde localStorage o estado global
@@ -193,6 +194,7 @@ const HomePage = () => {
             <CarouselClientes />
           </div>
         </section>
+        <Contact/>
       </main>
       <Footer />
     </div>

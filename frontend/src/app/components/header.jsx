@@ -132,10 +132,10 @@ export default function Header() {
               </li>
               <li>
                 <Link
-                  href="/contact"
+                  href="/library"
                   className="block py-2 px-2 xl:px-4 text-white text-center uppercase no-underline hover:text-yellow-400 transition text-sm xl:text-base whitespace-nowrap"
                 >
-                  Contáctenos
+                  Biblioteca
                 </Link>
               </li>
               {isAuthenticated && userRole && userRole.toLowerCase() === "admin" && (
