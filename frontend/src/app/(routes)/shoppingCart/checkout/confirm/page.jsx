@@ -1,44 +1,81 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Header from 'app/components/header';
 import Footer from 'app/components/footer';
+import SalesService from 'app/services/api/sales';
+import toast from 'react-hot-toast';
 
 export default function OrderConfirmationPage() {
     const [orderData, setOrderData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     useEffect(() => {
-        // Generar datos de la orden (en una app real, esto vendría del servidor)
-        const generateOrderData = () => {
-            const orderNumber = `ORD-${Date.now().toString().slice(-8)}`;
-            const estimatedDelivery = new Date();
-            estimatedDelivery.setDate(estimatedDelivery.getDate() + 3); // 3 días después
+        const orderId = searchParams.get('orderId');
+        
+        if (!orderId) {
+            toast.error("No se encontró un ID de orden para mostrar.");
+            router.push('/store');
+            return;
+        }
 
-            return {
-                orderNumber,
-                date: new Date().toLocaleDateString('es-CO'),
-                estimatedDelivery: estimatedDelivery.toLocaleDateString('es-CO'),
-                status: 'Confirmado',
-                email: 'usuario@ejemplo.com' // En una app real, esto vendría del formulario
-            };
+        const fetchOrderDetails = async () => {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                toast.error("Sesión no encontrada. Redirigiendo al login.");
+                router.push('/login');
+                return;
+            }
+
+            try {
+                const data = await SalesService.getSaleDetails(orderId, token);
+                if (data.success) {
+                    setOrderData(data);
+                } else {
+                    throw new Error(data.message || "No se pudieron cargar los detalles de la orden.");
+                }
+            } catch (err) {
+                setError(err.message || "Error al cargar los detalles de la orden.");
+                toast.error(err.message || "Error al cargar los detalles de la orden.");
+            } finally {
+                setLoading(false);
+            }
         };
 
-        setOrderData(generateOrderData());
-        setLoading(false);
-
-        // Opcional: limpiar cualquier dato restante del checkout
-        localStorage.removeItem('checkoutData');
-    }, []);
+        fetchOrderDetails();
+    }, [router, searchParams]);
 
     if (loading) {
         return (
             <div className="flex flex-col min-h-screen">
                 <Header />
                 <section className="flex-1 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white py-10 flex items-center justify-center">
-                    <div className="text-xl">Cargando confirmación...</div>
+                    <div className="text-xl animate-pulse">Cargando confirmación...</div>
+                </section>
+                <Footer />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col min-h-screen">
+                <Header />
+                <section className="flex-1 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white py-10 flex items-center justify-center">
+                    <div className="text-center bg-red-900/50 p-8 rounded-lg">
+                        <h2 className="text-2xl font-bold text-red-400 mb-4">Error al cargar la orden</h2>
+                        <p className="text-gray-300 mb-6">{error}</p>
+                        <button
+                            onClick={() => router.push('/store')}
+                            className="bg-[#3a6aff] hover:bg-[#2952ff] px-6 py-3 rounded-lg transition-colors font-semibold"
+                        >
+                            Volver a la Tienda
+                        </button>
+                    </div>
                 </section>
                 <Footer />
             </div>
@@ -76,24 +113,41 @@ export default function OrderConfirmationPage() {
                             <div className="space-y-3">
                                 <div className="flex justify-between">
                                     <span className="text-gray-300">Número de pedido:</span>
-                                    <span className="font-bold text-[#3a6aff]">{orderData.orderNumber}</span>
+                                    <span className="font-bold text-[#3a6aff]">{orderData?.orderNumber || 'N/A'}</span>
                                 </div>
                                 
                                 <div className="flex justify-between">
                                     <span className="text-gray-300">Fecha:</span>
-                                    <span className="font-semibold">{orderData.date}</span>
+                                    <span className="font-semibold">{orderData?.createdAt ? new Date(orderData.createdAt).toLocaleDateString('es-CO') : 'N/A'}</span>
                                 </div>
                                 
                                 <div className="flex justify-between">
                                     <span className="text-gray-300">Estado:</span>
-                                    <span className="font-semibold text-green-400">{orderData.status}</span>
+                                    <span className="font-semibold text-green-400">{orderData?.orderStatus || 'Confirmado'}</span>
                                 </div>
-                                
+
                                 <div className="flex justify-between">
-                                    <span className="text-gray-300">Entrega estimada:</span>
-                                    <span className="font-semibold">{orderData.estimatedDelivery}</span>
+                                    <span className="text-gray-300">Monto Total:</span>
+                                    <span className="font-semibold text-green-400">
+                                        ${(orderData?.totalAmount || 0).toLocaleString('es-CO')}
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-between">
+                                    <span className="text-gray-300">Método de Pago:</span>
+                                    <span className="font-semibold">{orderData?.paymentMethod || 'N/A'}</span>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Juegos Comprados */}
+                        <div className="bg-[#333] rounded-xl p-6 mb-8 text-left max-w-md mx-auto">
+                            <h3 className="text-xl font-bold text-white mb-4 text-center">Juegos Adquiridos</h3>
+                            <ul className="space-y-2">
+                                {orderData?.purchasedGames?.map(game => (
+                                    <li key={game.id} className="text-gray-300 text-center">{game.title || 'Nombre no disponible'}</li>
+                                ))}
+                            </ul>
                         </div>
 
                         {/* Información adicional */}
@@ -114,7 +168,7 @@ export default function OrderConfirmationPage() {
                         {/* Botones de acción */}
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <button
-                                onClick={() => router.push('/games')}
+                                onClick={() => router.push('/store')}
                                 className="bg-[#3a6aff] hover:bg-[#2952ff] px-8 py-3 rounded-lg transition-colors font-semibold text-lg"
                             >
                                 Seguir Comprando
@@ -129,7 +183,7 @@ export default function OrderConfirmationPage() {
                             
                             <button
                                 onClick={() => {
-                                    const orderInfo = `Pedido: ${orderData.orderNumber}\nFecha: ${orderData.date}\nEstado: ${orderData.status}`;
+                                    const orderInfo = `Pedido: ${orderData?.orderNumber}\nFecha: ${new Date(orderData?.createdAt).toLocaleDateString('es-CO')}\nEstado: ${orderData?.orderStatus}`;
                                     navigator.clipboard.writeText(orderInfo);
                                     alert('Información del pedido copiada al portapapeles');
                                 }}

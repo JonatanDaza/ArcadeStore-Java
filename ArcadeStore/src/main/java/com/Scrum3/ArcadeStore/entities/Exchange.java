@@ -1,8 +1,7 @@
 package com.Scrum3.ArcadeStore.entities;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -13,8 +12,7 @@ import java.math.BigDecimal; // Import BigDecimal
 
 @Entity
 @Table(name = "exchanges") // Mapped to the 'exchanges' table in your database
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Exchange {
@@ -47,4 +45,3 @@ public class Exchange {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }
-

@@ -4,96 +4,95 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from 'app/components/header';
 import Footer from 'app/components/footer';
+import toast from "react-hot-toast";
+import CheckoutService from "app/services/api/checkout";
+import PublicGameService from 'app/services/api/publicGames';
 
 export default function ShoppingCartPage() {
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
-    // Cargar items del carrito desde localStorage
+    // Cargar items del carrito desde localStorage al iniciar
+    const [imageErrors, setImageErrors] = useState({});
     useEffect(() => {
         const savedCart = localStorage.getItem('shoppingCart');
         if (savedCart) {
-            // Filtrar duplicados basándose en el ID
             const items = JSON.parse(savedCart);
             const uniqueItems = items.filter((item, index, self) =>
                 index === self.findIndex(i => i.id === item.id)
             );
             setCartItems(uniqueItems);
-            // Actualizar localStorage con items únicos
             localStorage.setItem('shoppingCart', JSON.stringify(uniqueItems));
         }
         setLoading(false);
     }, []);
 
-    // Función para eliminar un item del carrito
+    const handleImageError = (itemId) => {
+        setImageErrors(prev => ({ ...prev, [itemId]: true }));
+    };
+
     const removeItem = (itemId) => {
         const updatedCart = cartItems.filter(item => item.id !== itemId);
         setCartItems(updatedCart);
         localStorage.setItem('shoppingCart', JSON.stringify(updatedCart));
     };
 
-    // Función para limpiar todo el carrito
     const clearCart = () => {
         setCartItems([]);
         localStorage.removeItem('shoppingCart');
     };
 
-    // Separar juegos gratuitos de los pagos
     const freeGames = cartItems.filter(item => item.price === 0);
     const paidGames = cartItems.filter(item => item.price > 0);
 
-    // Calcular el total solo de juegos pagos
     const calculateTotal = () => {
-        return paidGames.reduce((total, item) => total + (item.price * item.quantity), 0);
+        return paidGames.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
     };
 
-    // Función para "descargar" juegos gratuitos
-    const handleDownloadFreeGames = () => {
+    // --- LÓGICA PARA "OBTENER" JUEGOS GRATUITOS ---
+    const handleDownloadFreeGames = async () => {
         if (freeGames.length === 0) return;
 
-        // Simular descarga/activación de juegos gratuitos
-        const gameNames = freeGames.map(game => game.title).join(', ');
+        const toastId = toast.loading('Procesando juegos gratuitos...');
+        try {
+            const token = localStorage.getItem("authToken");
+            if (!token) {
+                toast.error("Debes iniciar sesión para obtener juegos.", { id: toastId });
+                router.push('/login');
+                return;
+            }
 
-        // Aquí podrías agregar los juegos a la biblioteca del usuario
-        // Por ejemplo, guardar en localStorage como juegos adquiridos
-        const existingLibrary = JSON.parse(localStorage.getItem('userLibrary') || '[]');
-        const newGames = freeGames.filter(game =>
-            !existingLibrary.some(libGame => libGame.id === game.id)
-        );
+            // Prepara los datos para enviar al backend
+            const checkoutData = {
+                gameIds: freeGames.map(game => game.id),
+                paymentMethod: 'Gratuito'
+            };
 
-        if (newGames.length > 0) {
-            const updatedLibrary = [...existingLibrary, ...newGames.map(game => ({
-                ...game,
-                downloadedAt: new Date().toISOString()
-            }))];
-            localStorage.setItem('userLibrary', JSON.stringify(updatedLibrary));
+            // Llama al servicio de checkout
+            await CheckoutService.processCheckout(checkoutData, token);
+
+            // Si tiene éxito, actualiza el carrito localmente
+            const updatedCart = cartItems.filter(item => item.price > 0);
+            setCartItems(updatedCart);
+            localStorage.setItem('shoppingCart', JSON.stringify(updatedCart));
+
+            toast.success('¡Juegos gratuitos añadidos a tu biblioteca!', { id: toastId });
+
+        } catch (error) {
+            console.error("Error al procesar juegos gratuitos:", error);
+            toast.error(error.response?.data?.message || "Error al obtener los juegos gratuitos.", { id: toastId });
         }
-
-        // Remover juegos gratuitos del carrito
-        const updatedCart = cartItems.filter(item => item.price > 0);
-        setCartItems(updatedCart);
-        localStorage.setItem('shoppingCart', JSON.stringify(updatedCart));
-
-        alert(`¡Juegos descargados exitosamente!\n${gameNames}\n\nYa están disponibles en tu biblioteca.`);
     };
 
-    // Función para proceder al checkout solo con juegos pagos
-    const handleCheckout = () => {
-        if (paidGames.length === 0) return;
-
-        // Guardar solo los juegos pagos para el checkout
-        const checkoutData = {
-            items: paidGames,
-            total: calculateTotal(),
-            timestamp: new Date().toISOString()
-        };
-
-        // Guardar datos del checkout en localStorage para pasarlos a la página de pago
-        localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
-
-        // Redirigir a la página de checkout/pago
-        router.push('/shoppingCart/checkout');
+    // --- LÓGICA PARA "COMPRAR" JUEGOS DE PAGO ---
+    const handleCheckout = async () => {
+        if (paidGames.length > 0) {
+            // Redirige a la página de pago. El carrito se mantiene en localStorage.
+            router.push('shoppingCart/checkout');
+        } else {
+            toast.error("No hay juegos de pago en tu carrito.");
+        }
     };
 
     if (loading) {
@@ -208,10 +207,10 @@ export default function ShoppingCartPage() {
                                                             </span>
                                                         )}
                                                         <p className="text-2xl font-bold text-[#3a6aff]">
-                                                            ${item.price.toLocaleString("es-CO")}
+                                                            ${(item.price || 0).toLocaleString("es-CO")}
                                                         </p>
                                                         <p className="text-sm text-gray-400">
-                                                            Cantidad: {item.quantity}
+                                                            Cantidad: {item.quantity || 1}
                                                         </p>
                                                     </div>
 
@@ -261,9 +260,9 @@ export default function ShoppingCartPage() {
                                             <div className="space-y-2 mb-4">
                                                 {paidGames.map((item) => (
                                                     <div key={item.id} className="flex justify-between text-sm">
-                                                        <span className="truncate mr-2">{item.title} x{item.quantity}</span>
+                                                        <span className="truncate mr-2">{item.title} x{item.quantity || 1}</span>
                                                         <span className="font-semibold">
-                                                            ${(item.price * item.quantity).toLocaleString("es-CO")}
+                                                            ${((item.price || 0) * (item.quantity || 1)).toLocaleString("es-CO")}
                                                         </span>
                                                     </div>
                                                 ))}
@@ -288,12 +287,14 @@ export default function ShoppingCartPage() {
                                     )}
 
                                     {/* Botón para limpiar carrito */}
-                                    <button
-                                        onClick={clearCart}
-                                        className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg transition-colors text-sm"
-                                    >
-                                        Limpiar Carrito
-                                    </button>
+                                    {cartItems.length > 0 && (
+                                        <button
+                                            onClick={clearCart}
+                                            className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg transition-colors text-sm"
+                                        >
+                                            Limpiar Carrito
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -2,7 +2,7 @@
 
 import GameCard from './GameCard';
 
-export default function GameGrid({ games, onAddToCart, loading = false, error = null }) {
+export default function GameGrid({ games, onAddToCart, ownedGameIds = new Set(), loading = false, error = null }) {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -37,11 +37,11 @@ export default function GameGrid({ games, onAddToCart, loading = false, error = 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {games.map((game) => (
-        <GameCard
-          key={game.id}
-          game={game}
+        <GameCard 
+          key={game.id} 
+          game={game} 
           onAddToCart={onAddToCart}
-        />
+          isOwned={ownedGameIds.has(game.id)} />
       ))}
     </div>
   );

@@ -2,10 +2,12 @@ package com.Scrum3.ArcadeStore.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Data
 @Table(name = "categories")
 public class Category {
     
@@ -43,73 +45,5 @@ public class Category {
         this.name = name;
         this.description = description;
         this.active = active;
-    }
-    
-    // Getters y Setters
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
-    public String getName() {
-        return name;
-    }
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-    
-    public String getDescription() {
-        return description;
-    }
-    
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    
-    public boolean isActive() {
-        return active;
-    }
-    
-    public void setActive(boolean active) {
-        this.active = active;
-        this.updatedAt = LocalDateTime.now();
-    }
-    
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-    
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-    
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-    
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-    
-    public List<Game> getGames() {
-        return games;
-    }
-    
-    public void setGames(List<Game> games) {
-        this.games = games;
-    }
-    
-    @Override
-    public String toString() {
-        return "Category{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", active=" + active +
-                '}';
     }
 }

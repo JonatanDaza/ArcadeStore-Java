@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Data;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -14,8 +16,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "agreements")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Agreement {
@@ -49,18 +50,4 @@ public class Agreement {
     @OneToMany(mappedBy = "agreement", fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"agreement", "category", "hibernateLazyInitializer", "handler"})
     private List<Game> games;
-
-    public List<Game> getGames() {
-        return games;
-    }
-    
-    @Override
-    public String toString() {
-        return "Agreement{" +
-                "id=" + id +
-                ", companyName='" + companyName + '\'' +
-                ", active=" + active +
-                ", details='" + details + '\'' +
-                '}';
-    }
 }
