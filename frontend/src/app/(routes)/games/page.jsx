@@ -13,7 +13,6 @@ import LibraryService from 'app/services/api/library';
 export default function StorePage() {
   const router = useRouter();
   const [games, setGames] = useState([]);
-  const [featuredGames, setFeaturedGames] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,12 +48,6 @@ export default function StorePage() {
       const paidGames = await PublicGameService.getPaidGames();
       console.log('💰 Juegos de pago recibidos:', paidGames);
       setGames(paidGames || []);
-
-      // Cargar juegos destacados (pueden incluir gratuitos)
-      console.log('🌟 Cargando juegos destacados...');
-      const featured = await PublicGameService.getFeaturedGames();
-      console.log('🌟 Juegos destacados recibidos:', featured);
-      setFeaturedGames(featured || []);
 
     } catch (err) {
       setConnectionStatus('error');
@@ -94,16 +87,16 @@ export default function StorePage() {
 
   useEffect(() => {
     const fetchLibrary = async () => {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            try {
-                const libraryData = await LibraryService.getUserLibrary(token);
-                const ids = new Set(libraryData.map(game => game.id));
-                setOwnedGameIds(ids);
-            } catch (error) {
-                console.warn("No se pudo cargar la biblioteca del usuario", error);
-            }
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        try {
+          const libraryData = await LibraryService.getUserLibrary(token);
+          const ids = new Set(libraryData.map(game => game.id));
+          setOwnedGameIds(ids);
+        } catch (error) {
+          console.warn("No se pudo cargar la biblioteca del usuario", error);
         }
+      }
     };
     fetchLibrary();
   }, []);
@@ -254,22 +247,9 @@ export default function StorePage() {
           </div>
         </section>
 
-        {/* Featured Games */}
-        {featuredGames.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 mb-12">
-            <h2 className="text-3xl font-bold mb-6 text-[#3a6aff]">Juegos Destacados</h2>
-            <GameGrid
-              games={featuredGames}
-              onAddToCart={handleAddToCart}
-              ownedGameIds={ownedGameIds}
-              loading={loading && featuredGames.length === 0}
-              error={error && featuredGames.length === 0 ? error : null}
-            />
-          </section>
-        )}
-
         {/* Paid Games */}
         <section className="max-w-7xl mx-auto px-4 pb-12">
+          <h2 className="text-3xl font-bold mb-6 text-[#3a6aff]">Juegos</h2>
           <GameGrid
             games={filteredGames}
             onAddToCart={handleAddToCart}

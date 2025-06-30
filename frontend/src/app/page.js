@@ -8,7 +8,9 @@ import CarouselClientes from "./components/carouselClients";
 import GameCarousel from "./components/carouselGames";
 import RecentGames from "./components/recentGames";
 import Contact from "./components/contact";
-import PublicGameService from "app/services/api/publicGames"; 
+import PublicGameService from "app/services/api/publicGames";
+import { AnimatePresence } from "framer-motion";
+import { FaCommentDots  } from "react-icons/fa";
 
 const HomePage = () => {
   // Obtener el rol del usuario desde localStorage o estado global
@@ -19,7 +21,8 @@ const HomePage = () => {
   const [userId, setUserId] = useState(null);
   const [featuredGames, setFeaturedGames] = useState([]);
   const [recentGames, setRecentGames] = useState([]);
-  
+  const [showModal, setShowModal] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
@@ -156,8 +159,8 @@ const HomePage = () => {
               y disfrutar de los mejores juegos a precios increíbles!
             </p>
           </div>
-          <br/>
-          <br/>
+          <br />
+          <br />
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-2xl font-bold mb-4">
               NUESTROS CLIENTES ESTAN FELICES...
@@ -169,14 +172,31 @@ const HomePage = () => {
               oportunidad para ampliar tu colección y disfrutar de grandes
               aventuras.
             </p>
-          <br/>
+            <br />
             {/* Carousel de clientes */}
             <CarouselClientes />
           </div>
         </section>
-        <Contact/>
       </main>
       <Footer />
+
+      {/* Botón flotante */}
+      <div className="fixed bottom-6 right-6 flex flex-col items-end z-50 space-y-2">
+        <AnimatePresence>
+          {showModal && (
+            <Contact onClose={() => setShowModal(false)} />
+          )}
+        </AnimatePresence>
+
+        {/* Botón flotante */}
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-black border border-gray-700 hover:bg-gray-700 px-5 py-3 rounded-full shadow-xl font-bold text-lg transition-all duration-300"
+        >
+          <FaCommentDots className="h-6 w-6 text-white" />
+        </button>
+      </div>
+
     </div>
   );
 };

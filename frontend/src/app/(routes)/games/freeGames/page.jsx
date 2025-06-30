@@ -12,7 +12,6 @@ import CategoryService from "app/services/api/categories";
 export default function FreeGamesPage() {
   const router = useRouter();
   const [freeGames, setFreeGames] = useState([]);
-  const [featuredGames, setFeaturedGames] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,12 +44,6 @@ export default function FreeGamesPage() {
       const freeGamesData = await PublicGameService.getFreeGames();
       console.log('🆓 Juegos gratuitos recibidos:', freeGamesData);
       setFreeGames(freeGamesData || []);
-
-      // Cargar juegos destacados (pueden incluir gratuitos)
-      console.log('🌟 Cargando juegos destacados...');
-      const featured = await PublicGameService.getFeaturedGames();
-      console.log('🌟 Juegos destacados recibidos:', featured);
-      setFeaturedGames(featured || []);
 
     } catch (err) {
       setConnectionStatus('error');
@@ -206,21 +199,9 @@ export default function FreeGamesPage() {
           </div>
         </section>
 
-        {/* Featured Games */}
-        {featuredGames.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 mb-12">
-            <h2 className="text-3xl font-bold mb-6 text-[#3a6aff]">Juegos Destacados</h2>
-            <GameGrid
-              games={featuredGames}
-              onAddToCart={handleAddToCart}
-              loading={loading && featuredGames.length === 0}
-              error={error && featuredGames.length === 0 ? error : null}
-            />
-          </section>
-        )}
-
         {/* Paid Games */}
         <section className="max-w-7xl mx-auto px-4 pb-12">
+          <h2 className="text-3xl font-bold mb-6 text-[#3a6aff]">Juegos</h2>
           <GameGrid
             games={filteredGames}
             onAddToCart={handleAddToCart}

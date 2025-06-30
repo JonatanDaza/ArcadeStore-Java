@@ -30,7 +30,7 @@ export default function GameCard({ game, onAddToCart, isOwned }) {
         <img
           src={imageError ? '/images/default-game.png' : PublicGameService.getImageUrl(game.imagePath)}
           alt={game.title}
-          className="w-full h-48 object-cover"
+          className="w-full h-[400px] object-cover"
           onError={handleImageError}
         />
         {game.highlighted && (
@@ -64,9 +64,9 @@ export default function GameCard({ game, onAddToCart, isOwned }) {
         <div className="flex items-center justify-between">
           <span className="text-2xl font-bold text-[#3a6aff]">
             {game.price === 0 ? 'Gratis' : `$${game.price.toLocaleString('es-CO')}`}
-          </span>
-          
-          <div className="flex gap-2">
+          </span>          
+        </div>
+          <div className="flex space-x-2 mt-4 gap-2">
             {isOwned ? (
               <button
                 onClick={(e) => { e.stopPropagation(); router.push('/library'); }}
@@ -91,7 +91,6 @@ export default function GameCard({ game, onAddToCart, isOwned }) {
               </>
             )}
           </div>
-        </div>
       </div>
     </div>
   );
