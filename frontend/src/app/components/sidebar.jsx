@@ -61,7 +61,7 @@ export default function Sidebar() {
     ];
 
     return (
-        <aside className="w-55 min-w-55 max-w-55 bg-black text-white px-1 py-4 h-auto shadow-xl flex flex-col">
+        <aside className="w-55 min-w-55 max-w-55 bg-black text-white px-1 py-4 h-auto shadow-xl flex flex-col border-r border-gray-900">
             <div className="flex flex-col items-center gap-1 mb-6">
                 <span
                     className="flex flex-col items-center gap-1 text-[20px] font-bold text-white px-0 py-2 rounded-lg"

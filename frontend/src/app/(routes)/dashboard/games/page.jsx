@@ -33,38 +33,38 @@ export default function GamesPage() {
     try {
       setCategoriesLoading(true);
       console.log('🔄 Iniciando carga de categorías...');
-      
+
       const token = localStorage.getItem("authToken");
       console.log('🔑 Token encontrado:', token ? 'Sí' : 'No');
-      
+
       if (!token) {
         console.warn('⚠️ No hay token de autenticación');
         toast.error('No hay token de autenticación. Por favor, inicia sesión.');
         setCategories([]);
         return;
       }
-      
+
       // Verificar conexión primero
       console.log('📡 Verificando conexión con categorías...');
       const isConnected = await CategoryService.checkConnection(token);
       console.log('📡 Conexión con categorías:', isConnected ? 'OK' : 'FALLO');
-      
+
       if (!isConnected) {
         throw new Error('No se pudo conectar al servicio de categorías');
       }
 
       console.log('📦 Obteniendo categorías...');
       const categoriesData = await CategoryService.getAllCategories(token);
-      
+
       console.log('📦 Datos de categorías recibidos:', categoriesData);
       console.log('📦 Tipo de datos:', typeof categoriesData);
       console.log('📦 Es array:', Array.isArray(categoriesData));
       console.log('📦 Longitud:', categoriesData?.length);
-      
+
       if (Array.isArray(categoriesData)) {
         setCategories(categoriesData);
         console.log('✅ Categorías establecidas correctamente:', categoriesData.length, 'categorías');
-        
+
         // Log detallado de cada categoría
         categoriesData.forEach((cat, index) => {
           console.log(`📂 Categoría ${index + 1}:`, {
@@ -96,21 +96,21 @@ export default function GamesPage() {
     try {
       setAgreementsLoading(true);
       console.log('🔄 Iniciando carga de convenios...');
-      
+
       const token = localStorage.getItem("authToken");
       console.log('🔑 Token encontrado:', token ? 'Sí' : 'No');
-      
+
       if (!token) {
         console.warn('⚠️ No hay token de autenticación para convenios');
         setAgreements([]);
         return;
       }
-      
+
       // Verificar conexión primero
       console.log('📡 Verificando conexión con convenios...');
       const isConnected = await AgreementService.checkConnection(token);
       console.log('📡 Conexión con convenios:', isConnected ? 'OK' : 'FALLO');
-      
+
       if (!isConnected) {
         console.warn('⚠️ No se pudo conectar al servicio de convenios');
         setAgreements([]);
@@ -119,18 +119,18 @@ export default function GamesPage() {
 
       console.log('📦 Obteniendo convenios...');
       const agreementsData = await AgreementService.getAllAgreements(token);
-      
+
       console.log('📦 Datos de convenios recibidos:', agreementsData);
       console.log('📦 Tipo de datos:', typeof agreementsData);
       console.log('📦 Es array:', Array.isArray(agreementsData));
       console.log('📦 Longitud:', agreementsData?.length);
-      
+
       if (Array.isArray(agreementsData)) {
         // Filtrar solo convenios activos
         const activeAgreements = agreementsData.filter(agreement => agreement.active);
         setAgreements(activeAgreements);
         console.log('✅ Convenios establecidos correctamente:', activeAgreements.length, 'convenios activos');
-        
+
         // Log detallado de cada convenio
         activeAgreements.forEach((agreement, index) => {
           console.log(`🤝 Convenio ${index + 1}:`, {
@@ -178,7 +178,7 @@ export default function GamesPage() {
       try {
         console.log('🔍 Verificando GameService:', GameService);
         console.log('🔍 Métodos disponibles:', Object.getOwnPropertyNames(GameService));
-        
+
         if (typeof GameService.checkConnection === 'function') {
           isConnected = await GameService.checkConnection(token);
         } else {
@@ -203,7 +203,7 @@ export default function GamesPage() {
       // Load games, categories and agreements
       const gamesData = await GameService.getAllGames(token);
       console.log('🎮 Datos de juegos recibidos del backend:', gamesData);
-      
+
       // Mapear los datos del backend (inglés) al formato esperado por el frontend (español)
       const mappedGames = Array.isArray(gamesData) ? gamesData.map(game => ({
         id: game.id,
@@ -326,7 +326,7 @@ export default function GamesPage() {
       category: game.category,
       agreement: game.agreement // NUEVO: Incluir convenio completo
     };
-    
+
     console.log('✏️ Juego preparado para edición:', gameForEdit);
     setSelectedGame(gameForEdit);
     setModalType('edit');
@@ -342,13 +342,13 @@ export default function GamesPage() {
     console.log('🤝 Cantidad de convenios:', agreements.length);
     console.log('📂 Estado de carga de categorías:', categoriesLoading);
     console.log('🤝 Estado de carga de convenios:', agreementsLoading);
-    
+
     // Verificar si las categorías están cargando
     if (categoriesLoading) {
       toast.info('Cargando categorías, por favor espera...');
       return;
     }
-    
+
     // Si no hay categorías, intentar cargarlas primero
     if (categories.length === 0) {
       console.log('⚠️ No hay categorías, intentando cargar...');
@@ -368,7 +368,7 @@ export default function GamesPage() {
       });
       return;
     }
-    
+
     // Si hay categorías, abrir el modal directamente
     console.log('✅ Abriendo modal de creación...');
     setSelectedGame(null);
@@ -376,7 +376,7 @@ export default function GamesPage() {
     setShowModal(true);
   }, [categories, categoriesLoading, loadCategories, agreements, agreementsLoading]);
 
-  // Function to close modal
+  // Función para cerrar modal
   const handleCloseModal = useCallback(() => {
     setShowModal(false);
     setSelectedGame(null);
@@ -400,7 +400,7 @@ export default function GamesPage() {
       apiData.append('requisitos_minimos', gameData.requisitos_minimos || '');
       apiData.append('requisitos_recomendados', gameData.requisitos_recomendados || '');
       apiData.append('categoryId', gameData.categoryId?.toString() || '');
-      
+
       // NUEVO: Agregar convenio - CORREGIDO
       if (gameData.agreementId && gameData.agreementId !== '' && gameData.agreementId !== 'null') {
         apiData.append('agreementId', gameData.agreementId.toString());
@@ -408,9 +408,9 @@ export default function GamesPage() {
       } else {
         console.log('🤝 No se agregó convenio (opcional)');
       }
-      
+
       apiData.append('active', gameData.active?.toString() || 'true');
-      
+
       if (gameData.imagen instanceof File) {
         apiData.append('imagen', gameData.imagen);
       }
@@ -424,7 +424,7 @@ export default function GamesPage() {
       if (modalType === 'create') {
         const newGame = await GameService.createGame(apiData, token);
         console.log('✅ Juego creado:', newGame);
-        
+
         // Mapear el juego creado al formato del frontend
         const mappedNewGame = {
           id: newGame.id,
@@ -446,13 +446,13 @@ export default function GamesPage() {
           requisiteMinimum: newGame.requisiteMinimum,
           requisiteRecommended: newGame.requisiteRecommended
         };
-        
+
         setGames(prevGames => [...prevGames, mappedNewGame]);
         toast?.success('Juego creado exitosamente');
       } else if (modalType === 'edit' && selectedGame) {
         const updatedGame = await GameService.updateGame(selectedGame.id, apiData, token);
         console.log('✅ Juego actualizado:', updatedGame);
-        
+
         // Mapear el juego actualizado al formato del frontend
         const mappedUpdatedGame = {
           id: updatedGame.id,
@@ -474,7 +474,7 @@ export default function GamesPage() {
           requisiteMinimum: updatedGame.requisiteMinimum,
           requisiteRecommended: updatedGame.requisiteRecommended
         };
-        
+
         setGames(prevGames =>
           prevGames.map(game =>
             game.id === selectedGame.id ? mappedUpdatedGame : game
@@ -502,8 +502,8 @@ export default function GamesPage() {
   function cellImagenTitulo({ row }) {
     const game = row.original;
     // Usar tanto imagen como imagePath para compatibilidad
-    const imagePath = game.imagen || game.imagePath 
-      ? `http://localhost:8085/images/${game.imagen || game.imagePath}` 
+    const imagePath = game.imagen || game.imagePath
+      ? `http://localhost:8085/images/${game.imagen || game.imagePath}`
       : '/images/default-game.png';
 
     return (
@@ -511,12 +511,12 @@ export default function GamesPage() {
         <img
           src={imagePath}
           alt={game.titulo || game.title || 'Game Image'}
-          className="w-24 h-16 object-cover rounded"
+          className="w-24 h-auto object-cover rounded"
           onError={(e) => {
             e.target.src = '/images/default-game.png';
           }}
         />
-        <span className="font-medium text-gray-800">{game.titulo || game.title}</span>
+        <span className="font-medium text-gray-200">{game.titulo || game.title}</span>
       </div>
     );
   }
@@ -636,7 +636,7 @@ export default function GamesPage() {
     console.log('🔧 Cantidad de categorías:', categories.length);
     console.log('🔧 Convenios para el select:', agreements);
     console.log('🔧 Cantidad de convenios:', agreements.length);
-    
+
     const categoryOptions = categories.map(cat => {
       console.log('🏷️ Mapeando categoría:', cat);
       return {
@@ -653,10 +653,10 @@ export default function GamesPage() {
         label: agreement.companyName
       };
     });
-    
+
     console.log('🔧 Opciones del select de categorías generadas:', categoryOptions);
     console.log('🔧 Opciones del select de convenios generadas:', agreementOptions);
-    
+
     return [
       {
         name: 'titulo',
@@ -726,7 +726,7 @@ export default function GamesPage() {
         required: true,
         options: categoryOptions,
         errorMessage: 'La categoría es requerida',
-        helpText: categories.length === 0 
+        helpText: categories.length === 0
           ? 'No hay categorías disponibles. Puedes crear el juego y asignar la categoría después.'
           : 'Seleccione la categoría del juego'
       },
@@ -736,7 +736,7 @@ export default function GamesPage() {
         type: 'select',
         required: false,
         options: agreementOptions,
-        helpText: agreements.length === 0 
+        helpText: agreements.length === 0
           ? 'No hay convenios disponibles. Este campo es opcional.'
           : 'Seleccione el convenio asociado al juego (opcional)'
       },
@@ -829,36 +829,18 @@ export default function GamesPage() {
               <h1 className="text-xl lg:text-2xl font-bold custom_heading">
                 Lista de Juegos
               </h1>
-              
-              {/* Botón de crear juego con estado de debug */}
-              <div className="flex items-center gap-4">
-                <div className="text-sm text-gray-400">
-                  Categorías: {categories.length} 
-                  {categoriesLoading && ' (cargando...)'}
-                  | Convenios: {agreements.length}
-                  {agreementsLoading && ' (cargando...)'}
-                </div>
-                <button
-                  onClick={handleCreateGame}
-                  disabled={categoriesLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {categoriesLoading ? 'Cargando...' : 'Crear Juego'}
-                </button>
-              </div>
             </div>
 
             {/* Connection Status */}
             {connectionStatus !== 'connected' && (
-              <div className={`border px-4 py-3 rounded mb-4 ${
-                connectionStatus === 'checking' 
-                  ? 'bg-yellow-100 border-yellow-400 text-yellow-700'
-                  : 'bg-red-100 border-red-400 text-red-700'
-              }`}>
+              <div className={`border px-4 py-3 rounded mb-4 ${connectionStatus === 'checking'
+                ? 'bg-yellow-100 border-yellow-400 text-yellow-700'
+                : 'bg-red-100 border-red-400 text-red-700'
+                }`}>
                 <div className="flex items-center justify-between">
                   <span>
-                    {connectionStatus === 'checking' 
-                      ? 'Verificando conexión...' 
+                    {connectionStatus === 'checking'
+                      ? 'Verificando conexión...'
                       : 'Sin conexión al servidor'}
                   </span>
                   {connectionStatus !== 'checking' && (
@@ -922,59 +904,47 @@ export default function GamesPage() {
                     onAdd={handleCreateGame}
                   />
                 </div>
-
                 {/* Game statistics */}
-                {games.length > 0 && (
-                  <div className="mt-4 p-4 bg-gray-800 rounded-lg">
-                    <h3 className="text-lg font-semibold text-white mb-2">Estadísticas</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-400">{gameStats.total}</div>
-                        <div className="text-gray-300">Total</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-400">{gameStats.active}</div>
-                        <div className="text-gray-300">Activos</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-red-400">{gameStats.inactive}</div>
-                        <div className="text-gray-300">Inactivos</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-yellow-400">{gameStats.highlighted}</div>
-                        <div className="text-gray-300">Destacados</div>
-                      </div>
-                    </div>
+                {!loading && !error && games.length > 0 && (
+                  <div className="mt-4 text-sm text-gray-300">
+                    juegos en total: {gameStats.total} |
+                    Activos: {gameStats.active} |
+                    Inactivos: {gameStats.inactive} |
+                    Destacados: {gameStats.highlighted}
                   </div>
                 )}
               </>
             )}
           </div>
         </main>
-      </div>
+      </div >
       <Footer />
 
       {/* Universal Modal */}
-      {showModal && (modalType === 'create' || modalType === 'edit') && (
-        <CreateModal
-          showModal={showModal}
-          onClose={handleCloseModal}
-          onSave={handleSaveGame}
-          title={modalType === 'create' ? 'Nuevo Juego' : 'Editar Juego'}
-          fields={getModalFields()}
-          initialData={selectedGame || {}}
-          isSubmitting={isSubmitting}
-        />
-      )}
-      {showModal && modalType === 'view' && (
-        <ShowModal
-          showModal={showModal}
-          onClose={handleCloseModal}
-          title="Detalles del Juego"
-          data={selectedGame}
-          fields={showFields}
-        />
-      )}
-    </div>
+      {
+        showModal && (modalType === 'create' || modalType === 'edit') && (
+          <CreateModal
+            showModal={showModal}
+            onClose={handleCloseModal}
+            onSave={handleSaveGame}
+            title={modalType === 'create' ? 'Nuevo Juego' : 'Editar Juego'}
+            fields={getModalFields()}
+            initialData={selectedGame || {}}
+            isSubmitting={isSubmitting}
+          />
+        )
+      }
+      {
+        showModal && modalType === 'view' && (
+          <ShowModal
+            showModal={showModal}
+            onClose={handleCloseModal}
+            title="Detalles del Juego"
+            data={selectedGame}
+            fields={showFields}
+          />
+        )
+      }
+    </div >
   );
 }

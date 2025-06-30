@@ -19,6 +19,8 @@ export default function StorePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('checking');
+  const [priceFilter, setPriceFilter] = useState("");
+  const [filterType, setFilterType] = useState("masDe"); // "masDe" or "menosDe"
 
   // Cargar juegos de pago (no gratuitos)
   const loadGames = useCallback(async () => {
@@ -84,17 +86,22 @@ export default function StorePage() {
   useEffect(() => {
     loadGames();
     loadCategories();
+    setPriceFilter("");
+    setFilterType("masDe");
   }, [loadGames, loadCategories]);
 
   // Filtrar juegos
   const filteredGames = games.filter(game => {
     const matchesSearch = game.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         game.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = selectedCategory === 'all' || 
-                           game.category?.id?.toString() === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
+      game.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesCategory = selectedCategory === 'all' ||
+      game.category?.id?.toString() === selectedCategory;
+
+    const priceFilterNum = priceFilter ? Number(priceFilter) : (filterType === "masDe" ? 0 : Infinity);
+    const matchesPrice = filterType === "masDe" ? game.price >= priceFilterNum : game.price <= priceFilterNum;
+
+    return matchesSearch && matchesCategory && matchesPrice;
   });
 
   // Agregar al carrito
@@ -102,7 +109,7 @@ export default function StorePage() {
     try {
       const existingCart = JSON.parse(localStorage.getItem('shoppingCart') || '[]');
       const existingItemIndex = existingCart.findIndex(item => item.id === game.id);
-      
+
       if (existingItemIndex !== -1) {
         existingCart[existingItemIndex].quantity += 1;
       } else {
@@ -116,15 +123,15 @@ export default function StorePage() {
         };
         existingCart.push(cartItem);
       }
-      
+
       localStorage.setItem('shoppingCart', JSON.stringify(existingCart));
-      
+
       if (game.price === 0) {
         toast.success('¡Juego gratuito añadido a la biblioteca!');
       } else {
         toast.success('¡Juego agregado al carrito!');
       }
-      
+
     } catch (error) {
       toast.error('Error al agregar al carrito');
       console.error('Error adding to cart:', error);
@@ -134,7 +141,7 @@ export default function StorePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      
+
       <main className="flex-1 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white">
         {/* Hero Section */}
         <section className="py-12 px-4">
@@ -151,15 +158,14 @@ export default function StorePage() {
         {/* Connection Status */}
         {connectionStatus !== 'connected' && (
           <div className="max-w-7xl mx-auto px-4 mb-6">
-            <div className={`border px-4 py-3 rounded-lg ${
-              connectionStatus === 'checking' 
-                ? 'bg-yellow-900/20 border-yellow-500 text-yellow-400'
-                : 'bg-red-900/20 border-red-500 text-red-400'
-            }`}>
+            <div className={`border px-4 py-3 rounded-lg ${connectionStatus === 'checking'
+              ? 'bg-yellow-900/20 border-yellow-500 text-yellow-400'
+              : 'bg-red-900/20 border-red-500 text-red-400'
+              }`}>
               <div className="flex items-center justify-between">
                 <span>
-                  {connectionStatus === 'checking' 
-                    ? 'Verificando conexión...' 
+                  {connectionStatus === 'checking'
+                    ? 'Verificando conexión...'
                     : 'Sin conexión al servidor'}
                 </span>
                 {connectionStatus !== 'checking' && (
@@ -177,7 +183,7 @@ export default function StorePage() {
         )}
 
         {/* Search and Filters */}
-        <section className="max-w-7xl mx-auto px-4 mb-8">
+        <section className="max-w-4xl mx-auto px-4 mb-8">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="flex-1 max-w-md">
               <input
@@ -188,7 +194,7 @@ export default function StorePage() {
                 className="w-full px-4 py-3 bg-[#222] text-white rounded-lg border border-gray-600 focus:border-[#3a6aff] focus:outline-none"
               />
             </div>
-            
+
             <div className="flex items-center gap-4">
               <label className="text-gray-300">Categoría:</label>
               <select
@@ -203,6 +209,27 @@ export default function StorePage() {
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex flex-row items-center gap-2">
+                <label className="text-gray-300">Precio:</label>
+                <select
+                  value={filterType}
+                  onChange={e => setFilterType(e.target.value)}
+                  className="px-2 py-3 bg-[#222] text-white rounded-lg border border-gray-600 focus:border-[#3a6aff] focus:outline-none"
+                >
+                  <option value="masDe">Más de</option>
+                  <option value="menosDe">Menos de</option>
+                </select>
+                :
+                <input
+                  type="number"
+                  placeholder={filterType === "masDe" ? "" : ""}
+                  className="w-24 px-4 py-[10] bg-[#222] text-white rounded-lg border border-gray-600 focus:border-[#3a6aff] focus:outline-none"
+                  value={priceFilter}
+                  onChange={e => setPriceFilter(e.target.value)}
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -222,19 +249,6 @@ export default function StorePage() {
 
         {/* Paid Games */}
         <section className="max-w-7xl mx-auto px-4 pb-12">
-          <h2 className="text-3xl font-bold mb-6">
-            {selectedCategory === 'all' ? 'Juegos de Pago' : 'Juegos de Pago Filtrados'}
-            <span className="text-lg font-normal text-gray-400 ml-2">
-              ({filteredGames.length} {filteredGames.length === 1 ? 'juego' : 'juegos'})
-            </span>
-          </h2>
-          
-          {/* Información de debug */}
-          <div className="mb-6 text-sm text-gray-400">
-            <p>Juegos de pago disponibles: {games.length}</p>
-            <p>Mostrando: {filteredGames.length} juegos</p>
-          </div>
-          
           <GameGrid
             games={filteredGames}
             onAddToCart={handleAddToCart}
@@ -243,7 +257,6 @@ export default function StorePage() {
           />
         </section>
       </main>
-      
       <Footer />
     </div>
   );

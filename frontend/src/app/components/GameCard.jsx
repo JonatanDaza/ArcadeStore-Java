@@ -59,7 +59,7 @@ export default function GameCard({ game, onAddToCart }) {
         <img
           src={imageUrl}
           alt={game.title}
-          className="w-full h-64 object-cover"
+          className="w-auto h-auto object-cover"
           onError={handleImageError}
         />
         {game.highlighted && (
