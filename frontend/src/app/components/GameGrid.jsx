@@ -41,8 +41,9 @@ export default function GameGrid({ games, onAddToCart, ownedGameIds = new Set(),
           key={game.id} 
           game={game} 
           onAddToCart={onAddToCart}
-          isOwned={ownedGameIds.has(game.id)} />
+          isOwned={ownedGameIds ? ownedGameIds.has(game.id) : false} />
       ))}
     </div>
   );
-}
+};
+

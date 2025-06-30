@@ -122,7 +122,7 @@ export default function StorePage() {
       const existingItemIndex = existingCart.findIndex(item => item.id === game.id);
 
       if (existingItemIndex !== -1) {
-        existingCart[existingItemIndex].quantity += 1;
+        // Si ya existe en el carrito, no hacer nada (limitar a una unidad)
       } else {
         const cartItem = {
           id: game.id,
@@ -131,19 +131,14 @@ export default function StorePage() {
           image: PublicGameService.getImageUrl(game.imagePath),
           category: game.category?.name,
           quantity: 1
-        };
+        }; 
         existingCart.push(cartItem);
       }
 
       localStorage.setItem('shoppingCart', JSON.stringify(existingCart));
 
-      if (game.price === 0) {
-        toast.success('¡Juego gratuito añadido a la biblioteca!');
-      } else {
-        toast.success('¡Juego agregado al carrito!');
-      }
-
       router.push('/shoppingCart');
+      toast.success(`¡${game.title} añadido al carrito!`); 
 
     } catch (error) {
       toast.error('Error al agregar al carrito');

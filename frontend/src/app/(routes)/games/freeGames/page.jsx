@@ -8,6 +8,7 @@ import Footer from "app/components/footer";
 import GameGrid from "app/components/GameGrid";
 import PublicGameService from "app/services/api/publicGames";
 import CategoryService from "app/services/api/categories";
+import LibraryService from "app/services/api/library";
 
 export default function FreeGamesPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function FreeGamesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('checking');
+  const [ownedGameIds, setOwnedGameIds] = useState(new Set());
 
   // Cargar juegos gratuitos del backend
   const loadFreeGames = useCallback(async () => {
@@ -79,6 +81,22 @@ export default function FreeGamesPage() {
     loadCategories();
   }, [loadFreeGames, loadCategories]);
 
+  useEffect(() => {
+  const fetchLibrary = async () => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      try {
+        const libraryData = await LibraryService.getUserLibrary(token);
+        const ids = new Set(libraryData.map(game => game.id));
+        setOwnedGameIds(ids);
+      } catch (error) {
+        console.warn("No se pudo cargar la biblioteca del usuario", error);
+      }
+    }
+  };
+  fetchLibrary();
+}, []);
+
   // Filtrar juegos gratuitos
   const filteredGames = freeGames.filter(game => {
     const matchesSearch = game.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,7 +118,7 @@ export default function FreeGamesPage() {
         existingCart[existingItemIndex].quantity += 1;
       } else {
         const cartItem = {
-          id: game.id,
+          id: game.id, 
           title: game.title,
           price: game.price,
           image: game.imagePath,
@@ -112,11 +130,9 @@ export default function FreeGamesPage() {
 
       localStorage.setItem('shoppingCart', JSON.stringify(existingCart));
 
-      if (game.price === 0) {
-        toast.success('¡Juego gratuito añadido a la biblioteca!');
-      } else {
-        toast.success('¡Juego agregado al carrito!');
-      }
+      router.push('/shoppingCart');
+      toast.success(`¡${game.title} añadido al carrito!`);
+
 
     } catch (error) {
       toast.error('Error al agregar al carrito');
@@ -206,6 +222,7 @@ export default function FreeGamesPage() {
             games={filteredGames}
             onAddToCart={handleAddToCart}
             loading={loading}
+            ownedGameIds={ownedGameIds}
             error={error}
           />
         </section>
