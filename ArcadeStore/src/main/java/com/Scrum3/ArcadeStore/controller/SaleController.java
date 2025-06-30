@@ -1,15 +1,20 @@
 package com.Scrum3.ArcadeStore.controller;
 
+import com.Scrum3.ArcadeStore.dto.SaleDTO;
+import com.Scrum3.ArcadeStore.dto.CheckoutRequestDTO;
 import com.Scrum3.ArcadeStore.entities.Sale;
 import com.Scrum3.ArcadeStore.entities.User;
 import com.Scrum3.ArcadeStore.entities.Game;
 import com.Scrum3.ArcadeStore.services.SaleService;
+import com.Scrum3.ArcadeStore.services.UserService;
 import com.Scrum3.ArcadeStore.services.PdfReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,10 +42,14 @@ public class SaleController {
     @Autowired
     private PdfReportService pdfReportService;
 
+    @Autowired
+    private UserService userService;
+
     @GetMapping("/all")
-    public ResponseEntity<List<Sale>> getAllSales() {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<SaleDTO>> getAllSales() {
         try{
-            List<Sale> sales = saleService.getAllSales();
+            List<SaleDTO> sales = saleService.getAllSalesAsDTO();
             return new ResponseEntity<>(sales, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -52,6 +61,25 @@ public class SaleController {
         return saleService.getSaleById(id)
                 .map(sale -> new ResponseEntity<>(sale, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @PostMapping("/checkout")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<?> processCheckout(@RequestBody CheckoutRequestDTO request) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = authentication.getName();
+
+            User user = userService.getUserByEmail(userEmail)
+                    .orElseThrow(() -> new RuntimeException("Usuario no autenticado encontrado: " + userEmail));
+
+            List<Sale> createdSales = saleService.createSalesFromCart(request, user);
+            return ResponseEntity.ok(createdSales);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al procesar la compra: " + e.getMessage());
+        }
     }
 
     // ============= ENDPOINTS PARA REPORTES PDF =============

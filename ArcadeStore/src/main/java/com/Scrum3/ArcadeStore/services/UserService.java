@@ -3,6 +3,7 @@ package com.Scrum3.ArcadeStore.services;
 import com.Scrum3.ArcadeStore.entities.User;
 import com.Scrum3.ArcadeStore.Repository.UserRepository;
 import com.Scrum3.ArcadeStore.Repository.RoleRepository;
+import com.Scrum3.ArcadeStore.entities.Game;
 import com.Scrum3.ArcadeStore.entities.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,10 @@ public class UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -56,8 +61,10 @@ public class UserService {
         return false;
     }
 
-    public boolean equals(Long id, String authEmail) {
-        return false;
+    public boolean isSameUser(Long id, String authEmail) {
+        return userRepository.findById(id)
+                .map(user -> user.getEmail().equals(authEmail))
+                .orElse(false);
     }
 
     public void asignarRolAUsuario(Long userId, String nombreRol) {
