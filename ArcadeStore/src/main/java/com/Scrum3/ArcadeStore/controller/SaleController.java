@@ -22,7 +22,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/sales")
-@CrossOrigin(origins = "*")
+@CrossOrigin(
+        origins = {"http://localhost:3000", "http://127.0.0.1:3000"},
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE, RequestMethod.OPTIONS},
+        allowedHeaders = {"Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"},
+        allowCredentials = "true",
+        maxAge = 3600
+)
 public class SaleController {
 
     @Autowired
@@ -33,8 +39,12 @@ public class SaleController {
 
     @GetMapping("/all")
     public ResponseEntity<List<Sale>> getAllSales() {
-        List<Sale> sales = saleService.getAllSales();
-        return new ResponseEntity<>(sales, HttpStatus.OK);
+        try{
+            List<Sale> sales = saleService.getAllSales();
+            return new ResponseEntity<>(sales, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/{id}")

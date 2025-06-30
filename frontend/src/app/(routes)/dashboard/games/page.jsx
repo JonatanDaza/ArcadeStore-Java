@@ -695,28 +695,6 @@ export default function GamesPage() {
               <h1 className="text-xl lg:text-2xl font-bold custom_heading">
                 Lista de Juegos
               </h1>
-              <div className="flex gap-2">
-                <button
-                  onClick={loadGames}
-                  disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Cargando...' : 'Actualizar'}
-                </button>
-                <button
-                  onClick={loadCategories}
-                  disabled={loading}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Cargando...' : 'Recargar Categorías'}
-                </button>
-                <button
-                  onClick={handleCreateGame}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
-                >
-                  Nuevo Juego
-                </button>
-              </div>
             </div>
 
             {/* Connection Status */}
