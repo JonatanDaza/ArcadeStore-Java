@@ -1,12 +1,10 @@
 package com.Scrum3.ArcadeStore.dto;
 
 import com.Scrum3.ArcadeStore.entities.User;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 public class UserDTO {
     private Long id;
@@ -21,4 +19,3 @@ public class UserDTO {
         }
     }
 }
-

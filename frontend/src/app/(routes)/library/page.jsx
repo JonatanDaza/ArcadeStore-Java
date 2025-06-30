@@ -1,35 +1,82 @@
-'use client';
+"use client";
 
-import Footer from "@/components/footer";
-import Header from "@/components/header";
-import { useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Header from 'app/components/header';
+import Footer from 'app/components/footer';
+import LibraryService from 'app/services/api/library';
+import GameCard from 'app/components/GameCard';
+import toast from 'react-hot-toast';
 
-export default function ContactPage() {
-    const [form, setForm] = useState({
-        nombre: "",
-        email: "",
-        asunto: "",
-        mensaje: "",
-    });
-    const [enviado, setEnviado] = useState(false);
+export default function LibraryPage() {
+    const [library, setLibrary] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const router = useRouter();
 
-    const handleChange = e => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
+    useEffect(() => {
+        const fetchLibrary = async () => {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                toast.error("Debes iniciar sesión para ver tu biblioteca.");
+                router.push('/login');
+                return;
+            }
 
-    const handleSubmit = e => {
-        e.preventDefault();
-        // Aquí puedes enviar el formulario a tu backend o servicio de correo
-        setEnviado(true);
-        // Limpia el formulario si quieres
-        // setForm({ nombre: "", email: "", asunto: "", mensaje: "" });
-    };
+            try {
+                const data = await LibraryService.getUserLibrary(token);
+                setLibrary(data || []);
+            } catch (err) {
+                const errorMessage = err.message || "Error al cargar tu biblioteca.";
+                setError(errorMessage);
+                toast.error(errorMessage);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchLibrary();
+    }, [router]);
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#06174d]">
+        <div className="flex flex-col min-h-screen">
             <Header />
-            <main className="flex-1 font-poppins text-white flex flex-col items-center justify-center bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-0">
-                <h1 className="text-3xl font-bold mb-6 text-center">Biblioteca</h1>
+            <main className="flex-1 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white">
+                <section className="py-12 px-4">
+                    <div className="max-w-7xl mx-auto text-center">
+                        <h1 className="text-4xl md:text-6xl font-bold mb-6 text-[#3a6aff]">Mi Biblioteca</h1>
+                        <p className="text-xl text-gray-300 mb-8">Todos tus juegos en un solo lugar.</p>
+                    </div>
+                </section>
+
+                <section className="max-w-7xl mx-auto px-4 pb-12">
+                    {loading ? (
+                        <div className="flex justify-center items-center py-12">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                        </div>
+                    ) : error ? (
+                        <div className="text-center py-12 bg-red-900/20 border border-red-500 rounded-lg">
+                            <p className="text-red-400">{error}</p>
+                        </div>
+                    ) : library.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {library.map(game => (
+                                <GameCard key={game.id} game={game} isOwned={true} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-20 bg-[#222] rounded-2xl">
+                            <h2 className="text-2xl font-bold mb-4">Tu biblioteca está vacía</h2>
+                            <p className="text-gray-400 mb-6">¡Explora la tienda para encontrar tu próximo juego favorito!</p>
+                            <button
+                                onClick={() => router.push('/games')}
+                                className="bg-[#3a6aff] hover:bg-[#2952ff] px-8 py-3 rounded-lg transition-colors font-semibold"
+                            >
+                                Ir a la Tienda
+                            </button>
+                        </div>
+                    )}
+                </section>
             </main>
             <Footer />
         </div>

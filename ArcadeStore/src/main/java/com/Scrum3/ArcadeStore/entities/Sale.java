@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Data;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -14,8 +16,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "sales")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Sale {
@@ -28,23 +29,27 @@ public class Sale {
     @Column(name = "sale_date", nullable = false)
     private LocalDateTime saleDate;
 
-    @Column(name = "total_amount", precision = 10, scale = 2, nullable = false) // Mapped to 'total_amount'
-    private BigDecimal totalAmount;
+    // ✅ MEJORADO: Precio unitario del juego al momento de la venta
+    @Column(name = "unit_price", precision = 10, scale = 2, nullable = false)
+    private BigDecimal unitPrice;
 
-    @Column(name = "payment_method", length = 50)
-    private String paymentMethod;
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity = 1;
+
+    // ✅ ELIMINADO: paymentMethod (se obtiene desde Payment a través de Order)
+    // ✅ ELIMINADO: totalAmount (se calcula con unitPrice * quantity)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
-    @JsonIgnore // Evita bucles infinitos al serializar a JSON
+    @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnore
     private Order order;
 
-    @ManyToOne
-    @JoinColumn(name = "game_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "game_id", nullable = false)
     private Game game;
 
     @CreationTimestamp
@@ -54,4 +59,17 @@ public class Sale {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // ✅ MÉTODO HELPER: Calcular total de esta venta
+    public BigDecimal getTotalAmount() {
+        return unitPrice.multiply(BigDecimal.valueOf(quantity));
+    }
+
+    // ✅ MÉTODO HELPER: Obtener método de pago desde la orden
+    public String getPaymentMethod() {
+        if (order != null && order.getPayment() != null) {
+            return order.getPayment().getPaymentMethod();
+        }
+        return "Desconocido";
+    }
 }

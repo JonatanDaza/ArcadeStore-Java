@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Data;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -13,8 +15,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "payments")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Payment {
@@ -25,11 +26,16 @@ public class Payment {
     @Column(name = "payment_method", length = 50, nullable = false)
     private String paymentMethod;
 
-    @Column(name = "total_payment", precision = 10, scale = 2, nullable = false) // Mapped to 'total_payment'
+    // ✅ CORREGIDO: precision (no praecision)
+    @Column(name = "total_payment", precision = 10, scale = 2, nullable = false)
     private BigDecimal amount;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
+    @Column(name = "payment_status", length = 20, nullable = false)
+    private String paymentStatus = "COMPLETED";
+
+    // ✅ MEJORADO: Relación uno a uno con Order
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)

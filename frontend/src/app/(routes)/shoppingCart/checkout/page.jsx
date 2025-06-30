@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowBigLeftDash } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import Header from 'app/components/header';
 import Footer from 'app/components/footer';
+import CheckoutService from 'app/services/api/checkout';
 
 export default function CheckoutPage() {
     const [cartItems, setCartItems] = useState([]);
@@ -280,41 +282,42 @@ export default function CheckoutPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (paidGames.length === 0) return;
         setProcessing(true);
-
         const toastId = toast.loading('Procesando tu compra...');
+
         try {
             const token = localStorage.getItem("authToken");
             if (!token) {
                 toast.error("Debes iniciar sesión para comprar.", { id: toastId });
                 router.push('/login');
-                setProcessing(false);
                 return;
             }
-
+ 
             const paymentMethodMap = {
                 'credit-card': 'Tarjeta de Crédito',
                 'debit-card': 'Tarjeta de Débito',
                 'pse': 'PSE',
                 'paypal': 'PayPal'
             };
-
+ 
             const checkoutPayload = {
                 gameIds: paidGames.map(game => game.id),
                 paymentMethod: paymentMethodMap[formData.paymentMethod] || 'Desconocido',
             };
+ 
+            const response = await CheckoutService.processCheckout(checkoutPayload, token);
 
-            await CheckoutService.processCheckout(checkoutPayload, token);
-
+            toast.success('¡Compra realizada con éxito!', { id: toastId });
+ 
+            // Limpiar solo los juegos pagos del carrito
             const remainingItems = cartItems.filter(item => item.price === 0);
             localStorage.setItem('shoppingCart', JSON.stringify(remainingItems));
 
-            toast.success('¡Compra realizada con éxito!', { id: toastId, duration: 4000 });
-            
-            router.push('/checkout/confirm');
+            // Redirigir a la página de confirmación con el ID de la orden
+            router.push(`/shoppingCart/checkout/confirm?orderId=${response.orderId}`);
+
         } catch (error) {
-            const errorMessage = error.response?.data?.message || error.message || 'Error procesando el pago. Inténtalo de nuevo.';
+            const errorMessage = error.response?.data?.message || error.message || 'Error procesando el pago.';
             toast.error(errorMessage, { id: toastId });
             console.error('Payment processing error:', error);
         } finally {

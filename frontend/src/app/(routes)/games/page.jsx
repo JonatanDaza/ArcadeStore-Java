@@ -8,6 +8,7 @@ import Footer from 'app/components/footer';
 import GameGrid from 'app/components/GameGrid';
 import PublicGameService from 'app/services/api/publicGames';
 import CategoryService from 'app/services/api/categories';
+import LibraryService from 'app/services/api/library';
 
 export default function StorePage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function StorePage() {
   const [connectionStatus, setConnectionStatus] = useState('checking');
   const [priceFilter, setPriceFilter] = useState("");
   const [filterType, setFilterType] = useState("masDe"); // "masDe" or "menosDe"
+  const [ownedGameIds, setOwnedGameIds] = useState(new Set());
 
   // Cargar juegos de pago (no gratuitos)
   const loadGames = useCallback(async () => {
@@ -90,6 +92,22 @@ export default function StorePage() {
     setFilterType("masDe");
   }, [loadGames, loadCategories]);
 
+  useEffect(() => {
+    const fetchLibrary = async () => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            try {
+                const libraryData = await LibraryService.getUserLibrary(token);
+                const ids = new Set(libraryData.map(game => game.id));
+                setOwnedGameIds(ids);
+            } catch (error) {
+                console.warn("No se pudo cargar la biblioteca del usuario", error);
+            }
+        }
+    };
+    fetchLibrary();
+  }, []);
+
   // Filtrar juegos
   const filteredGames = games.filter(game => {
     const matchesSearch = game.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,7 +135,7 @@ export default function StorePage() {
           id: game.id,
           title: game.title,
           price: game.price,
-          image: game.imagePath,
+          image: PublicGameService.getImageUrl(game.imagePath),
           category: game.category?.name,
           quantity: 1
         };
@@ -132,11 +150,13 @@ export default function StorePage() {
         toast.success('¡Juego agregado al carrito!');
       }
 
+      router.push('/shoppingCart');
+
     } catch (error) {
       toast.error('Error al agregar al carrito');
       console.error('Error adding to cart:', error);
     }
-  }, []);
+  }, [router]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -241,6 +261,7 @@ export default function StorePage() {
             <GameGrid
               games={featuredGames}
               onAddToCart={handleAddToCart}
+              ownedGameIds={ownedGameIds}
               loading={loading && featuredGames.length === 0}
               error={error && featuredGames.length === 0 ? error : null}
             />
@@ -252,6 +273,7 @@ export default function StorePage() {
           <GameGrid
             games={filteredGames}
             onAddToCart={handleAddToCart}
+            ownedGameIds={ownedGameIds}
             loading={loading}
             error={error}
           />
