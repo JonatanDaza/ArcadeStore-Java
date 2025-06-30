@@ -30,6 +30,218 @@ public class GameController {
     @Autowired
     private GameRepository gameRepository;
 
+    // Endpoint de diagnóstico temporal
+    @GetMapping("/public/debug")
+    public ResponseEntity<?> debugGames() {
+        try {
+            System.out.println("🔍 DEBUG: Iniciando diagnóstico...");
+            
+            // Verificar repositorio
+            if (gameRepository == null) {
+                System.err.println("❌ DEBUG: GameRepository es null!");
+                return ResponseEntity.ok("ERROR: GameRepository es null");
+            }
+            
+            // Contar todos los juegos
+            long totalGames = gameRepository.count();
+            System.out.println("🔍 DEBUG: Total de juegos en BD: " + totalGames);
+            
+            // Obtener todos los juegos
+            List<Game> allGames = gameRepository.findAll();
+            System.out.println("🔍 DEBUG: Juegos obtenidos: " + allGames.size());
+            
+            // Verificar juegos activos
+            List<Game> activeGames = gameRepository.findByActiveTrue();
+            System.out.println("🔍 DEBUG: Juegos activos: " + (activeGames != null ? activeGames.size() : "null"));
+            
+            // Información detallada
+            StringBuilder info = new StringBuilder();
+            info.append("Total juegos: ").append(totalGames).append("\n");
+            info.append("Juegos obtenidos: ").append(allGames.size()).append("\n");
+            info.append("Juegos activos: ").append(activeGames != null ? activeGames.size() : "null").append("\n");
+            
+            if (allGames.size() > 0) {
+                info.append("\nPrimer juego:\n");
+                Game firstGame = allGames.get(0);
+                info.append("- ID: ").append(firstGame.getId()).append("\n");
+                info.append("- Título: ").append(firstGame.getTitle()).append("\n");
+                info.append("- Activo: ").append(firstGame.isActive()).append("\n");
+                info.append("- Categoría: ").append(firstGame.getCategory() != null ? firstGame.getCategory().getName() : "null").append("\n");
+            }
+            
+            return ResponseEntity.ok(info.toString());
+            
+        } catch (Exception e) {
+            System.err.println("❌ DEBUG: Error en diagnóstico: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.ok("ERROR: " + e.getMessage() + "\nStack: " + e.getStackTrace()[0]);
+        }
+    }
+
+    // Endpoint para verificar conexión
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        System.out.println("💚 Health check solicitado");
+        return ResponseEntity.ok("API funcionando correctamente");
+    }
+
+    // ENDPOINTS PÚBLICOS PARA LA TIENDA (ORDEN IMPORTANTE - ESPECÍFICOS PRIMERO)
+    
+    @GetMapping("/public/active")
+    public ResponseEntity<List<GameDTO>> getActiveGamesForStore() {
+        try {
+            System.out.println("🎮 Iniciando getActiveGamesForStore...");
+            
+            // Verificar que el repositorio esté disponible
+            if (gameRepository == null) {
+                System.err.println("❌ GameRepository es null!");
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            
+            System.out.println("📦 Buscando juegos activos...");
+            List<Game> activeGames = gameRepository.findByActiveTrue();
+            System.out.println("📦 Juegos activos encontrados: " + (activeGames != null ? activeGames.size() : "null"));
+            
+            if (activeGames == null) {
+                System.err.println("❌ La consulta devolvió null");
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            
+            System.out.println("🔄 Convirtiendo a DTO...");
+            List<GameDTO> gameDTOs = activeGames.stream()
+                    .map(game -> {
+                        System.out.println("🎯 Procesando juego: " + game.getTitle());
+                        return new GameDTO(game);
+                    })
+                    .collect(Collectors.toList());
+            
+            System.out.println("✅ DTOs creados: " + gameDTOs.size());
+            return new ResponseEntity<>(gameDTOs, HttpStatus.OK);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error in getActiveGamesForStore: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/public/paid")
+    public ResponseEntity<List<GameDTO>> getPaidGames() {
+        try {
+            System.out.println("💰 Buscando juegos de pago...");
+            
+            List<GameDTO> paidGames = gameRepository.findByActiveTrueAndPriceGreaterThan(0.0).stream()
+                    .map(GameDTO::new)
+                    .collect(Collectors.toList());
+            
+            System.out.println("💰 Juegos de pago encontrados: " + paidGames.size());
+            return new ResponseEntity<>(paidGames, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("❌ Error in getPaidGames: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/public/free")
+    public ResponseEntity<List<GameDTO>> getFreeGames() {
+        try {
+            System.out.println("🆓 Buscando juegos gratuitos...");
+            
+            List<GameDTO> freeGames = gameRepository.findByActiveTrueAndPrice(0.0).stream()
+                    .map(GameDTO::new)
+                    .collect(Collectors.toList());
+            
+            System.out.println("🆓 Juegos gratuitos encontrados: " + freeGames.size());
+            return new ResponseEntity<>(freeGames, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("❌ Error in getFreeGames: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/public/featured")
+    public ResponseEntity<List<GameDTO>> getFeaturedGames() {
+        try {
+            System.out.println("🌟 Buscando juegos destacados...");
+            
+            List<GameDTO> featuredGames = gameRepository.findByActiveTrueAndHighlightedTrue().stream()
+                    .map(GameDTO::new)
+                    .collect(Collectors.toList());
+            
+            System.out.println("🌟 Juegos destacados encontrados: " + featuredGames.size());
+            return new ResponseEntity<>(featuredGames, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("❌ Error in getFeaturedGames: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/public/recent")
+    public ResponseEntity<List<GameDTO>> getRecentGames() {
+        try {
+            System.out.println("🕒 Buscando juegos recientes...");
+            
+            List<GameDTO> recentGames = gameRepository.findTop6ByActiveTrueOrderByIdDesc().stream()
+                    .map(GameDTO::new)
+                    .collect(Collectors.toList());
+            
+            System.out.println("🕒 Juegos recientes encontrados: " + recentGames.size());
+            return new ResponseEntity<>(recentGames, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("❌ Error in getRecentGames: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/public/category/{categoryId}")
+    public ResponseEntity<List<GameDTO>> getGamesByCategory(@PathVariable Long categoryId) {
+        try {
+            System.out.println("📂 Buscando juegos por categoría: " + categoryId);
+            
+            List<GameDTO> categoryGames = gameRepository.findByActiveTrueAndCategoryId(categoryId).stream()
+                    .map(GameDTO::new)
+                    .collect(Collectors.toList());
+            
+            System.out.println("📂 Juegos encontrados en categoría " + categoryId + ": " + categoryGames.size());
+            return new ResponseEntity<>(categoryGames, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("❌ Error in getGamesByCategory: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // IMPORTANTE: Este endpoint debe ir AL FINAL porque usa {id} como variable
+    @GetMapping("/public/{id}")
+    public ResponseEntity<GameDTO> getPublicGameById(@PathVariable Long id) {
+        try {
+            System.out.println("🎮 Buscando juego público con ID: " + id);
+            
+            return gameService.getGameById(id)
+                    .filter(game -> {
+                        System.out.println("🔍 Juego encontrado: " + game.getTitle() + ", activo: " + game.isActive());
+                        return game.isActive(); // Solo juegos activos
+                    })
+                    .map(game -> {
+                        System.out.println("✅ Devolviendo juego: " + game.getTitle());
+                        return new ResponseEntity<>(new GameDTO(game), HttpStatus.OK);
+                    })
+                    .orElseGet(() -> {
+                        System.out.println("❌ Juego no encontrado o inactivo");
+                        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                    });
+        } catch (Exception e) {
+            System.err.println("❌ Error in getPublicGameById: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Endpoints protegidos para administración
     @GetMapping("/all")
     public ResponseEntity<List<Game>> getAllGames() {
         try {
@@ -172,11 +384,5 @@ public class GameController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Error al cambiar estado: " + e.getMessage());
         }
-    }
-
-    // Endpoint para verificar conexión
-    @GetMapping("/health")
-    public ResponseEntity<String> healthCheck() {
-        return ResponseEntity.ok("API funcionando correctamente");
     }
 }
