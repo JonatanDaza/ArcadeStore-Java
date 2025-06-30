@@ -4,7 +4,7 @@ import Footer from "app/components/footer";
 import Table from "app/components/Table";
 import ActionButton from "app/components/ActionButton";
 import Sidebar from "app/components/sidebar";
-import SalesService from "app/services/api/sales";
+import SalesService, { getAllSales } from "app/services/api/sales";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
