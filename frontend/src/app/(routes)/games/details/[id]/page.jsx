@@ -1,11 +1,13 @@
 'use client';
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import Header from "app/components/header";
 import Footer from "app/components/footer";
 import PublicGameService from "app/services/api/publicGames";
+import LibraryService from "app/services/api/library";
+import { FaDownload, FaExchangeAlt } from 'react-icons/fa';
 
 export default function GameDetailsPage() {
   const params = useParams();
@@ -16,33 +18,39 @@ export default function GameDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
+  const [isOwned, setIsOwned] = useState(false);
+  const [installing, setInstalling] = useState(false);
+  
 
-  useEffect(() => {
-    if (gameId) {
-      loadGameDetails();
-    }
-  }, [gameId]);
+  const fetchGameDetails = useCallback(async () => {
+    if (!gameId) return;
 
-  const loadGameDetails = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('🎮 Cargando detalles del juego ID:', gameId);
       const gameData = await PublicGameService.getGameById(gameId);
-      console.log('🎮 Datos del juego recibidos:', gameData);
-      console.log('🔧 Requisitos mínimos del backend:', gameData.requisiteMinimum);
-      console.log('🔧 Requisitos recomendados del backend:', gameData.requisiteRecommended);
       setGame(gameData);
+
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        const libraryData = await LibraryService.getUserLibrary(token);
+        const ownedGameIds = new Set(libraryData.map(g => g.id.toString()));
+        setIsOwned(ownedGameIds.has(gameId.toString()));
+      }
     } catch (err) {
       setError(err.message || 'Error al cargar el juego');
-      console.error('Error loading game details:', err);
+      toast.error('Error al cargar el juego.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [gameId]);
 
-  const handleAddToCart = () => {
+  useEffect(() => {
+    fetchGameDetails();
+  }, [fetchGameDetails]);
+
+  const handleAddToCart = useCallback(() => {
     if (!game) return;
 
     try {
@@ -50,7 +58,7 @@ export default function GameDetailsPage() {
       const existingItemIndex = existingCart.findIndex(item => item.id === game.id);
       
       if (existingItemIndex !== -1) {
-        existingCart[existingItemIndex].quantity += 1;
+        toast.success(`¡${game.title} ya está en el carrito!`);
       } else {
         const cartItem = {
           id: game.id,
@@ -61,14 +69,8 @@ export default function GameDetailsPage() {
           quantity: 1
         };
         existingCart.push(cartItem);
-      }
-      
-      localStorage.setItem('shoppingCart', JSON.stringify(existingCart));
-      
-      if (game.price === 0) {
-        toast.success("¡Juego gratuito añadido a la biblioteca!");
-      } else {
-        toast.success("¡Juego agregado al carrito!");
+        localStorage.setItem('shoppingCart', JSON.stringify(existingCart));
+        toast.success(`¡${game.title} añadido al carrito!`);
       }
       
       // Redirigir al carrito
@@ -77,6 +79,23 @@ export default function GameDetailsPage() {
       toast.error('Error al agregar al carrito');
       console.error('Error adding to cart:', error);
     }
+    }, [game, router]);
+
+  const handleInstallClick = async () => {
+    setInstalling(true);
+    toast.loading('Iniciando instalación...', { id: 'install-toast' });
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      toast.success(`¡${game.title} instalado correctamente!`, { id: 'install-toast' });
+    } catch (error) {
+      toast.error(`Error al instalar ${game.title}`, { id: 'install-toast' });
+    } finally {
+      setInstalling(false);
+    }
+  };
+
+  const handleExchangeClick = () => {
+    toast.info('La función de intercambio estará disponible próximamente.');
   };
 
   const handleImageError = () => {
@@ -307,21 +326,37 @@ export default function GameDetailsPage() {
               {game.description || 'Sin descripción disponible'}
             </p>
             
-            <div className="flex items-center gap-6 mb-8">
-              <button
-                className={`px-6 py-3 rounded-lg transition-colors font-semibold text-base ${
-                  game.price === 0 
-                    ? "bg-green-600 hover:bg-green-700" 
-                    : "bg-[#3a6aff] hover:bg-[#2952ff]"
-                }`}
-                onClick={handleAddToCart}
-              >
-                {game.price === 0 ? "Obtener gratis" : "Agregar al carrito"}
-              </button>
-              <span className="text-2xl font-bold text-[#3a6aff]">
-                {game.price === 0 ? "" : `$${game.price.toLocaleString("es-CO")}`}
-              </span>
-            </div>
+            {isOwned ? (
+              <div className="flex items-center gap-4 mb-8">
+                <button
+                  onClick={handleInstallClick}
+                  disabled={installing}
+                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-colors font-semibold text-base w-full ${installing ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                >
+                  <FaDownload />
+                  {installing ? 'Instalando...' : 'Instalar'}
+                </button>
+                <button
+                  onClick={handleExchangeClick}
+                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-colors font-semibold text-base w-full bg-yellow-500 hover:bg-yellow-600 text-black"
+                >
+                  <FaExchangeAlt />
+                  Intercambiar
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-6 mb-8">
+                <button
+                  className={`px-6 py-3 rounded-lg transition-colors font-semibold text-base ${game.price === 0 ? "bg-green-600 hover:bg-green-700" : "bg-[#3a6aff] hover:bg-[#2952ff]"}`}
+                  onClick={handleAddToCart}
+                >
+                  {game.price === 0 ? "Obtener gratis" : "Agregar al carrito"}
+                </button>
+                <span className="text-2xl font-bold text-[#3a6aff]">
+                  {game.price === 0 ? "" : `$${game.price.toLocaleString("es-CO")}`}
+                </span>
+              </div>
+            )}
             
             {/* Requisitos del sistema - DATOS REALES DEL BACKEND */}
             {hasRequirements && (
