@@ -249,6 +249,8 @@ public class GameController {
             List<Game> games = gameService.getAllGames();
             return new ResponseEntity<>(games, HttpStatus.OK);
         } catch (Exception e) {
+            System.err.println("❌ Detailed Error in getAllGames: " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
