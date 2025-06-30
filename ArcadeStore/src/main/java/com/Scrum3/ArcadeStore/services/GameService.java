@@ -250,31 +250,82 @@ public class GameService {
                 .orElseThrow(() -> new RuntimeException("Convenio no encontrado con ID: " + agreementId));
     }
 
+    // CORREGIDO: Método para desactivar juegos - SIN RESTRICCIONES
     public boolean desactivarJuegoSINoTieneCategoriaActiva(Long id) {
         try {
+            System.out.println("🔄 Desactivando juego ID: " + id);
+            
             Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Juego no encontrado con ID: " + id));
             
-            boolean tieneJuegosActivos = gameRepository.existsByCategoryIdAndActiveTrue(game.getCategory().getId());
-            if (!tieneJuegosActivos) {
-                game.setActive(false);
-                gameRepository.save(game);
-                return true;
-            }
-            return false;
+            System.out.println("🎮 Juego encontrado: " + game.getTitle());
+            System.out.println("🏷️ Categoría del juego: " + (game.getCategory() != null ? game.getCategory().getName() : "null"));
+            System.out.println("🏷️ Categoría activa: " + (game.getCategory() != null ? game.getCategory().isActive() : "null"));
+            
+            // CORREGIDO: Los juegos se pueden desactivar SIN RESTRICCIONES
+            // La restricción es solo para ACTIVAR juegos, no para desactivarlos
+            System.out.println("✅ Desactivando juego sin restricciones");
+            game.setActive(false);
+            gameRepository.save(game);
+            System.out.println("✅ Juego desactivado exitosamente");
+            return true;
+            
         } catch (Exception e) {
+            System.err.println("❌ Error al desactivar juego: " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Error al desactivar juego: " + e.getMessage(), e);
         }
     }
 
+    // CORREGIDO: Método para activar juegos - CON RESTRICCIÓN DE CATEGORÍA ACTIVA
     public void activarJuego(Long id) {
         try {
+            System.out.println("🔄 Intentando activar juego ID: " + id);
+            
             Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Juego no encontrado con ID: " + id));
+            
+            System.out.println("🎮 Juego encontrado: " + game.getTitle());
+            System.out.println("🏷️ Categoría del juego: " + (game.getCategory() != null ? game.getCategory().getName() : "null"));
+            System.out.println("🏷️ Categoría activa: " + (game.getCategory() != null ? game.getCategory().isActive() : "null"));
+            
+            // RESTRICCIÓN: Solo se puede activar un juego si su categoría está activa
+            if (game.getCategory() != null && !game.getCategory().isActive()) {
+                System.out.println("❌ No se puede activar el juego porque su categoría está inactiva");
+                throw new RuntimeException("No se puede activar el juego porque su categoría está inactiva");
+            }
+            
+            System.out.println("✅ Se puede activar el juego porque su categoría está activa");
             game.setActive(true);
             gameRepository.save(game);
+            System.out.println("✅ Juego activado exitosamente");
+            
         } catch (Exception e) {
+            System.err.println("❌ Error al activar juego: " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Error al activar juego: " + e.getMessage(), e);
+        }
+    }
+
+    // NUEVO: Método para destacar/quitar destacado de un juego
+    public boolean highlightGame(Long id, boolean highlighted, String token) {
+        try {
+            System.out.println("🔄 " + (highlighted ? "Destacando" : "Quitando destacado de") + " juego ID: " + id);
+            
+            Game game = gameRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Juego no encontrado con ID: " + id));
+            
+            System.out.println("🎮 Juego encontrado: " + game.getTitle());
+            
+            game.setHighlighted(highlighted);
+            gameRepository.save(game);
+            
+            System.out.println("✅ Juego " + (highlighted ? "destacado" : "quitado de destacados") + " exitosamente");
+            return true;
+        } catch (Exception e) {
+            System.err.println("❌ Error al cambiar estado de destacado: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al cambiar estado de destacado: " + e.getMessage(), e);
         }
     }
 }

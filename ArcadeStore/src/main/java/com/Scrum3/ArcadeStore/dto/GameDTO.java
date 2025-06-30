@@ -13,7 +13,7 @@ public class GameDTO {
     private boolean active;
     private boolean highlighted;
     private CategoryDTO category;
-    private String agreement;
+    private AgreementDTO agreement; // CAMBIADO: Usar DTO en lugar de String
 
     // Constructor vacío (requerido por Jackson)
     public GameDTO() {}
@@ -30,14 +30,14 @@ public class GameDTO {
         this.active = game.isActive();
         this.highlighted = game.isHighlighted();
         
-        // Mapear categoría
+        // Mapear categoría de forma segura
         if (game.getCategory() != null) {
             this.category = new CategoryDTO(game.getCategory());
         }
         
-        // Mapear agreement si existe
+        // CORREGIDO: Mapear agreement de forma segura usando DTO
         if (game.getAgreement() != null) {
-            this.agreement = game.getAgreement().getCompanyName();
+            this.agreement = new AgreementDTO(game.getAgreement());
         }
     }
 
@@ -122,11 +122,11 @@ public class GameDTO {
         this.category = category;
     }
 
-    public String getAgreement() {
+    public AgreementDTO getAgreement() {
         return agreement;
     }
 
-    public void setAgreement(String agreement) {
+    public void setAgreement(AgreementDTO agreement) {
         this.agreement = agreement;
     }
 }
