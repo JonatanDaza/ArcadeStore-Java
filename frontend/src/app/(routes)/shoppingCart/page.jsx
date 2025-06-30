@@ -6,7 +6,6 @@ import Header from 'app/components/header';
 import Footer from 'app/components/footer';
 import toast from "react-hot-toast";
 import CheckoutService from "app/services/api/checkout";
-import PublicGameService from 'app/services/api/publicGames';
 
 export default function ShoppingCartPage() {
     const [cartItems, setCartItems] = useState([]);

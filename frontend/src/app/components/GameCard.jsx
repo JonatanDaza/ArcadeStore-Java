@@ -7,6 +7,7 @@ import PublicGameService from 'app/services/api/publicGames';
 export default function GameCard({ game, onAddToCart, isOwned }) {
   const router = useRouter();
   const [imageError, setImageError] = useState(false);
+  const [installing, setInstalling] = useState(false);
 
   const handleImageError = (e) => {
     e.target.onerror = null; // Prevents infinite loops if the fallback also fails
@@ -20,8 +21,20 @@ export default function GameCard({ game, onAddToCart, isOwned }) {
   };
 
   const handleAddToCartClick = (e) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     onAddToCart(game); // Call the function passed via props
+  };
+
+  const handleInstallClick = async (e) => {
+    e.stopPropagation();
+    setInstalling(true);
+    try {
+      // Simulate installation
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      toast.success(`¡${game.title} instalado!`);
+    } finally {
+      setInstalling(false);
+    }
   };
 
   return (
@@ -44,10 +57,10 @@ export default function GameCard({ game, onAddToCart, isOwned }) {
           </div>
         )}
       </div>
-      
+
       <div className="p-6">
         <div className="mb-3">
-          <h3 className="text-xl font-bold text-white mb-2 line-clamp-1" title={game.title}>
+          <h3 className="text-xl font-bold text-white mb-2 line-clamp-1" title={game.title} >
             {game.title}
           </h3>
           {game.category && (
@@ -56,24 +69,29 @@ export default function GameCard({ game, onAddToCart, isOwned }) {
             </span>
           )}
         </div>
-        
+
         <p className="text-gray-300 text-sm mb-4 line-clamp-2">
           {game.description || 'Sin descripción disponible'}
         </p>
-        
+
         <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold text-[#3a6aff]">
+          <span className="text-2xl font-bold text-[#3a6aff]" >
             {game.price === 0 ? 'Gratis' : `$${game.price.toLocaleString('es-CO')}`}
           </span>
           
           <div className="flex gap-2">
             {isOwned ? (
-              <button
-                onClick={(e) => { e.stopPropagation(); router.push('/library'); }}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-              >
-                En Biblioteca
-              </button>
+              <>
+                <button
+                  onClick={handleViewDetails}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                >
+                  Detalles
+                </button>
+                <button onClick={handleInstallClick} disabled={installing} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${installing ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white`}>
+                  {installing ? 'Instalando...' : 'Instalar'}
+                </button>
+              </>
             ) : (
               <>
                 <button
@@ -84,7 +102,7 @@ export default function GameCard({ game, onAddToCart, isOwned }) {
                 </button>
                 <button
                   onClick={handleAddToCartClick}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${game.price === 0 ? 'bg-green-600 hover:bg-green-700' : 'bg-[#3a6aff] hover:bg-[#2952ff]'} text-white`}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${game.price === 0 ? 'bg-green-600 hover:bg-green-700' : 'bg-[#3a6aff] hover:bg-[#2952ff]'} text-white`} 
                 >
                   {game.price === 0 ? 'Obtener' : 'Agregar'}
                 </button>
