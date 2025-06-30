@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import Header from "app/components/header";
@@ -12,10 +12,12 @@ import ShowModal from "@/components/modalShow";
 // Import the GameService
 import GameService from "app/services/api/games";
 import CategoryService from "app/services/api/categories";
+import AgreementService from "app/services/api/agreements"; // NUEVO: Importar servicio de convenios
 
 export default function GamesPage() {
   const [games, setGames] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [agreements, setAgreements] = useState([]); // NUEVO: Estado para convenios
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('checking');
@@ -23,14 +25,24 @@ export default function GamesPage() {
   const [modalType, setModalType] = useState('view');
   const [selectedGame, setSelectedGame] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [agreementsLoading, setAgreementsLoading] = useState(false); // NUEVO: Estado de carga para convenios
 
   // Load categories for the dropdown
   const loadCategories = useCallback(async () => {
     try {
+      setCategoriesLoading(true);
       console.log('🔄 Iniciando carga de categorías...');
       
       const token = localStorage.getItem("authToken");
       console.log('🔑 Token encontrado:', token ? 'Sí' : 'No');
+      
+      if (!token) {
+        console.warn('⚠️ No hay token de autenticación');
+        toast.error('No hay token de autenticación. Por favor, inicia sesión.');
+        setCategories([]);
+        return;
+      }
       
       // Verificar conexión primero
       console.log('📡 Verificando conexión con categorías...');
@@ -74,6 +86,75 @@ export default function GamesPage() {
       });
       setCategories([]);
       toast?.error(`Error al cargar categorías: ${err.message}`);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  }, []);
+
+  // NUEVO: Cargar convenios para el dropdown
+  const loadAgreements = useCallback(async () => {
+    try {
+      setAgreementsLoading(true);
+      console.log('🔄 Iniciando carga de convenios...');
+      
+      const token = localStorage.getItem("authToken");
+      console.log('🔑 Token encontrado:', token ? 'Sí' : 'No');
+      
+      if (!token) {
+        console.warn('⚠️ No hay token de autenticación para convenios');
+        setAgreements([]);
+        return;
+      }
+      
+      // Verificar conexión primero
+      console.log('📡 Verificando conexión con convenios...');
+      const isConnected = await AgreementService.checkConnection(token);
+      console.log('📡 Conexión con convenios:', isConnected ? 'OK' : 'FALLO');
+      
+      if (!isConnected) {
+        console.warn('⚠️ No se pudo conectar al servicio de convenios');
+        setAgreements([]);
+        return;
+      }
+
+      console.log('📦 Obteniendo convenios...');
+      const agreementsData = await AgreementService.getAllAgreements(token);
+      
+      console.log('📦 Datos de convenios recibidos:', agreementsData);
+      console.log('📦 Tipo de datos:', typeof agreementsData);
+      console.log('📦 Es array:', Array.isArray(agreementsData));
+      console.log('📦 Longitud:', agreementsData?.length);
+      
+      if (Array.isArray(agreementsData)) {
+        // Filtrar solo convenios activos
+        const activeAgreements = agreementsData.filter(agreement => agreement.active);
+        setAgreements(activeAgreements);
+        console.log('✅ Convenios establecidos correctamente:', activeAgreements.length, 'convenios activos');
+        
+        // Log detallado de cada convenio
+        activeAgreements.forEach((agreement, index) => {
+          console.log(`🤝 Convenio ${index + 1}:`, {
+            id: agreement.id,
+            companyName: agreement.companyName,
+            active: agreement.active
+          });
+        });
+      } else {
+        console.warn('⚠️ Los datos de convenios no son un array:', agreementsData);
+        setAgreements([]);
+      }
+    } catch (err) {
+      console.error('❌ Error loading agreements:', err);
+      console.error('❌ Error details:', {
+        message: err.message,
+        stack: err.stack,
+        response: err.response
+      });
+      setAgreements([]);
+      // No mostrar error toast para convenios ya que es opcional
+      console.warn('⚠️ Convenios no disponibles, continuando sin ellos');
+    } finally {
+      setAgreementsLoading(false);
     }
   }, []);
 
@@ -85,6 +166,12 @@ export default function GamesPage() {
       setError(null);
 
       const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        setError('No hay token de autenticación. Por favor, inicia sesión.');
+        setConnectionStatus('error');
+        return;
+      }
 
       // Check connection first - Usar try/catch para manejar el error
       let isConnected = false;
@@ -113,7 +200,7 @@ export default function GamesPage() {
 
       setConnectionStatus('connected');
 
-      // Load games and categories
+      // Load games, categories and agreements
       const gamesData = await GameService.getAllGames(token);
       console.log('🎮 Datos de juegos recibidos del backend:', gamesData);
       
@@ -129,6 +216,7 @@ export default function GamesPage() {
         active: game.active,
         highlighted: game.highlighted,
         category: game.category,
+        agreement: game.agreement, // NUEVO: Mapear convenio
         // Mantener también los campos originales para compatibilidad
         title: game.title,
         description: game.description,
@@ -142,6 +230,7 @@ export default function GamesPage() {
       setGames(mappedGames);
 
       await loadCategories();
+      await loadAgreements(); // NUEVO: Cargar convenios
     } catch (err) {
       setConnectionStatus('error');
       const errorMessage = err.message || "Error al cargar juegos";
@@ -151,7 +240,7 @@ export default function GamesPage() {
     } finally {
       setLoading(false);
     }
-  }, [loadCategories]);
+  }, [loadCategories, loadAgreements]);
 
   useEffect(() => {
     loadGames();
@@ -232,8 +321,10 @@ export default function GamesPage() {
       requisitos_minimos: game.requisitos_minimos || game.requisiteMinimum,
       requisitos_recomendados: game.requisitos_recomendados || game.requisiteRecommended,
       categoryId: game.category?.id,
+      agreementId: game.agreement?.id, // NUEVO: Mapear convenio
       active: game.active,
-      category: game.category
+      category: game.category,
+      agreement: game.agreement // NUEVO: Incluir convenio completo
     };
     
     console.log('✏️ Juego preparado para edición:', gameForEdit);
@@ -242,21 +333,48 @@ export default function GamesPage() {
     setShowModal(true);
   }, []);
 
-  // Function to create new game
+  // Function to create new game - MEJORADA
   const handleCreateGame = useCallback(() => {
-    console.log('🎮 Creando nuevo juego...');
+    console.log('🎮 Intentando crear nuevo juego...');
     console.log('📂 Categorías disponibles:', categories);
     console.log('📂 Cantidad de categorías:', categories.length);
+    console.log('🤝 Convenios disponibles:', agreements);
+    console.log('🤝 Cantidad de convenios:', agreements.length);
+    console.log('📂 Estado de carga de categorías:', categoriesLoading);
+    console.log('🤝 Estado de carga de convenios:', agreementsLoading);
     
-    if (categories.length === 0) {
-      toast?.error('No hay categorías disponibles. Por favor, crea una categoría primero.');
+    // Verificar si las categorías están cargando
+    if (categoriesLoading) {
+      toast.info('Cargando categorías, por favor espera...');
       return;
     }
     
+    // Si no hay categorías, intentar cargarlas primero
+    if (categories.length === 0) {
+      console.log('⚠️ No hay categorías, intentando cargar...');
+      toast.info('Cargando categorías...');
+      loadCategories().then(() => {
+        console.log('📂 Categorías cargadas, abriendo modal...');
+        setSelectedGame(null);
+        setModalType('create');
+        setShowModal(true);
+      }).catch((err) => {
+        console.error('❌ Error al cargar categorías:', err);
+        toast.error('Error al cargar categorías. Aún puedes crear el juego, pero deberás asignar la categoría después.');
+        // Abrir el modal de todas formas
+        setSelectedGame(null);
+        setModalType('create');
+        setShowModal(true);
+      });
+      return;
+    }
+    
+    // Si hay categorías, abrir el modal directamente
+    console.log('✅ Abriendo modal de creación...');
     setSelectedGame(null);
     setModalType('create');
     setShowModal(true);
-  }, [categories]);
+  }, [categories, categoriesLoading, loadCategories, agreements, agreementsLoading]);
 
   // Function to close modal
   const handleCloseModal = useCallback(() => {
@@ -282,10 +400,25 @@ export default function GamesPage() {
       apiData.append('requisitos_minimos', gameData.requisitos_minimos || '');
       apiData.append('requisitos_recomendados', gameData.requisitos_recomendados || '');
       apiData.append('categoryId', gameData.categoryId?.toString() || '');
+      
+      // NUEVO: Agregar convenio - CORREGIDO
+      if (gameData.agreementId && gameData.agreementId !== '' && gameData.agreementId !== 'null') {
+        apiData.append('agreementId', gameData.agreementId.toString());
+        console.log('🤝 Agregando convenio ID:', gameData.agreementId);
+      } else {
+        console.log('🤝 No se agregó convenio (opcional)');
+      }
+      
       apiData.append('active', gameData.active?.toString() || 'true');
       
       if (gameData.imagen instanceof File) {
         apiData.append('imagen', gameData.imagen);
+      }
+
+      // Debug: Mostrar todos los datos del FormData
+      console.log('📋 Datos del FormData:');
+      for (let [key, value] of apiData.entries()) {
+        console.log(`  ${key}:`, value);
       }
 
       if (modalType === 'create') {
@@ -304,6 +437,7 @@ export default function GamesPage() {
           active: newGame.active,
           highlighted: newGame.highlighted,
           category: newGame.category,
+          agreement: newGame.agreement, // NUEVO: Mapear convenio
           // Mantener también los campos originales
           title: newGame.title,
           description: newGame.description,
@@ -331,6 +465,7 @@ export default function GamesPage() {
           active: updatedGame.active,
           highlighted: updatedGame.highlighted,
           category: updatedGame.category,
+          agreement: updatedGame.agreement, // NUEVO: Mapear convenio
           // Mantener también los campos originales
           title: updatedGame.title,
           description: updatedGame.description,
@@ -440,7 +575,7 @@ export default function GamesPage() {
     );
   }, [handleHighlight, handleViewGame, handleEditGame, handleStatusChange]);
 
-  // Column definitions
+  // Column definitions - AGREGADA COLUMNA DE CONVENIO
   const columns = [
     {
       header: "No",
@@ -463,31 +598,14 @@ export default function GamesPage() {
       cell: cellDescripcion
     },
     {
-      header: "Req. Mínimos",
-      accessorKey: "requisitos_minimos",
-      cell: info => (
-        <div className="max-w-xs">
-          <p className="truncate" title={info.getValue()}>
-            {info.getValue() || 'No especificado'}
-          </p>
-        </div>
-      )
-    },
-    {
-      header: "Req. Recomendados",
-      accessorKey: "requisitos_recomendados",
-      cell: info => (
-        <div className="max-w-xs">
-          <p className="truncate" title={info.getValue()}>
-            {info.getValue() || 'No especificado'}
-          </p>
-        </div>
-      )
-    },
-    {
       header: "Categoría",
       accessorKey: "category",
       cell: ({ row }) => row.original.category ? row.original.category.name : 'N/A'
+    },
+    {
+      header: "Convenio", // NUEVA COLUMNA
+      accessorKey: "agreement",
+      cell: ({ row }) => row.original.agreement ? row.original.agreement.companyName : 'Sin convenio'
     },
     {
       header: "Estado",
@@ -516,6 +634,8 @@ export default function GamesPage() {
     console.log('🔧 Generando campos del modal...');
     console.log('🔧 Categorías para el select:', categories);
     console.log('🔧 Cantidad de categorías:', categories.length);
+    console.log('🔧 Convenios para el select:', agreements);
+    console.log('🔧 Cantidad de convenios:', agreements.length);
     
     const categoryOptions = categories.map(cat => {
       console.log('🏷️ Mapeando categoría:', cat);
@@ -524,8 +644,18 @@ export default function GamesPage() {
         label: cat.name
       };
     });
+
+    // NUEVO: Opciones de convenios
+    const agreementOptions = agreements.map(agreement => {
+      console.log('🤝 Mapeando convenio:', agreement);
+      return {
+        value: agreement.id,
+        label: agreement.companyName
+      };
+    });
     
-    console.log('🔧 Opciones del select generadas:', categoryOptions);
+    console.log('🔧 Opciones del select de categorías generadas:', categoryOptions);
+    console.log('🔧 Opciones del select de convenios generadas:', agreementOptions);
     
     return [
       {
@@ -596,7 +726,19 @@ export default function GamesPage() {
         required: true,
         options: categoryOptions,
         errorMessage: 'La categoría es requerida',
-        helpText: 'Seleccione la categoría del juego'
+        helpText: categories.length === 0 
+          ? 'No hay categorías disponibles. Puedes crear el juego y asignar la categoría después.'
+          : 'Seleccione la categoría del juego'
+      },
+      {
+        name: 'agreementId', // NUEVO CAMPO
+        label: 'Convenio',
+        type: 'select',
+        required: true,
+        options: agreementOptions,
+        helpText: agreements.length === 0 
+          ? 'No hay convenios disponibles. Este campo es opcional.'
+          : 'Seleccione el convenio asociado al juego (opcional)'
       },
       {
         name: 'active',
@@ -609,7 +751,7 @@ export default function GamesPage() {
     ];
   };
 
-  // Fields for show modal
+  // Fields for show modal - AGREGADO CONVENIO
   const showFields = [
     {
       name: 'titulo',
@@ -639,18 +781,10 @@ export default function GamesPage() {
       getValue: (data) => data.category ? data.category.name : 'Sin categoría'
     },
     {
-      name: 'requisitos_minimos',
-      label: 'Requisitos Mínimos',
-      type: 'textarea',
-      maxDisplayLength: 150,
-      getValue: (data) => data.requisitos_minimos || data.requisiteMinimum
-    },
-    {
-      name: 'requisitos_recomendados',
-      label: 'Requisitos Recomendados',
-      type: 'textarea',
-      maxDisplayLength: 150,
-      getValue: (data) => data.requisitos_recomendados || data.requisiteRecommended
+      name: 'convenio', // NUEVO CAMPO
+      label: 'Convenio',
+      type: 'text',
+      getValue: (data) => data.agreement ? data.agreement.companyName : 'Sin convenio'
     },
     {
       name: 'active',
@@ -695,6 +829,23 @@ export default function GamesPage() {
               <h1 className="text-xl lg:text-2xl font-bold custom_heading">
                 Lista de Juegos
               </h1>
+              
+              {/* Botón de crear juego con estado de debug */}
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-400">
+                  Categorías: {categories.length} 
+                  {categoriesLoading && ' (cargando...)'}
+                  | Convenios: {agreements.length}
+                  {agreementsLoading && ' (cargando...)'}
+                </div>
+                <button
+                  onClick={handleCreateGame}
+                  disabled={categoriesLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {categoriesLoading ? 'Cargando...' : 'Crear Juego'}
+                </button>
+              </div>
             </div>
 
             {/* Connection Status */}

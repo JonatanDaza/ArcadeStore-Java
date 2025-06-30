@@ -54,6 +54,7 @@ public class GameService {
         return gameRepository.findById(id);
     }
 
+    // MÉTODO ACTUALIZADO: Incluir agreementId
     public Game createGame(
             MultipartFile imagen,
             String titulo,
@@ -62,9 +63,12 @@ public class GameService {
             String requisitosMinimos,
             String requisitosRecomendados,
             Long categoryId,
+            Long agreementId, // NUEVO: Parámetro para convenio
             Boolean active
     ) {
         try {
+            System.out.println("🎮 Creando juego con convenio ID: " + agreementId);
+            
             Game game = new Game();
             game.setTitle(titulo);
             game.setDescription(descripcion);
@@ -76,15 +80,37 @@ public class GameService {
             // Buscar y asignar categoría
             Category category = getCategoryById(categoryId);
             game.setCategory(category);
+            System.out.println("✅ Categoría asignada: " + category.getName());
+
+            // NUEVO: Buscar y asignar convenio si se proporciona
+            if (agreementId != null) {
+                try {
+                    Agreement agreement = getAgreementById(agreementId);
+                    game.setAgreement(agreement);
+                    System.out.println("✅ Convenio asignado: " + agreement.getCompanyName());
+                } catch (Exception e) {
+                    System.err.println("❌ Error al asignar convenio: " + e.getMessage());
+                    // No lanzar excepción, solo log del error ya que el convenio es opcional
+                }
+            } else {
+                System.out.println("ℹ️ No se proporcionó convenio (opcional)");
+            }
 
             // Guardar imagen si se proporciona
             if (imagen != null && !imagen.isEmpty()) {
                 String imagePath = saveImage(imagen);
                 game.setImagePath(imagePath);
+                System.out.println("✅ Imagen guardada: " + imagePath);
             }
 
-            return gameRepository.save(game);
+            Game savedGame = gameRepository.save(game);
+            System.out.println("✅ Juego guardado con ID: " + savedGame.getId());
+            System.out.println("✅ Convenio final: " + (savedGame.getAgreement() != null ? savedGame.getAgreement().getCompanyName() : "Sin convenio"));
+            
+            return savedGame;
         } catch (Exception e) {
+            System.err.println("❌ Error al crear el juego: " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Error al crear el juego: " + e.getMessage(), e);
         }
     }
@@ -132,12 +158,15 @@ public class GameService {
             if (gameDetails.getImagePath() != null) {
                 existingGame.setImagePath(gameDetails.getImagePath());
             }
+            // NUEVO: Actualizar convenio
+            existingGame.setAgreement(gameDetails.getAgreement());
             return gameRepository.save(existingGame);
         } else {
             return null;
         }
     }
 
+    // MÉTODO ACTUALIZADO: Incluir agreementId
     public Game updateGameWithMultipart(
             Long id,
             MultipartFile imagen,
@@ -147,9 +176,12 @@ public class GameService {
             String requisitosMinimos,
             String requisitosRecomendados,
             String categoryId,
+            String agreementId, // NUEVO: Parámetro para convenio
             String active
     ) {
         try {
+            System.out.println("🔄 Actualizando juego ID: " + id + " con convenio: " + agreementId);
+            
             Optional<Game> optionalGame = gameRepository.findById(id);
             if (!optionalGame.isPresent()) {
                 return null;
@@ -169,16 +201,40 @@ public class GameService {
             if (categoryId != null) {
                 Category category = getCategoryById(Long.parseLong(categoryId));
                 existingGame.setCategory(category);
+                System.out.println("✅ Categoría actualizada: " + category.getName());
+            }
+
+            // NUEVO: Actualizar convenio si se proporciona
+            if (agreementId != null && !agreementId.trim().isEmpty() && !agreementId.equals("null") && !agreementId.equals("")) {
+                try {
+                    Agreement agreement = getAgreementById(Long.parseLong(agreementId));
+                    existingGame.setAgreement(agreement);
+                    System.out.println("✅ Convenio actualizado: " + agreement.getCompanyName());
+                } catch (Exception e) {
+                    System.err.println("❌ Error al actualizar convenio: " + e.getMessage());
+                    // No lanzar excepción, solo log del error
+                }
+            } else if (agreementId != null && (agreementId.trim().isEmpty() || agreementId.equals("null") || agreementId.equals(""))) {
+                // Si se envía vacío o null, remover el convenio
+                existingGame.setAgreement(null);
+                System.out.println("ℹ️ Convenio removido del juego");
             }
 
             // Actualizar imagen si se proporciona
             if (imagen != null && !imagen.isEmpty()) {
                 String imagePath = saveImage(imagen);
                 existingGame.setImagePath(imagePath);
+                System.out.println("✅ Imagen actualizada: " + imagePath);
             }
 
-            return gameRepository.save(existingGame);
+            Game savedGame = gameRepository.save(existingGame);
+            System.out.println("✅ Juego actualizado exitosamente");
+            System.out.println("✅ Convenio final: " + (savedGame.getAgreement() != null ? savedGame.getAgreement().getCompanyName() : "Sin convenio"));
+            
+            return savedGame;
         } catch (Exception e) {
+            System.err.println("❌ Error al actualizar el juego: " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Error al actualizar el juego: " + e.getMessage(), e);
         }
     }
@@ -186,6 +242,12 @@ public class GameService {
     public Category getCategoryById(Long categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + categoryId));
+    }
+
+    // NUEVO: Método para obtener convenio por ID
+    public Agreement getAgreementById(Long agreementId) {
+        return agreementRepository.findById(agreementId)
+                .orElseThrow(() -> new RuntimeException("Convenio no encontrado con ID: " + agreementId));
     }
 
     public boolean desactivarJuegoSINoTieneCategoriaActiva(Long id) {

@@ -28,7 +28,11 @@ export default function GameDetailsPage() {
       setLoading(true);
       setError(null);
       
+      console.log('🎮 Cargando detalles del juego ID:', gameId);
       const gameData = await PublicGameService.getGameById(gameId);
+      console.log('🎮 Datos del juego recibidos:', gameData);
+      console.log('🔧 Requisitos mínimos del backend:', gameData.requisiteMinimum);
+      console.log('🔧 Requisitos recomendados del backend:', gameData.requisiteRecommended);
       setGame(gameData);
     } catch (err) {
       setError(err.message || 'Error al cargar el juego');
@@ -52,7 +56,7 @@ export default function GameDetailsPage() {
           id: game.id,
           title: game.title,
           price: game.price,
-          image: game.imagePath,
+          image: PublicGameService.getImageUrl(game.imagePath),
           category: game.category?.name,
           quantity: 1
         };
@@ -67,6 +71,7 @@ export default function GameDetailsPage() {
         toast.success("¡Juego agregado al carrito!");
       }
       
+      // Redirigir al carrito
       router.push('/shoppingCart');
     } catch (error) {
       toast.error('Error al agregar al carrito');
@@ -129,74 +134,168 @@ export default function GameDetailsPage() {
     ? '/images/default-game.png' 
     : PublicGameService.getImageUrl(game.imagePath);
 
-  // Parsear requisitos si vienen como string
+  // Función para parsear requisitos de texto plano a estructura organizada
   const parseRequirements = (reqString) => {
-    if (!reqString) return null;
+    if (!reqString || reqString.trim() === '') {
+      return null;
+    }
+    
+    console.log('📋 Parseando requisitos:', reqString);
     
     try {
-      // Si ya es un objeto, devolverlo
-      if (typeof reqString === 'object') return reqString;
+      // Si ya es un objeto JSON, devolverlo
+      if (typeof reqString === 'object') {
+        return reqString;
+      }
       
-      // Si es string, intentar parsearlo como texto simple
+      // Si es string, intentar parsearlo como JSON primero
+      try {
+        const parsed = JSON.parse(reqString);
+        if (typeof parsed === 'object') {
+          return parsed;
+        }
+      } catch (e) {
+        // No es JSON válido, continuar con parsing de texto
+      }
+      
+      // Parsear como texto plano
       const lines = reqString.split('\n').filter(line => line.trim());
       const requirements = {};
       
       lines.forEach(line => {
-        const [key, ...valueParts] = line.split(':');
-        if (key && valueParts.length > 0) {
-          const cleanKey = key.trim().toLowerCase();
-          const value = valueParts.join(':').trim();
+        const colonIndex = line.indexOf(':');
+        if (colonIndex !== -1) {
+          const key = line.substring(0, colonIndex).trim().toLowerCase();
+          const value = line.substring(colonIndex + 1).trim();
           
-          if (cleanKey.includes('so') || cleanKey.includes('sistema')) {
+          if (key.includes('so') || key.includes('sistema') || key.includes('os') || key.includes('operating')) {
             requirements.os = value;
-          } else if (cleanKey.includes('cpu') || cleanKey.includes('procesador')) {
+          } else if (key.includes('cpu') || key.includes('procesador') || key.includes('processor')) {
             requirements.cpu = value;
-          } else if (cleanKey.includes('ram') || cleanKey.includes('memoria')) {
+          } else if (key.includes('ram') || key.includes('memoria') || key.includes('memory')) {
             requirements.ram = value;
-          } else if (cleanKey.includes('gpu') || cleanKey.includes('gráficos') || cleanKey.includes('tarjeta')) {
+          } else if (key.includes('gpu') || key.includes('gráficos') || key.includes('tarjeta') || key.includes('graphics') || key.includes('video')) {
             requirements.gpu = value;
-          } else if (cleanKey.includes('almacenamiento') || cleanKey.includes('espacio')) {
+          } else if (key.includes('almacenamiento') || key.includes('espacio') || key.includes('storage') || key.includes('disk') || key.includes('disco')) {
             requirements.storage = value;
+          } else if (key.includes('directx')) {
+            requirements.directx = value;
+          } else if (key.includes('red') || key.includes('network') || key.includes('internet')) {
+            requirements.network = value;
           }
         }
       });
       
+      console.log('📋 Requisitos parseados:', requirements);
       return Object.keys(requirements).length > 0 ? requirements : null;
     } catch (e) {
+      console.error('Error parsing requirements:', e);
       return null;
     }
   };
 
+  // Función para mostrar requisitos como texto plano si no se pueden parsear
+  const renderRequirementsText = (reqString) => {
+    if (!reqString || reqString.trim() === '') {
+      return <p className="text-gray-400 italic">No especificado</p>;
+    }
+    
+    return (
+      <div className="text-gray-400 text-sm whitespace-pre-line">
+        {reqString}
+      </div>
+    );
+  };
+
+  // Función para renderizar requisitos estructurados
+  const renderStructuredRequirements = (requirements) => {
+    if (!requirements) {
+      return <p className="text-gray-400 italic">No especificado</p>;
+    }
+
+    return (
+      <div className="space-y-3 text-sm">
+        {requirements.os && (
+          <div>
+            <span className="font-semibold text-gray-300">SO:</span>
+            <span className="text-gray-400 ml-2">{requirements.os}</span>
+          </div>
+        )}
+        {requirements.cpu && (
+          <div>
+            <span className="font-semibold text-gray-300">CPU:</span>
+            <span className="text-gray-400 ml-2">{requirements.cpu}</span>
+          </div>
+        )}
+        {requirements.ram && (
+          <div>
+            <span className="font-semibold text-gray-300">RAM:</span>
+            <span className="text-gray-400 ml-2">{requirements.ram}</span>
+          </div>
+        )}
+        {requirements.gpu && (
+          <div>
+            <span className="font-semibold text-gray-300">Gráficos:</span>
+            <span className="text-gray-400 ml-2">{requirements.gpu}</span>
+          </div>
+        )}
+        {requirements.storage && (
+          <div>
+            <span className="font-semibold text-gray-300">Almacenamiento:</span>
+            <span className="text-gray-400 ml-2">{requirements.storage}</span>
+          </div>
+        )}
+        {requirements.directx && (
+          <div>
+            <span className="font-semibold text-gray-300">DirectX:</span>
+            <span className="text-gray-400 ml-2">{requirements.directx}</span>
+          </div>
+        )}
+        {requirements.network && (
+          <div>
+            <span className="font-semibold text-gray-300">Red:</span>
+            <span className="text-gray-400 ml-2">{requirements.network}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Parsear los requisitos del backend
   const minRequirements = parseRequirements(game.requisiteMinimum);
   const recRequirements = parseRequirements(game.requisiteRecommended);
+
+  // Verificar si hay requisitos para mostrar
+  const hasRequirements = game.requisiteMinimum || game.requisiteRecommended;
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       
-      <main className="flex-1 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white font-sans flex items-center justify-center p-2">
-        <div className="bg-[#222] rounded-2xl shadow-2xl flex flex-col lg:flex-row w-full max-w-6xl min-h-[600px] overflow-hidden relative">
+      <main className="flex-1 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white font-sans flex items-center justify-center p-4">
+        <div className="bg-[#3a3a3a] rounded-2xl shadow-2xl flex flex-col lg:flex-row w-full max-w-6xl min-h-[600px] overflow-hidden relative">
           <button
             onClick={() => router.back()}
-            className="absolute top-6 right-8 z-50 text-gray-400 hover:text-red-400 transition text-3xl font-bold bg-[#222] rounded-full w-12 h-12 flex items-center justify-center shadow-lg"
-            title="Volver"
-            aria-label="Volver"
-            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
+            className="absolute top-4 right-4 z-50 text-gray-400 hover:text-white transition text-2xl font-bold bg-transparent rounded-full w-8 h-8 flex items-center justify-center"
+            title="Cerrar"
+            aria-label="Cerrar"
           >
             ×
           </button>
           
-          <div className="flex-shrink-0 flex items-center justify-center bg-black lg:w-[40%] w-full p-8">
+          {/* Imagen del juego */}
+          <div className="flex-shrink-0 flex items-center justify-center bg-black lg:w-[40%] w-full p-6">
             <img
               src={imageUrl}
               alt={game.title}
-              className="w-full h-auto object-contain rounded-xl shadow-lg"
+              className="w-full h-auto object-contain rounded-xl shadow-lg max-h-[500px]"
               onError={handleImageError}
             />
           </div>
           
-          <div className="flex-1 p-10 flex flex-col">
-            <h1 className="text-5xl font-extrabold mb-3">{game.title}</h1>
+          {/* Información del juego */}
+          <div className="flex-1 p-8 flex flex-col">
+            <h1 className="text-4xl font-extrabold mb-3 text-white">{game.title}</h1>
             
             {game.category && (
               <span className="inline-block bg-[#3a6aff] text-white text-sm px-4 py-2 rounded-full mb-6 w-fit font-semibold">
@@ -204,13 +303,13 @@ export default function GameDetailsPage() {
               </span>
             )}
             
-            <p className="text-gray-300 mb-8 text-lg">
+            <p className="text-gray-300 mb-6 text-base leading-relaxed">
               {game.description || 'Sin descripción disponible'}
             </p>
             
-            <div className="flex items-center gap-8 mb-10">
+            <div className="flex items-center gap-6 mb-8">
               <button
-                className={`px-8 py-4 rounded-lg transition-colors font-semibold text-lg ${
+                className={`px-6 py-3 rounded-lg transition-colors font-semibold text-base ${
                   game.price === 0 
                     ? "bg-green-600 hover:bg-green-700" 
                     : "bg-[#3a6aff] hover:bg-[#2952ff]"
@@ -219,47 +318,49 @@ export default function GameDetailsPage() {
               >
                 {game.price === 0 ? "Obtener gratis" : "Agregar al carrito"}
               </button>
-              <span className="text-3xl font-bold text-[#3a6aff]">
+              <span className="text-2xl font-bold text-[#3a6aff]">
                 {game.price === 0 ? "" : `$${game.price.toLocaleString("es-CO")}`}
               </span>
             </div>
             
-            {/* Apartado de requisitos del sistema */}
-            {(minRequirements || recRequirements) && (
-              <div className="mt-8">
-                <h2 className="text-2xl font-bold mb-4 text-[#3a6aff]">Requisitos del sistema</h2>
-                <div className="flex flex-col md:flex-row gap-8">
-                  {minRequirements && (
-                    <div className="flex-1 bg-[#181c2f] rounded-xl p-6">
-                      <h3 className="font-semibold mb-3 text-white text-lg">Mínimos</h3>
-                      <ul className="text-gray-300 text-base space-y-2">
-                        {minRequirements.os && <li><b>SO:</b> {minRequirements.os}</li>}
-                        {minRequirements.cpu && <li><b>CPU:</b> {minRequirements.cpu}</li>}
-                        {minRequirements.ram && <li><b>RAM:</b> {minRequirements.ram}</li>}
-                        {minRequirements.gpu && <li><b>Gráficos:</b> {minRequirements.gpu}</li>}
-                        {minRequirements.storage && <li><b>Almacenamiento:</b> {minRequirements.storage}</li>}
-                        {!minRequirements.os && !minRequirements.cpu && (
-                          <li className="text-gray-400 italic">{game.requisiteMinimum}</li>
-                        )}
-                      </ul>
+            {/* Requisitos del sistema - DATOS REALES DEL BACKEND */}
+            {hasRequirements && (
+              <div className="mt-4">
+                <h2 className="text-2xl font-bold mb-6 text-[#3a6aff]">Requisitos del sistema</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Requisitos Mínimos */}
+                  {game.requisiteMinimum && (
+                    <div className="bg-[#2a2a3a] rounded-lg p-6">
+                      <h3 className="font-bold mb-4 text-white text-lg">Mínimos</h3>
+                      {minRequirements ? 
+                        renderStructuredRequirements(minRequirements) : 
+                        renderRequirementsText(game.requisiteMinimum)
+                      }
                     </div>
                   )}
                   
-                  {recRequirements && (
-                    <div className="flex-1 bg-[#181c2f] rounded-xl p-6">
-                      <h3 className="font-semibold mb-3 text-white text-lg">Recomendados</h3>
-                      <ul className="text-gray-300 text-base space-y-2">
-                        {recRequirements.os && <li><b>SO:</b> {recRequirements.os}</li>}
-                        {recRequirements.cpu && <li><b>CPU:</b> {recRequirements.cpu}</li>}
-                        {recRequirements.ram && <li><b>RAM:</b> {recRequirements.ram}</li>}
-                        {recRequirements.gpu && <li><b>Gráficos:</b> {recRequirements.gpu}</li>}
-                        {recRequirements.storage && <li><b>Almacenamiento:</b> {recRequirements.storage}</li>}
-                        {!recRequirements.os && !recRequirements.cpu && (
-                          <li className="text-gray-400 italic">{game.requisiteRecommended}</li>
-                        )}
-                      </ul>
+                  {/* Requisitos Recomendados */}
+                  {game.requisiteRecommended && (
+                    <div className="bg-[#2a2a3a] rounded-lg p-6">
+                      <h3 className="font-bold mb-4 text-white text-lg">Recomendados</h3>
+                      {recRequirements ? 
+                        renderStructuredRequirements(recRequirements) : 
+                        renderRequirementsText(game.requisiteRecommended)
+                      }
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Mensaje si no hay requisitos */}
+            {!hasRequirements && (
+              <div className="mt-4">
+                <h2 className="text-2xl font-bold mb-6 text-[#3a6aff]">Requisitos del sistema</h2>
+                <div className="bg-[#2a2a3a] rounded-lg p-6">
+                  <p className="text-gray-400 italic text-center">
+                    Los requisitos del sistema no han sido especificados para este juego.
+                  </p>
                 </div>
               </div>
             )}
