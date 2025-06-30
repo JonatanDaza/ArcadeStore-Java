@@ -258,7 +258,7 @@ export default function GamesPage() {
     setShowModal(true);
   }, [categories]);
 
-  // Function to close modal
+  // Función para cerrar modal
   const handleCloseModal = useCallback(() => {
     setShowModal(false);
     setSelectedGame(null);
