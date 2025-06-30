@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import PublicGameService from 'app/services/api/publicGames';
+import PublicGameService from '../services/api/publicGames';
 
 const RecentGames = ({ juegosRecientes = [] }) => {
   const router = useRouter();
@@ -25,6 +25,26 @@ const RecentGames = ({ juegosRecientes = [] }) => {
       } catch (error) {
         console.error('Error loading recent games:', error);
         // Usar datos de ejemplo en caso de error
+        setGames([
+          {
+            id: 1,
+            titulo: "Red Dead Redemption 2",
+            descripcion: "es una épica aventura de mundo abierto ambientada en el ocaso de la era del salvaje oeste americano. Únete a Arthur Morgan y la banda de Van der Linde...",
+            image: "HALO4.png"
+          },
+          {
+            id: 2,
+            titulo: "Cyberpunk 2077",
+            descripcion: "Un RPG de mundo abierto ambientado en Night City, una megalópolis obsesionada con el poder, el glamour y la modificación corporal. Juegas como V, un mercenario en busca de un implante único...",
+            image: "GTAV.png"
+          },
+          {
+            id: 3,
+            titulo: "The Witcher 3",
+            descripcion: "Como Geralt de Rivia, un cazador de monstruos conocido como brujo, embárcate en una aventura épica en un mundo fantástico rico en contenido y opciones significativas...",
+            image: "FARCRY3.jpeg"
+          }
+        ]);
       } finally {
         setLoading(false);
       }
@@ -38,6 +58,11 @@ const RecentGames = ({ juegosRecientes = [] }) => {
       ...prev,
       [gameId]: true
     }));
+  };
+
+  const handleViewDetails = (juegoId) => {
+    // Redirigir a la página de detalles del juego
+    router.push(`/games/${juegoId}`);
   };
 
   const getImageUrl = (game) => {
@@ -122,12 +147,12 @@ const RecentGames = ({ juegosRecientes = [] }) => {
                 {limitText(juego.descripcion, 150)}
               </p>
               
-              <a
-                href={`/games/details/${juego.id}`}
+              <button
+                onClick={() => handleViewDetails(juego.id)}
                 className="inline-block bg-[#fff] hover:bg-[#3a6aff] text-black hover:text-white py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 Más información
-              </a>
+              </button>
             </div>
           </section>
         ))}

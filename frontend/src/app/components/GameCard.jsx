@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import PublicGameService from '../services/api/publicGames';
+import PublicGameService from 'app/services/api/publicGames';
 
 export default function GameCard({ game, onAddToCart }) {
   const router = useRouter();
@@ -13,13 +13,39 @@ export default function GameCard({ game, onAddToCart }) {
   };
 
   const handleViewDetails = () => {
-    router.push(`/games/${game.id}`);
+    // Redirigir a la página de detalles del juego
+    router.push(`/games/details/${game.id}`);
   };
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    if (onAddToCart) {
-      onAddToCart(game);
+    
+    try {
+      const existingCart = JSON.parse(localStorage.getItem('shoppingCart') || '[]');
+      const existingItemIndex = existingCart.findIndex(item => item.id === game.id);
+      
+      if (existingItemIndex !== -1) {
+        existingCart[existingItemIndex].quantity += 1;
+      } else {
+        const cartItem = {
+          id: game.id,
+          title: game.title,
+          price: game.price,
+          image: PublicGameService.getImageUrl(game.imagePath),
+          category: game.category?.name,
+          quantity: 1
+        };
+        existingCart.push(cartItem);
+      }
+      
+      localStorage.setItem('shoppingCart', JSON.stringify(existingCart));
+      
+      // Redirigir al carrito después de agregar
+      router.push('/shoppingCart');
+      
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Error al agregar al carrito');
     }
   };
 

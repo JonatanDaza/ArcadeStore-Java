@@ -67,6 +67,7 @@ public class GameController {
                 info.append("- Título: ").append(firstGame.getTitle()).append("\n");
                 info.append("- Activo: ").append(firstGame.isActive()).append("\n");
                 info.append("- Categoría: ").append(firstGame.getCategory() != null ? firstGame.getCategory().getName() : "null").append("\n");
+                info.append("- Convenio: ").append(firstGame.getAgreement() != null ? firstGame.getAgreement().getCompanyName() : "null").append("\n");
             }
             
             return ResponseEntity.ok(info.toString());
@@ -284,18 +285,25 @@ public class GameController {
             @RequestPart("requisitos_minimos") String requisitosMinimos,
             @RequestPart("requisitos_recomendados") String requisitosRecomendados,
             @RequestPart("categoryId") String categoryId,
+            @RequestPart(value = "agreementId", required = false) String agreementId, // NUEVO: Campo opcional para convenio
             @RequestPart("active") String active
     ) {
         try {
             // Validar y convertir parámetros
             Double precioDouble;
             Long categoryIdLong;
+            Long agreementIdLong = null; // NUEVO: Convenio opcional
             Boolean activeBoolean;
             
             try {
                 precioDouble = Double.parseDouble(precio);
                 categoryIdLong = Long.parseLong(categoryId);
                 activeBoolean = Boolean.parseBoolean(active);
+                
+                // NUEVO: Parsear agreementId si se proporciona
+                if (agreementId != null && !agreementId.trim().isEmpty() && !agreementId.equals("null")) {
+                    agreementIdLong = Long.parseLong(agreementId);
+                }
             } catch (NumberFormatException e) {
                 return ResponseEntity.badRequest()
                     .body("Error en formato de datos: " + e.getMessage());
@@ -321,7 +329,7 @@ public class GameController {
 
             Game createdGame = gameService.createGame(
                     imagen, titulo, descripcion, precioDouble,
-                    requisitosMinimos, requisitosRecomendados, categoryIdLong, activeBoolean
+                    requisitosMinimos, requisitosRecomendados, categoryIdLong, agreementIdLong, activeBoolean // NUEVO: Pasar agreementId
             );
             
             return new ResponseEntity<>(createdGame, HttpStatus.CREATED);
@@ -344,12 +352,13 @@ public class GameController {
             @RequestPart(value = "requisitos_minimos", required = false) String requisitosMinimos,
             @RequestPart(value = "requisitos_recomendados", required = false) String requisitosRecomendados,
             @RequestPart(value = "categoryId", required = false) String categoryId,
+            @RequestPart(value = "agreementId", required = false) String agreementId, // NUEVO: Campo opcional para convenio
             @RequestPart(value = "active", required = false) String active
     ) {
         try {
             Game updatedGame = gameService.updateGameWithMultipart(
                 id, imagen, titulo, descripcion, precio, 
-                requisitosMinimos, requisitosRecomendados, categoryId, active
+                requisitosMinimos, requisitosRecomendados, categoryId, agreementId, active // NUEVO: Pasar agreementId
             );
             
             if (updatedGame != null) {
