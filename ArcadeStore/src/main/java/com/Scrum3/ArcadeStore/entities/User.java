@@ -1,5 +1,6 @@
 package com.Scrum3.ArcadeStore.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,6 +39,7 @@ public class User {
     private Role role;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore // Evita la serialización recursiva que causa el bucle infinito.
     private List<Sale> sales;
 
     @CreationTimestamp

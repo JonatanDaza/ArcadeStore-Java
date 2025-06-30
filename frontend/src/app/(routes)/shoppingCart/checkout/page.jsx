@@ -7,7 +7,7 @@ import Header from 'app/components/header';
 import Footer from 'app/components/footer';
 
 export default function CheckoutPage() {
-    const [checkoutData, setCheckoutData] = useState(null);
+    const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         email: '',
@@ -53,11 +53,19 @@ export default function CheckoutPage() {
     ];
 
     useEffect(() => {
-        const savedCheckoutData = localStorage.getItem('checkoutData');
-        if (savedCheckoutData) {
-            setCheckoutData(JSON.parse(savedCheckoutData));
+        const savedCart = localStorage.getItem('shoppingCart');
+        if (savedCart) {
+            const items = JSON.parse(savedCart);
+            const paidItems = items.filter(item => item.price > 0);
+            if (paidItems.length > 0) {
+                setCartItems(items);
+            } else {
+                toast.error("No hay juegos de pago para procesar.");
+                router.push('/shoppingCart');
+            }
         } else {
             // Si no hay datos de checkout, redirigir al carrito
+            toast.error("Tu carrito está vacío.");
             router.push('/shoppingCart');
         }
         setLoading(false);
@@ -272,25 +280,42 @@ export default function CheckoutPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (paidGames.length === 0) return;
         setProcessing(true);
 
-        // Simular procesamiento de pago
+        const toastId = toast.loading('Procesando tu compra...');
         try {
-            // Aquí integrarías con tu procesador de pagos (Stripe, PayPal, etc.)
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            const token = localStorage.getItem("authToken");
+            if (!token) {
+                toast.error("Debes iniciar sesión para comprar.", { id: toastId });
+                router.push('/login');
+                setProcessing(false);
+                return;
+            }
 
-            // Limpiar el carrito después de un pago exitoso
-            localStorage.removeItem('shoppingCart');
-            localStorage.removeItem('checkoutData');
+            const paymentMethodMap = {
+                'credit-card': 'Tarjeta de Crédito',
+                'debit-card': 'Tarjeta de Débito',
+                'pse': 'PSE',
+                'paypal': 'PayPal'
+            };
 
-            // Redirigir a página de confirmación
-            router.push('/shoppingCart/checkout/confirm');
+            const checkoutPayload = {
+                gameIds: paidGames.map(game => game.id),
+                paymentMethod: paymentMethodMap[formData.paymentMethod] || 'Desconocido',
+            };
+
+            await CheckoutService.processCheckout(checkoutPayload, token);
+
+            const remainingItems = cartItems.filter(item => item.price === 0);
+            localStorage.setItem('shoppingCart', JSON.stringify(remainingItems));
+
+            toast.success('¡Compra realizada con éxito!', { id: toastId, duration: 4000 });
+            
+            router.push('/checkout/confirm');
         } catch (error) {
-            // Provide more specific error messages
-            const errorMessage = error.response?.data?.message ||
-                                 error.message ||
-                                 'Error procesando el pago. Inténtalo de nuevo.';
-            alert(errorMessage);
+            const errorMessage = error.response?.data?.message || error.message || 'Error procesando el pago. Inténtalo de nuevo.';
+            toast.error(errorMessage, { id: toastId });
             console.error('Payment processing error:', error);
         } finally {
             setProcessing(false);
@@ -309,7 +334,9 @@ export default function CheckoutPage() {
         );
     }
 
-    if (!checkoutData) {
+    const paidGames = cartItems.filter(item => item.price > 0);
+    const calculateTotal = () => paidGames.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
+    if (paidGames.length === 0) {
         return (
             <div className="flex flex-col min-h-screen">
                 <Header />
@@ -436,7 +463,7 @@ export default function CheckoutPage() {
                             <h2 className="text-2xl font-bold mb-6 text-[#3a6aff]">Resumen del Pedido</h2>
                             
                             <div className="space-y-4 mb-6">
-                                {checkoutData.items.map((item) => (
+                                {paidGames.map((item) => (
                                     <div key={item.id} className="flex items-center gap-4 p-4 bg-[#333] rounded-lg">
                                         <img
                                             src={item.image || '/images/default-game.png'}
@@ -449,7 +476,7 @@ export default function CheckoutPage() {
                                         <div className="flex-grow">
                                             <h3 className="font-bold">{item.title}</h3>
                                             <p className="text-sm text-gray-300">
-                                                Cantidad: {item.quantity}
+                                                Cantidad: {item.quantity || 1}
                                             </p>
                                         </div>
                                         <div className="text-right">
@@ -466,7 +493,7 @@ export default function CheckoutPage() {
                             <div className="flex justify-between text-2xl font-bold">
                                 <span>Total:</span>
                                 <span className="text-[#3a6aff]">
-                                    ${checkoutData.total.toLocaleString("es-CO")}
+                                     ${calculateTotal().toLocaleString("es-CO")}
                                 </span>
                             </div>
                         </div>

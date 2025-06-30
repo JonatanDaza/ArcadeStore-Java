@@ -1,5 +1,6 @@
 package com.Scrum3.ArcadeStore.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,6 +37,11 @@ public class Sale {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
+    @JsonIgnore // Evita bucles infinitos al serializar a JSON
+    private Order order;
 
     @ManyToOne
     @JoinColumn(name = "game_id")
