@@ -114,14 +114,14 @@ export default function OrderConfirmationPage() {
                         {/* Botones de acción */}
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <button
-                                onClick={() => router.push('/store')}
+                                onClick={() => router.push('/games')}
                                 className="bg-[#3a6aff] hover:bg-[#2952ff] px-8 py-3 rounded-lg transition-colors font-semibold text-lg"
                             >
                                 Seguir Comprando
                             </button>
                             
                             <button
-                                onClick={() => router.push('/my-games')}
+                                onClick={() => router.push('/library')}
                                 className="bg-green-600 hover:bg-green-700 px-8 py-3 rounded-lg transition-colors font-semibold text-lg"
                             >
                                 Ver Mis Juegos

@@ -21,7 +21,7 @@ const DonutChart = ({ data, colors, centerText, centerValue }) => {
 
   return (
     <div className="relative w-48 h-48 mx-auto">
-      <svg viewBox="0 0 200 200" className="w-full h-full transform -rotate-90">
+      <svg viewBox="0 0 200 200" className="w-full h-full transform -rotate-100">
         {segments.map((segment, index) => {
           const startAngleRad = (segment.startAngle * Math.PI) / 180;
           const endAngleRad = ((segment.startAngle + segment.angle) * Math.PI) / 180;
@@ -48,7 +48,8 @@ const DonutChart = ({ data, colors, centerText, centerValue }) => {
             <path
               key={index}
               d={pathData}
-              fill={segment.color}
+              fill={segment.darkcolor}
+              stroke={segment.color}
               className="hover:opacity-80 transition-opacity duration-200"
               style={{
                 filter: `drop-shadow(0 2px 4px ${segment.color}40)`,
@@ -60,8 +61,8 @@ const DonutChart = ({ data, colors, centerText, centerValue }) => {
       
       {/* Centro del donut */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-2xl font-bold text-gray-700">{centerValue}</div>
-        <div className="text-sm text-gray-500">{centerText}</div>
+        <div className="text-2xl font-bold text-white">{centerValue}</div>
+        <div className="text-sm text-white">{centerText}</div>
       </div>
     </div>
   );

@@ -6,8 +6,8 @@ const ModernProgressBar = ({ value, maxValue, color, label }) => {
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <span className="text-sm font-medium text-gray-600">{label}</span>
-        <span className="text-sm font-bold text-gray-700">{value}</span>
+        <span className="text-sm font-medium text-white">{label}</span>
+        <span className="text-sm font-bold text-white">{value}</span>
       </div>
       <div className="w-full bg-gray-200 rounded-full h-3 relative overflow-hidden">
         <div
