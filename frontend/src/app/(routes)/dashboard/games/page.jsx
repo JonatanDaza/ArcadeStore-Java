@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import Header from "app/components/header";
@@ -216,7 +216,7 @@ export default function GamesPage() {
         active: game.active,
         highlighted: game.highlighted,
         category: game.category,
-        agreement: game.agreement, // NUEVO: Mapear convenio
+        agreement: game.agreement, // NUEVO: Mapear convenio (ahora es un objeto DTO)
         // Mantener también los campos originales para compatibilidad
         title: game.title,
         description: game.description,
@@ -734,7 +734,7 @@ export default function GamesPage() {
         name: 'agreementId', // NUEVO CAMPO
         label: 'Convenio',
         type: 'select',
-        required: true,
+        required: false,
         options: agreementOptions,
         helpText: agreements.length === 0 
           ? 'No hay convenios disponibles. Este campo es opcional.'

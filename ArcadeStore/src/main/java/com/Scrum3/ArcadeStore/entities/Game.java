@@ -37,13 +37,13 @@ public class Game {
     
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id", nullable = false)
-    @JsonIgnoreProperties("games") // Evitar referencia circular
+    @JsonIgnoreProperties({"games", "hibernateLazyInitializer", "handler"}) // Evitar referencia circular
     private Category category;
     
-    // Relación con Agreement (opcional)
-    @ManyToOne(fetch = FetchType.LAZY)
+    // CORREGIDO: Relación con Agreement con fetch EAGER para evitar LazyInitializationException
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "agreement_id")
-    @JsonIgnoreProperties("games") // Evitar referencia circular
+    @JsonIgnoreProperties({"games", "hibernateLazyInitializer", "handler"}) // Evitar referencia circular
     private Agreement agreement;
     
     // Constructores
@@ -155,6 +155,7 @@ public class Game {
                 ", active=" + active +
                 ", highlighted=" + highlighted +
                 ", category=" + (category != null ? category.getName() : "null") +
+                ", agreement=" + (agreement != null ? agreement.getCompanyName() : "null") +
                 '}';
     }
 }
