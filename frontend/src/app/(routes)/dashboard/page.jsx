@@ -228,11 +228,11 @@ export default function DashboardPage() {
 
   // Datos para el gráfico de dona
   const donutData = [
-    { label: 'Activos', value: stats.active_games },
+    { label: 'Gratuitos', value: stats.free_games },
     { label: 'De Pago', value: stats.paid_games },
-    { label: 'Gratuitos', value: stats.free_games }
+    { label: 'Total', value: stats.total_games - stats.free_games - stats.paid_games },
   ];
-  const donutColors = ['#3b82f6', '#10b981', '#f59e0b'];
+  const donutColors = ['purple', 'darkblue', '#10b981' ];
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -259,7 +259,7 @@ export default function DashboardPage() {
                 value={stats.total_users}
                 trend={12.5}
                 color="#3b82f6"
-                bgGradient="bg-gradient-to-br from-blue-600 to-blue-800"
+                bgGradient="bg-gradient-to-br to-[#0000FF] border border-gray-800 border-opacity-20"
               />
               
               <TrendCard
@@ -268,7 +268,7 @@ export default function DashboardPage() {
                 value={stats.total_games}
                 trend={8.3}
                 color="#10b981"
-                bgGradient="bg-gradient-to-br from-emerald-600 to-emerald-800"
+                bgGradient="bg-gradient-to-br to-[#008000] border border-gray-800 border-opacity-20"
               />
               
               <TrendCard
@@ -277,7 +277,7 @@ export default function DashboardPage() {
                 value={stats.total_intercambios}
                 trend={-2.1}
                 color="#f59e0b"
-                bgGradient="bg-gradient-to-br from-amber-600 to-amber-800"
+                bgGradient="bg-gradient-to-br to-[#dc7633] border border-gray-800 border-opacity-20"
               />
               
               <TrendCard
@@ -286,7 +286,7 @@ export default function DashboardPage() {
                 value={stats.total_agreements}
                 trend={15.2}
                 color="#06b6d4"
-                bgGradient="bg-gradient-to-br from-cyan-600 to-cyan-800"
+                bgGradient="bg-gradient-to-br to-[#1b4f72] border border-gray-800 border-opacity-20]"
               />
               
               <TrendCard
@@ -295,30 +295,30 @@ export default function DashboardPage() {
                 value={stats.total_sales}
                 trend={5.7}
                 color="#8b5cf6"
-                bgGradient="bg-gradient-to-br from-purple-600 to-purple-800"
+                bgGradient="bg-gradient-to-br to-[#800080] border border-gray-800 border-opacity-20"
               />
             </div>
 
             {/* Sección de gráficos */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Gráfico circular de ventas */}
-              <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl p-8 border border-white border-opacity-20 shadow-2xl">
+              <div className="bg-gradient-to-br to-gray-800 bg-opacity-10 backdrop-blur-lg rounded-3xl p-8 border border-gray-800 border-opacity-20 shadow-2xl">
                 <h3 className="text-2xl font-bold text-white mb-6 text-center">Progreso de Ventas</h3>
                 <ModernCircleChart
                   percentage={stats.percentage_games_sold}
-                  color="#10b981"
+                  color="blue"
                   label="Juegos de Pago"
                   value={stats.percentage_games_sold}
                 />
                 <div className="mt-6 text-center">
-                  <p className="text-gray-300 text-sm">
+                  <p className="text-white text-sm">
                     {stats.paid_games} de {stats.total_games} juegos son de pago
                   </p>
                 </div>
               </div>
 
               {/* Gráfico de dona - Distribución de juegos */}
-              <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl p-8 border border-white border-opacity-20 shadow-2xl">
+              <div className="bg-gradient-to-br to-gray-800 bg-opacity-10 backdrop-blur-lg rounded-3xl p-8 border border-gray-800 border-opacity-20 shadow-2xl">
                 <h3 className="text-2xl font-bold text-white mb-6 text-center">Distribución de Juegos</h3>
                 <DonutChart
                   data={donutData}
@@ -334,9 +334,9 @@ export default function DashboardPage() {
                           className="w-3 h-3 rounded-full mr-2"
                           style={{ backgroundColor: donutColors[index] }}
                         ></div>
-                        <span className="text-gray-300">{item.label}</span>
+                        <span className="text-white">{item.label}</span>
                       </div>
-                      <span className="text-white font-medium">{item.value}</span>
+                      <span className="text-white font-bold">{item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -344,61 +344,46 @@ export default function DashboardPage() {
             </div>
 
             {/* Barras de progreso detalladas */}
-            <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl p-8 border border-white border-opacity-20 shadow-2xl">
+            <div className=" bg-gradient-to-br via-gray-800 to-gray-800 bg-opacity-10 backdrop-blur-lg rounded-3xl p-8 border border-gray-800 border-opacity-20 shadow-2xl">
               <h3 className="text-2xl font-bold text-white mb-8 text-center">Métricas Detalladas</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <ModernProgressBar
                   value={stats.total_users}
                   maxValue={200}
-                  color="#3b82f6"
+                  color="#0000FF"
                   label="Usuarios Registrados"
                 />
                 <ModernProgressBar
                   value={stats.total_games}
                   maxValue={300}
-                  color="#10b981"
+                  color="#008000"
                   label="Juegos Publicados"
                 />
                 <ModernProgressBar
                   value={stats.total_intercambios}
                   maxValue={150}
-                  color="#f59e0b"
+                  color="#dc7633"
                   label="Intercambios Realizados"
                 />
                 <ModernProgressBar
                   value={stats.total_agreements}
                   maxValue={150}
-                  color="#06b6d4"
+                  color="#1b4f72"
                   label="Acuerdos Totales"
                 />
                 <ModernProgressBar
                   value={stats.active_agreements}
                   maxValue={stats.total_agreements || 100}
-                  color="#22c55e"
+                  color="#1b4f72"
                   label="Acuerdos Activos"
                 />
                 <ModernProgressBar
                   value={stats.total_sales}
                   maxValue={200}
-                  color="#8b5cf6"
+                  color="#800080"
                   label="Ventas Realizadas"
                 />
               </div>
-            </div>
-
-            {/* Botón de actualización mejorado */}
-            <div className="flex justify-center pt-8">
-              <button
-                onClick={fetchStats}
-                disabled={loading}
-                className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl text-white font-semibold shadow-2xl hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-300 border border-white border-opacity-20 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span className="relative z-10 flex items-center">
-                  <RefreshCw className={`w-5 h-5 mr-2 ${loading ? 'animate-spin' : 'group-hover:animate-spin'}`} />
-                  {loading ? 'Actualizando...' : 'Actualizar Estadísticas'}
-                </span>
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 blur transition-opacity duration-300"></div>
-              </button>
             </div>
           </div>
         </main>

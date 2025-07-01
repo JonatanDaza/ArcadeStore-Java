@@ -11,12 +11,12 @@ const TrendCard = ({ icon: Icon, title, value, trend, color, bgGradient }) => {
       
       {/* Patrón de fondo */}
       <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
-        <div className="w-full h-full bg-white rounded-full transform translate-x-6 -translate-y-6"></div>
+        <div className="w-full h-full bg-black rounded-full transform translate-x-6 -translate-y-6"></div>
       </div>
       
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <div className="p-3 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
+          <div className="p-3 bg-opacity-20 rounded-xl backdrop-blur-sm">
             <Icon className="w-6 h-6 text-white" />
           </div>
           <div className={`flex items-center text-sm font-medium ${isPositive ? 'text-green-200' : 'text-red-200'}`}>

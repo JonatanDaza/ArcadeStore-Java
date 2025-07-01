@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_URL = 'http://localhost:8085/api/sales';
+// ✅ CORREGIDO: Estandarizar la URL base para que sea coherente con otros servicios.
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8085';
 
 // Helper para headers con JWT
 const authHeaders = (token) => ({
@@ -20,7 +21,7 @@ const authHeadersForDownload = (token) => ({
 
 export async function checkConnection(token) {
     try {
-        const res = await axios.get(`${API_URL}/all`, authHeaders(token));
+        const res = await axios.get(`${API_URL}/api/sales/all`, authHeaders(token));
         return res.status === 200;
     } catch {
         return false;
@@ -28,21 +29,33 @@ export async function checkConnection(token) {
 }
 
 export async function getAllSales(token) {
-    const res = await axios.get(`${API_URL}/all`, authHeaders(token));
+    const res = await axios.get(`${API_URL}/api/sales/all`, authHeaders(token));
     return res.data;
 }
+
+// ✅ NUEVO: Obtener detalles de una venta/orden por su ID para la página de confirmación
+async function getSaleDetails(orderId, token) {
+    try {
+        const res = await axios.get(`${API_URL}/api/sales/order/${orderId}`, authHeaders(token));
+        return res.data;
+    } catch (error) {
+        console.error('Error fetching sale details:', error.response || error);
+        throw error.response?.data || new Error('Error al obtener los detalles de la compra.');
+    }
+}
+
 
 // Función mejorada para generar PDF con datos de ventas
 export async function ReportPdf(token, salesData = null) {
     try {
-        let url = `${API_URL}/report/pdf`;
+        let url = `${API_URL}/api/sales/report/pdf`;
         let requestConfig = authHeadersForDownload(token);
         
         // Si no se proporcionan datos, el backend debería obtenerlos
         // Si se proporcionan datos, los enviamos en el body
         if (salesData && salesData.length > 0) {
             // Cambiar a POST para enviar datos
-            url = `${API_URL}/report/pdf-with-data`;
+            url = `${API_URL}/api/sales/report/pdf-with-data`;
             requestConfig = {
                 ...authHeaders(token),
                 responseType: 'blob'
@@ -65,7 +78,7 @@ export async function ReportPdf(token, salesData = null) {
 export async function ReportPdfWithFilters(token, filters = {}) {
     try {
         const res = await axios.post(
-            `${API_URL}/report/pdf-filtered`, 
+            `${API_URL}/api/sales/report/pdf-filtered`, 
             filters, 
             {
                 ...authHeaders(token),
@@ -121,9 +134,9 @@ export async function getReportPdfPreview(token, salesData = null) {
         
         let res;
         if (salesData && salesData.length > 0) {
-            res = await axios.post(`${API_URL}/report/pdf-preview`, { sales: salesData }, config);
+            res = await axios.post(`${API_URL}/api/sales/report/pdf-preview`, { sales: salesData }, config);
         } else {
-            res = await axios.get(`${API_URL}/report/pdf-preview`, config);
+            res = await axios.get(`${API_URL}/api/sales/report/pdf-preview`, config);
         }
         
         // Retornar URL del blob para mostrar en iframe o nueva ventana
@@ -141,6 +154,7 @@ const SalesService = {
     ReportPdf,
     ReportPdfWithFilters,
     getReportPdfPreview,
+    getSaleDetails // ✅ NUEVO
 };
 
 export default SalesService;

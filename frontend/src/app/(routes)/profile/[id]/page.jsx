@@ -8,13 +8,28 @@ import Favorites from "app/components/favorites";
 import Settings from "app/components/settings";
 import SidebarPerfil from "app/components/sidebarPerfil";
 import LogoutModal from "app/components/logoutModal";
+// Corregir la ruta de importación
+import { getUserById, updateUser } from "app/services/api/users";
+import { Toaster } from "react-hot-toast";
 
 const sidebarOptions = [
   { key: "info", label: "Información personal" },
-  { key: "orders", label: "Mis pedidos" },
-  { key: "favorites", label: "Favoritos" },
-  { key: "settings", label: "Configuración" },
+  { key: "orders", label: "Mis juegos" },
+  // { key: "favorites", label: "Favoritos" },
+  // { key: "settings", label: "Configuración" },
 ];
+
+// Función para obtener valores iniciales seguros
+const getInitialUserInfo = () => ({
+  id: null,
+  username: "",
+  email: "",
+  passwordHash: "",
+  active: true,
+  role: null,
+  createdAt: null,
+  updatedAt: null
+});
 
 // Botón de salir como componente
 function ExitButton({ onClick }) {
@@ -42,29 +57,45 @@ export default function ProfilePage() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userNotFound, setUserNotFound] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
 
-  const [userInfo, setUserInfo] = useState({
-    id: null,
-    name: "",
-    email: "",
-    phone: "",
-    address: ""
-  });
+  // Inicializar con valores seguros
+  const [userInfo, setUserInfo] = useState(getInitialUserInfo);
+  const [editedInfo, setEditedInfo] = useState(getInitialUserInfo);
 
-  const [editedInfo, setEditedInfo] = useState({ ...userInfo });
-
+  // Verificar autenticación y autorización
   useEffect(() => {
     const storedId = localStorage.getItem("id");
+    const token = localStorage.getItem("authToken");
+
+    console.log("Auth check - storedId:", storedId, "urlUserId:", urlUserId, "hasToken:", !!token);
+
+    if (!token) {
+      console.log("No token found, redirecting to login");
+      router.replace("/login");
+      return;
+    }
+
     setSessionUserId(storedId);
 
+    // Verificar que el usuario solo pueda acceder a su propio perfil
     if (storedId && urlUserId && storedId !== urlUserId) {
+      console.log("User trying to access different profile, redirecting");
       router.replace(`/profile/${storedId}`);
+      return;
     }
-    if (!storedId) router.replace("/login");
+
+    if (!storedId) {
+      console.log("No stored ID, redirecting to login");
+      router.replace("/login");
+    }
   }, [urlUserId, router]);
+
+  // Cargar datos del usuario
   useEffect(() => {
     const loadUserData = async () => {
       if (!urlUserId) {
+        console.log("No urlUserId provided");
         setUserNotFound(true);
         setLoading(false);
         return;
@@ -73,33 +104,107 @@ export default function ProfilePage() {
       try {
         setLoading(true);
         const token = localStorage.getItem("authToken");
+
+        console.log("Loading user data for ID:", urlUserId);
+
+        if (!token) {
+          console.log("No token during data load, redirecting");
+          router.replace("/login");
+          return;
+        }
+
+        console.log("Calling getUserById...");
         const userData = await getUserById(urlUserId, token);
+        console.log("User data received:", userData);
 
         if (userData) {
-          setUserInfo(userData);
-          setEditedInfo(userData);
+          // Asegurar que todos los campos tengan valores seguros
+          const safeUserData = {
+            id: userData.id || null,
+            username: userData.username || "",
+            email: userData.email || "",
+            passwordHash: userData.passwordHash || "",
+            active: userData.active !== undefined ? userData.active : true,
+            role: userData.role || null,
+            createdAt: userData.createdAt || null,
+            updatedAt: userData.updatedAt || null
+          };
+
+          setUserInfo(safeUserData);
+          setEditedInfo(safeUserData);
           setUserNotFound(false);
+          console.log("User data set successfully");
         } else {
+          console.log("No user data returned");
           setUserNotFound(true);
         }
       } catch (error) {
         console.error("Error loading user data:", error);
-        setUserNotFound(true);
+        console.error("Error stack:", error.stack);
+
+        if (error.message.includes('401') || error.message.includes('403')) {
+          console.log("Authentication error, clearing session");
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("id");
+          router.replace("/login");
+        } else {
+          console.log("Setting user not found due to error");
+          setUserNotFound(true);
+        }
       } finally {
         setLoading(false);
+        console.log("Loading finished");
       }
     };
 
     loadUserData();
-  }, [urlUserId]);
+  }, [urlUserId, router]);
+
   const handleEdit = () => {
     setIsEditing(true);
     setEditedInfo({ ...userInfo });
   };
 
-  const handleSave = () => {
-    setUserInfo({ ...editedInfo });
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      setSaveLoading(true);
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        router.replace("/login");
+        return;
+      }
+
+      // Solo enviar los campos que se pueden editar
+      const editableData = {
+        username: editedInfo.username || "",
+        email: editedInfo.email || ""
+      };
+
+      const updatedUser = await updateUser(urlUserId, editableData, token);
+
+      // Asegurar que la respuesta tenga valores seguros
+      const safeUpdatedUser = {
+        id: updatedUser.id || userInfo.id,
+        username: updatedUser.username || "",
+        email: updatedUser.email || "",
+        passwordHash: updatedUser.passwordHash || userInfo.passwordHash,
+        active: updatedUser.active !== undefined ? updatedUser.active : userInfo.active,
+        role: updatedUser.role || userInfo.role,
+        createdAt: updatedUser.createdAt || userInfo.createdAt,
+        updatedAt: updatedUser.updatedAt || userInfo.updatedAt
+      };
+
+      setUserInfo(safeUpdatedUser);
+      setIsEditing(false);
+
+      console.log("Perfil actualizado correctamente");
+    } catch (error) {
+      console.error("Error updating user:", error);
+      alert("Error al actualizar el perfil. Por favor, inténtalo de nuevo.");
+    } finally {
+      setSaveLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -108,6 +213,8 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("id");
     setShowLogoutModal(false);
     router.push('/');
   };
@@ -153,23 +260,35 @@ export default function ProfilePage() {
             handleEdit={handleEdit}
             handleSave={handleSave}
             handleCancel={handleCancel}
+            saveLoading={saveLoading}
           />
         );
       case "orders":
-        return <Orders />;
+        return <Orders userId={userInfo.id || null} />;
       case "favorites":
-        return <Favorites />;
+        return <Favorites userId={userInfo.id || null} />;
       case "settings":
-        return <Settings />;
+        return <Settings userId={userInfo.id || null} />;
       default:
         return null;
     }
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white font-sans relative ">
+    <div className="flex min-h-screen bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white font-sans relative">
+      <Toaster
+        position="top-right"
+        containerStyle={{ top: '8rem' }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+        }}
+      />
       <SidebarPerfil
-        userName={userInfo.name}
+        userName={userInfo.username || "Usuario"}
         sidebarOptions={sidebarOptions}
         selected={selected}
         setSelected={setSelected}
@@ -183,6 +302,7 @@ export default function ProfilePage() {
         <LogoutModal
           isOpen={showLogoutModal}
           onClose={() => setShowLogoutModal(false)}
+          onConfirm={handleLogout}
         />
       )}
     </div>

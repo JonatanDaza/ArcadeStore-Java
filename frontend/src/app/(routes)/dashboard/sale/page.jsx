@@ -6,7 +6,7 @@ import ActionButton from "app/components/ActionButton";
 import Sidebar from "app/components/sidebar";
 import SalesService, { getAllSales } from "app/services/api/sales";
 import { useState, useEffect, useCallback } from "react";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import ShowModal from "@/components/modalShow";
 import { jwtDecode } from 'jwt-decode';
@@ -126,7 +126,10 @@ export default function SalesPage() {
         router.push('/login');
         return;
       }
-
+      if (!sales || sales.length === 0) {
+        toast.error('No se puede generar el PDF porque no existen ventas registradas.');
+        return;
+      }
       // Llamar al servicio para obtener el PDF como blob
       const response = await fetch('http://localhost:8085/api/sales/report/pdf', {
         method: 'GET',
@@ -141,28 +144,28 @@ export default function SalesPage() {
 
       // Convertir la respuesta a blob
       const blob = await response.blob();
-      
+
       // Crear URL temporal para el blob
       const url = window.URL.createObjectURL(blob);
-      
+
       // Crear elemento de descarga temporal
       const link = document.createElement('a');
       link.href = url;
-      
+
       // Generar nombre del archivo con fecha actual
       const now = new Date();
       const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
       const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
       link.download = `reporte-ventas-${dateStr}-${timeStr}.pdf`;
-      
+
       // Añadir al DOM temporalmente y hacer click
       document.body.appendChild(link);
       link.click();
-      
+
       // Limpiar
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       toast.success('Reporte PDF descargado exitosamente');
     } catch (err) {
       let errorMessage = 'Error desconocido al generar reporte';
@@ -212,11 +215,11 @@ export default function SalesPage() {
     // Combinar headers y filas
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => 
-        row.map(field => 
+      ...rows.map(row =>
+        row.map(field =>
           // Escapar campos que contengan comas, comillas o saltos de línea
           typeof field === 'string' && (field.includes(',') || field.includes('"') || field.includes('\n'))
-            ? `"${field.replace(/"/g, '""')}"` 
+            ? `"${field.replace(/"/g, '""')}"`
             : field
         ).join(',')
       )
@@ -235,34 +238,34 @@ export default function SalesPage() {
 
       // Convertir datos a CSV
       const csvContent = convertToCSV(sales);
-      
+
       // Crear blob con BOM para UTF-8 (para acentos)
       const BOM = '\uFEFF';
-      const blob = new Blob([BOM + csvContent], { 
-        type: 'text/csv;charset=utf-8;' 
+      const blob = new Blob([BOM + csvContent], {
+        type: 'text/csv;charset=utf-8;'
       });
-      
+
       // Crear URL temporal
       const url = window.URL.createObjectURL(blob);
-      
+
       // Crear elemento de descarga
       const link = document.createElement('a');
       link.href = url;
-      
+
       // Generar nombre del archivo con fecha actual
       const now = new Date();
       const dateStr = now.toISOString().split('T')[0];
       const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
       link.download = `ventas-tabla-${dateStr}-${timeStr}.csv`;
-      
+
       // Descargar
       document.body.appendChild(link);
       link.click();
-      
+
       // Limpiar
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       toast.success(`CSV descargado con ${sales.length} registros`);
     } catch (err) {
       toast.error('Error al generar archivo CSV');
@@ -487,6 +490,17 @@ export default function SalesPage() {
       <Header />
       <div className="flex flex-1 min-h-0">
         <Sidebar />
+        <Toaster
+          position="top-right"
+          containerStyle={{ top: '8rem' }}
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#333',
+              color: '#fff',
+            },
+          }}
+        />
         <main className="flex-1 min-w-0 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-3 lg:p-5">
           <div className="w-auto h-auto pt-3">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 lg:mb-6">
@@ -503,7 +517,7 @@ export default function SalesPage() {
                 </button>
                 <button
                   onClick={handleGenerateReport}
-                  disabled={isGeneratingReport || loading}
+                  disabled={isGeneratingReport || loading || !sales.length}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isGeneratingReport ? (
@@ -569,29 +583,27 @@ export default function SalesPage() {
 
             {/* Información adicional y estadísticas */}
             {!loading && !error && sales.length > 0 && (
-              <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="text-sm text-gray-300 bg-gray-800 p-4 rounded-lg">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
+                <div className="mt-4 text-sm text-gray-300">
                   <strong>Estadísticas Generales:</strong><br />
                   Total de ventas: {salesStats.total}<br />
-                  Activas: {salesStats.active}<br />
-                  Inactivas: {salesStats.inactive}
                 </div>
-                <div className="text-sm text-gray-300 bg-gray-800 p-4 rounded-lg">
+                <div className="mt-4 text-sm text-gray-300">
                   <strong>Ingresos:</strong><br />
                   Total: {formatCurrency(salesStats.totalRevenue)}<br />
                   Promedio por venta: {formatCurrency(salesStats.averageSale)}
                 </div>
-                <div className="text-sm text-gray-300 bg-gray-800 p-4 rounded-lg">
+                <div className="mt-4 text-sm text-gray-300">
                   <strong>Métodos de Pago:</strong><br />
                   Diferentes métodos: {salesStats.paymentMethods}<br />
-                  Más común: {sales.length > 0 ? 
+                  Más común: {sales.length > 0 ?
                     Object.entries(
                       sales.reduce((acc, sale) => {
                         const method = sale.paymentMethod || 'No especificado';
                         acc[method] = (acc[method] || 0) + 1;
                         return acc;
                       }, {})
-                    ).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A'
+                    ).sort(([, a], [, b]) => b - a)[0]?.[0] || 'N/A'
                     : 'N/A'
                   }
                 </div>

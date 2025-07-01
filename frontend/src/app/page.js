@@ -7,7 +7,10 @@ import Footer from "./components/footer";
 import CarouselClientes from "./components/carouselClients";
 import GameCarousel from "./components/carouselGames";
 import RecentGames from "./components/recentGames";
-import Contact from "./components/caontact";
+import Contact from "./components/contact";
+import PublicGameService from "app/services/api/publicGames";
+import { AnimatePresence } from "framer-motion";
+import { FaCommentDots  } from "react-icons/fa";
 
 const HomePage = () => {
   // Obtener el rol del usuario desde localStorage o estado global
@@ -16,6 +19,10 @@ const HomePage = () => {
   const [userName, setUserName] = useState("");
   const [userNick, setUserNick] = useState("");
   const [userId, setUserId] = useState(null);
+  const [featuredGames, setFeaturedGames] = useState([]);
+  const [recentGames, setRecentGames] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
@@ -29,57 +36,33 @@ const HomePage = () => {
     }
   }, []);
 
-  const featuredGames = [
-    {
-      id: 1,
-      titulo: "GTA V",
-      descripcion: "Un ... de mundo ...",
-      image: "GTAV.png",
-      categoria: { nombre_categoria: "..." }
-    },
-    {
-      id: 2,
-      titulo: "Dragon ball sparking zero",
-      descripcion: "Un ... de mundo ...",
-      image: "Dragon ball sparking zero.png",
-      categoria: { nombre_categoria: "..." }
-    },
-    {
-      id: 3,
-      titulo: "HALO 4",
-      descripcion: "Un ... de mundo ...",
-      image: "HALO4.png",
-      categoria: { nombre_categoria: "..." }
-    },
-    {
-      id: 4,
-      titulo: "FARCRY 3",
-      descripcion: "Un ... de mundo ...",
-      image: "FARCRY3.jpeg",
-      categoria: { nombre_categoria: "..." }
-    },
-  ];
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        const data = await PublicGameService.getFeaturedGames();
+        const mapped = data.map(game => PublicGameService.mapGameData(game));
+        setFeaturedGames(mapped);
+      } catch (err) {
+        console.error("Error al cargar juegos destacados:", err);
+      }
+    };
 
-  const recentGames = [
-    {
-      id: 1,
-      titulo: "Red Dead Redemption 2",
-      descripcion: "es una épica aventura de mundo abierto ambientada en el ocaso de la era del salvaje oeste americano. Únete a Arthur Morgan y la banda de Van der Linde...",
-      image: "Red Dead Redeption 2.png"
-    },
-    {
-      id: 2,
-      titulo: "Borderlands 2",
-      descripcion: "Un RPG de mundo abierto ambientado en Night City, una megalópolis obsesionada con el poder, el glamour y la modificación corporal. Juegas como V, un mercenario en busca de un implante único...",
-      image: "Borderlands 2.png"
-    },
-    {
-      id: 3,
-      titulo: "Dragon ball sparking zero",
-      descripcion: "Como Geralt de Rivia, un cazador de monstruos conocido como brujo, embárcate en una aventura épica en un mundo fantástico rico en contenido y opciones significativas...",
-      image: "Dragon ball sparking zero.png"
-    }
-  ];
+    fetchFeatured();
+  }, []);
+
+  useEffect(() => {
+    const fetchRecentGames = async () => {
+      try {
+        const games = await PublicGameService.getRecentGames();
+        const mapped = games.map(game => PublicGameService.mapGameData(game));
+        setRecentGames(mapped);
+      } catch (error) {
+        console.error('❌ Error cargando juegos recientes:', error);
+      }
+    };
+
+    fetchRecentGames();
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#06174d]">
@@ -176,8 +159,8 @@ const HomePage = () => {
               y disfrutar de los mejores juegos a precios increíbles!
             </p>
           </div>
-          <br/>
-          <br/>
+          <br />
+          <br />
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-2xl font-bold mb-4">
               NUESTROS CLIENTES ESTAN FELICES...
@@ -189,14 +172,31 @@ const HomePage = () => {
               oportunidad para ampliar tu colección y disfrutar de grandes
               aventuras.
             </p>
-          <br/>
+            <br />
             {/* Carousel de clientes */}
             <CarouselClientes />
           </div>
         </section>
-        <Contact/>
       </main>
       <Footer />
+
+      {/* Botón flotante */}
+      <div className="fixed bottom-6 right-6 flex flex-col items-end z-50 space-y-2">
+        <AnimatePresence>
+          {showModal && (
+            <Contact onClose={() => setShowModal(false)} />
+          )}
+        </AnimatePresence>
+
+        {/* Botón flotante */}
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-black border border-gray-700 hover:bg-gray-700 px-5 py-3 rounded-full shadow-xl font-bold text-lg transition-all duration-300"
+        >
+          <FaCommentDots className="h-6 w-6 text-white" />
+        </button>
+      </div>
+
     </div>
   );
 };

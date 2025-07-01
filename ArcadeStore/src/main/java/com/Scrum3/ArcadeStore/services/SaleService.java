@@ -5,6 +5,8 @@ import com.Scrum3.ArcadeStore.Repository.OrderRepository;
 import com.Scrum3.ArcadeStore.Repository.PaymentRepository;
 import com.Scrum3.ArcadeStore.dto.SaleDTO;
 import com.Scrum3.ArcadeStore.dto.CheckoutRequestDTO;
+import com.Scrum3.ArcadeStore.dto.CheckoutResponseDTO;
+import com.Scrum3.ArcadeStore.dto.GameDTO;
 import com.Scrum3.ArcadeStore.entities.Game;
 import com.Scrum3.ArcadeStore.entities.Order;
 import com.Scrum3.ArcadeStore.entities.Payment;
@@ -62,8 +64,8 @@ public class SaleService {
         if (optionalSale.isPresent()) {
             Sale existingSale = optionalSale.get();
             existingSale.setSaleDate(saleDetails.getSaleDate());
-            existingSale.setTotalAmount(saleDetails.getTotalAmount());
-            existingSale.setPaymentMethod(saleDetails.getPaymentMethod());
+            existingSale.setUnitPrice(saleDetails.getUnitPrice());
+            existingSale.setQuantity(saleDetails.getQuantity());
             existingSale.setUser(saleDetails.getUser());
             return saleRepository.save(existingSale);
         } else {
@@ -83,6 +85,7 @@ public class SaleService {
 
         return false;
     }
+
     public List<Sale> getSalesWithFilters(Map<String, Object> filters) {
         // Implement logic to filter sales based on the provided filters
         // This is a placeholder implementation; actual filtering logic will depend on the requirements
@@ -90,8 +93,7 @@ public class SaleService {
     }
 
     @Transactional
-    public List<Sale> createSalesFromCart(CheckoutRequestDTO request, User user) {
-        List<Sale> createdSales = new ArrayList<>();
+    public CheckoutResponseDTO createSalesFromCart(CheckoutRequestDTO request, User user) {
         if (request.getGameIds() == null || request.getGameIds().isEmpty()) {
             throw new IllegalArgumentException("La lista de IDs de juegos no puede estar vacía.");
         }
@@ -99,8 +101,10 @@ public class SaleService {
         // 1. Obtener todos los juegos y calcular el monto total
         List<Game> gamesInCart = new ArrayList<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
+        
         for (Long gameId : request.getGameIds()) {
-            Game game = gameRepository.findById(gameId).orElseThrow(() -> new EntityNotFoundException("Juego no encontrado con ID: " + gameId));
+            Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new EntityNotFoundException("Juego no encontrado con ID: " + gameId));
             gamesInCart.add(game);
             totalAmount = totalAmount.add(BigDecimal.valueOf(game.getPrice()));
         }
@@ -109,7 +113,7 @@ public class SaleService {
         Order newOrder = new Order();
         newOrder.setUser(user);
         newOrder.setOrderDate(LocalDateTime.now());
-        newOrder.setOrderStatus("COMPLETADA");
+        newOrder.setOrderStatus("COMPLETED");
         newOrder.setProductQuantity(gamesInCart.size());
         Order savedOrder = orderRepository.save(newOrder);
 
@@ -118,24 +122,70 @@ public class SaleService {
         newPayment.setOrder(savedOrder);
         newPayment.setAmount(totalAmount);
         newPayment.setPaymentMethod(request.getPaymentMethod());
-        // Si es gratuito, el estado del pago podría ser "N/A" o "Completado".
-        // Aquí asumimos que se registra de todas formas para mantener la consistencia.
-        paymentRepository.save(newPayment);
+        newPayment.setPaymentStatus("COMPLETED");
+        Payment savedPayment = paymentRepository.save(newPayment);
 
-        // 4. Crear los registros de Venta (Sale) asociados a la Orden
+        // 4. Crear los registros de Venta
+        List<Sale> createdSales = new ArrayList<>();
         for (Game game : gamesInCart) {
             Sale newSale = new Sale();
             newSale.setUser(user);
             newSale.setGame(game);
-            newSale.setOrder(savedOrder); // Asociar la venta con la orden
+            newSale.setOrder(savedOrder);
             newSale.setSaleDate(LocalDateTime.now());
-            newSale.setTotalAmount(BigDecimal.valueOf(game.getPrice()));
-            newSale.setPaymentMethod(request.getPaymentMethod());
+            newSale.setUnitPrice(BigDecimal.valueOf(game.getPrice()));
+            newSale.setQuantity(1);
             newSale.setActive(true);
 
             createdSales.add(saleRepository.save(newSale));
         }
 
-        return createdSales;
+        // 5. Construir respuesta completa
+        return CheckoutResponseDTO.builder()
+            .orderNumber(savedOrder.getOrderNumber())
+            .orderId(savedOrder.getId())
+            .paymentId(savedPayment.getId())
+            .totalAmount(totalAmount)
+            .paymentMethod(savedPayment.getPaymentMethod())
+            .paymentStatus(savedPayment.getPaymentStatus())
+            .orderStatus(savedOrder.getOrderStatus())
+            .purchasedGames(createdSales.stream()
+                .map(sale -> new GameDTO(sale.getGame()))
+                .collect(Collectors.toList()))
+            .createdAt(savedOrder.getCreatedAt())
+            .message("Compra procesada exitosamente")
+            .success(true)
+            .build();
+    }
+
+    // ✅ NUEVO: Obtener detalles de una orden para la página de confirmación
+    @Transactional(readOnly = true)
+    public CheckoutResponseDTO getSaleDetailsByOrderId(Long orderId, User user) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new EntityNotFoundException("Orden no encontrada con ID: " + orderId));
+
+        // Verificación de seguridad: el usuario solo puede ver sus propias órdenes (o si es admin)
+        if (!order.getUser().getId().equals(user.getId()) && !user.getRole().getName().equals("ADMIN")) {
+            throw new SecurityException("No tiene permiso para ver esta orden.");
+        }
+
+        Payment payment = order.getPayment();
+        if (payment == null) {
+            throw new EntityNotFoundException("No se encontró un pago asociado a la orden ID: " + orderId);
+        }
+
+        return CheckoutResponseDTO.builder()
+            .orderNumber(order.getOrderNumber())
+            .orderId(order.getId())
+            .paymentId(payment.getId())
+            .totalAmount(payment.getAmount())
+            .paymentMethod(payment.getPaymentMethod())
+            .paymentStatus(payment.getPaymentStatus())
+            .orderStatus(order.getOrderStatus())
+            .purchasedGames(order.getSales().stream().map(sale -> new GameDTO(sale.getGame())).collect(Collectors.toList()))
+            .createdAt(order.getCreatedAt())
+            .message("Detalles de la compra recuperados exitosamente")
+            .success(true)
+            .build();
     }
 }

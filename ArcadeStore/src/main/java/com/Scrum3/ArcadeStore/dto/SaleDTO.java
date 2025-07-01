@@ -1,15 +1,13 @@
 package com.Scrum3.ArcadeStore.dto;
 
 import com.Scrum3.ArcadeStore.entities.Sale;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 public class SaleDTO {
     private Long id;

@@ -60,26 +60,21 @@ const RecentGames = ({ juegosRecientes = [] }) => {
     }));
   };
 
-  const handleViewDetails = (juegoId) => {
-    // Redirigir a la página de detalles del juego
-    router.push(`/games/${juegoId}`);
-  };
-
   const getImageUrl = (game) => {
     if (imageErrors[game.id]) {
       return '/images/default-game.png';
     }
-    
-    // Si tiene imagePath del backend, usar el servicio
+
+    // Usa PublicGameService para juegos mapeados con image
+    if (game.image) {
+      return PublicGameService.getImageUrl(game.image);
+    }
+
+    // Compatibilidad con formato antiguo (ruta directa)
     if (game.imagePath) {
       return PublicGameService.getImageUrl(game.imagePath);
     }
-    
-    // Si tiene image del formato anterior, mantener compatibilidad
-    if (game.image) {
-      return `/images/${game.image}`;
-    }
-    
+
     return '/images/default-game.png';
   };
 
@@ -111,7 +106,7 @@ const RecentGames = ({ juegosRecientes = [] }) => {
         </h2>
         {games.map((juego, index) => (
           <section
-            className="flex flex-col md:flex-row items-center mb-12 rounded-lg"
+            className="flex flex-col md:flex-row items-center mb-12 rounded-lg bg-gradient-to-br from-gray-800 via-gray-950 to-gray-900 shadow-xl"
             key={juego.id}
           >
             <div className={`md:w-1/2 ${index % 2 !== 0 ? "md:order-2" : ""}`}>
@@ -122,18 +117,18 @@ const RecentGames = ({ juegosRecientes = [] }) => {
                 onError={() => handleImageError(juego.id)}
               />
             </div>
-            <div className="md:w-1/2 p-8">
+            <div className="md:w-1/2 items-center justify-center p-8">
               <h3 className="text-3xl font-bold text-[#3a6aff] fw-blod mb-4">
                 {juego.titulo}
               </h3>
-              
+
               {/* Mostrar categoría si existe */}
               {juego.categoria && (
                 <span className="inline-block bg-[#3a6aff] text-white text-sm px-3 py-1 rounded-full mb-4">
                   {juego.categoria.name}
                 </span>
               )}
-              
+
               {/* Mostrar precio */}
               {juego.precio !== undefined && (
                 <div className="mb-4">
@@ -142,17 +137,19 @@ const RecentGames = ({ juegosRecientes = [] }) => {
                   </span>
                 </div>
               )}
-              
+
               <p className="mb-6 text-[#fff] leading-relaxed">
                 {limitText(juego.descripcion, 150)}
               </p>
-              
-              <button
-                onClick={() => handleViewDetails(juego.id)}
-                className="inline-block bg-[#fff] hover:bg-[#3a6aff] text-black hover:text-white py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-              >
-                Más información
-              </button>
+
+              <div className="pt-4">
+                <a
+                  href={`/games/details/${juego.id}`}
+                  className="inline-block bg-[#fff] hover:bg-[#3a6aff] text-black py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  Detalles
+                </a>
+              </div>
             </div>
           </section>
         ))}

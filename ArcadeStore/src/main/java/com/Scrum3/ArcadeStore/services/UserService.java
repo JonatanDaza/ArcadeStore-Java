@@ -1,15 +1,20 @@
 package com.Scrum3.ArcadeStore.services;
 
+import com.Scrum3.ArcadeStore.Repository.SaleRepository;
 import com.Scrum3.ArcadeStore.entities.User;
 import com.Scrum3.ArcadeStore.Repository.UserRepository;
 import com.Scrum3.ArcadeStore.Repository.RoleRepository;
+import com.Scrum3.ArcadeStore.dto.GameDTO;
 import com.Scrum3.ArcadeStore.entities.Game;
+import com.Scrum3.ArcadeStore.entities.Sale;
 import com.Scrum3.ArcadeStore.entities.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -19,6 +24,9 @@ public class UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private SaleRepository saleRepository;
 
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
@@ -87,15 +95,33 @@ public class UserService {
             Role rolActual = user.getRole();
 
             if ("ADMIN".equalsIgnoreCase(rolActual.getName())) {
-                Role userRole = roleRepository.findByName("USER").orElseThrow(() -> new RuntimeException("Rol USER no encontrado"));
+                Role userRole = roleRepository.findByName("USER")
+                        .orElseThrow(() -> new RuntimeException("Rol USER no encontrado"));
                 user.setRole(userRole);
             } else {
-                Role adminRole = roleRepository.findByName("ADMIN").orElseThrow(() -> new RuntimeException("Rol ADMIN no encontrado"));
+                Role adminRole = roleRepository.findByName("ADMIN")
+                        .orElseThrow(() -> new RuntimeException("Rol ADMIN no encontrado"));
                 user.setRole(adminRole);
             }
             userRepository.save(user);
             return true;
         }
         return false;
+    }
+
+    // ✅ NUEVO: Obtener la biblioteca de juegos de un usuario
+    @Transactional(readOnly = true)
+    public List<GameDTO> getUserLibrary(User user) {
+        return saleRepository.findByUser(user).stream()
+                .map(Sale::getGame) // De cada venta, obtenemos el juego
+                .distinct() // Nos aseguramos de que cada juego aparezca solo una vez
+                .map(GameDTO::new) // Convertimos la entidad Game a GameDTO
+                .collect(Collectors.toList());
+    }
+
+    public boolean isCurrentUser(Long userId, String userEmail) {
+        return getUserByEmail(userEmail)
+                .map(user -> user.getId().equals(userId))
+                .orElse(false);
     }
 }

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
+import { Toaster } from "react-hot-toast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -99,6 +100,17 @@ export default function LoginPage() {
           </form>
         </div>
       </main>
+      <Toaster
+        position="top-right"
+        containerStyle={{ top: '8rem' }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+        }}
+      />
     </div>
   );
 }

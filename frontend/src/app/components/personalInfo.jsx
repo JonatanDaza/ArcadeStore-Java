@@ -1,4 +1,5 @@
-import { User, Mail, Phone, MapPin, Edit2, Save, X } from "lucide-react";
+import { User, Mail, Edit2, Save, X } from "lucide-react";
+import { MdPassword } from "react-icons/md";
 
 export default function PersonalInfo({
   userInfo,
@@ -10,7 +11,7 @@ export default function PersonalInfo({
   handleCancel,
 }) {
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-auto">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-3xl font-bold">Información personal</h2>
         {!isEditing && (
@@ -24,7 +25,7 @@ export default function PersonalInfo({
         )}
       </div>
       {isEditing ? (
-        <div className="space-y-6">
+        <div className="space-y-6 flex flex-col-1">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-300">
@@ -96,7 +97,7 @@ export default function PersonalInfo({
                 <User className="text-[#3a6aff]" size={20} />
                 <h3 className="font-semibold text-lg">Nombre</h3>
               </div>
-              <p className="text-gray-300">{userInfo.name}</p>
+              <p className="text-gray-300">{userInfo.username}</p>
             </div>
             <div className="bg-[#333] p-6 rounded-lg">
               <div className="flex items-center gap-3 mb-3">
@@ -104,20 +105,6 @@ export default function PersonalInfo({
                 <h3 className="font-semibold text-lg">Email</h3>
               </div>
               <p className="text-gray-300">{userInfo.email}</p>
-            </div>
-            <div className="bg-[#333] p-6 rounded-lg">
-              <div className="flex items-center gap-3 mb-3">
-                <Phone className="text-[#3a6aff]" size={20} />
-                <h3 className="font-semibold text-lg">Teléfono</h3>
-              </div>
-              <p className="text-gray-300">{userInfo.phone}</p>
-            </div>
-            <div className="bg-[#333] p-6 rounded-lg">
-              <div className="flex items-center gap-3 mb-3">
-                <MapPin className="text-[#3a6aff]" size={20} />
-                <h3 className="font-semibold text-lg">Dirección</h3>
-              </div>
-              <p className="text-gray-300">{userInfo.address}</p>
             </div>
           </div>
         </div>

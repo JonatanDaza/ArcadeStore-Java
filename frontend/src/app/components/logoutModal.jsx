@@ -29,7 +29,7 @@ export default function LogoutModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-[#333] p-8 rounded-lg max-w-md w-full mx-4">
         <h3 className="text-xl font-bold mb-4 text-white">Cerrar sesión</h3>
         <p className="text-gray-300 mb-6">

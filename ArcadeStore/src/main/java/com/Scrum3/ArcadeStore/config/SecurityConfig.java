@@ -36,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/games/public/**").permitAll() // Rutas públicas para la tienda
                         .requestMatchers("/api/games/health").permitAll() // Health check público
                         .requestMatchers("/images/**").permitAll() // Imágenes públicas
+                        .requestMatchers("/api/contact").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )

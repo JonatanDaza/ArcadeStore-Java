@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowBigLeftDash } from 'lucide-react';
+import { toast, Toaster } from 'react-hot-toast';
 import Header from 'app/components/header';
 import Footer from 'app/components/footer';
+import CheckoutService from 'app/services/api/checkout';
 
 export default function CheckoutPage() {
     const [cartItems, setCartItems] = useState([]);
@@ -280,16 +282,14 @@ export default function CheckoutPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (paidGames.length === 0) return;
         setProcessing(true);
-
         const toastId = toast.loading('Procesando tu compra...');
+
         try {
             const token = localStorage.getItem("authToken");
             if (!token) {
                 toast.error("Debes iniciar sesión para comprar.", { id: toastId });
                 router.push('/login');
-                setProcessing(false);
                 return;
             }
 
@@ -305,23 +305,26 @@ export default function CheckoutPage() {
                 paymentMethod: paymentMethodMap[formData.paymentMethod] || 'Desconocido',
             };
 
-            await CheckoutService.processCheckout(checkoutPayload, token);
+            const response = await CheckoutService.processCheckout(checkoutPayload, token);
 
+            toast.success('¡Compra realizada con éxito!', { id: toastId });
+
+            // Limpiar solo los juegos pagos del carrito
             const remainingItems = cartItems.filter(item => item.price === 0);
             localStorage.setItem('shoppingCart', JSON.stringify(remainingItems));
 
-            toast.success('¡Compra realizada con éxito!', { id: toastId, duration: 4000 });
-            
-            router.push('/checkout/confirm');
+            // Redirigir a la página de confirmación con el ID de la orden
+            router.push(`/shoppingCart/checkout/confirm?orderId=${response.orderId}`);
+
         } catch (error) {
-            const errorMessage = error.response?.data?.message || error.message || 'Error procesando el pago. Inténtalo de nuevo.';
+            const errorMessage = error.response?.data?.message || error.message || 'Error procesando el pago.';
             toast.error(errorMessage, { id: toastId });
             console.error('Payment processing error:', error);
         } finally {
             setProcessing(false);
         }
     };
-    
+
     if (loading) {
         return (
             <div className="flex flex-col min-h-screen">
@@ -359,6 +362,17 @@ export default function CheckoutPage() {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
+            <Toaster
+                position="top-right"
+                containerStyle={{ top: '8rem' }}
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: '#333',
+                        color: '#fff',
+                    },
+                }}
+            />
             <section className="flex-1 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white py-10">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <div className="flex items-center justify-between mb-8">
@@ -367,7 +381,7 @@ export default function CheckoutPage() {
                             onClick={() => router.back()}
                             className="text-gray-400 hover:text-blue-800 transition text-3xl font-bold bg-[#222] p-4 rounded-full w-auto h-12 flex items-center justify-center shadow-lg"
                         >
-                            <ArrowBigLeftDash/> Volver
+                            <ArrowBigLeftDash /> Volver
                         </button>
                     </div>
 
@@ -375,7 +389,7 @@ export default function CheckoutPage() {
                         {/* Formulario de datos */}
                         <div className="bg-[#222] p-8 rounded-2xl shadow-lg">
                             <h2 className="text-2xl font-bold mb-6 text-[#3a6aff]">Información de Facturación</h2>
-                            
+
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* Información básica */}
                                 <div className="space-y-4">
@@ -447,11 +461,10 @@ export default function CheckoutPage() {
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
-                                        processing 
-                                            ? 'bg-gray-600 cursor-not-allowed' 
-                                            : 'bg-[#3a6aff] hover:bg-[#2952ff]'
-                                    }`}
+                                    className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${processing
+                                        ? 'bg-gray-600 cursor-not-allowed'
+                                        : 'bg-[#3a6aff] hover:bg-[#2952ff]'
+                                        }`}
                                 >
                                     {processing ? 'Procesando...' : 'Procesar Pago'}
                                 </button>
@@ -461,7 +474,7 @@ export default function CheckoutPage() {
                         {/* Resumen del pedido */}
                         <div className="bg-[#222] p-8 rounded-2xl shadow-lg h-fit">
                             <h2 className="text-2xl font-bold mb-6 text-[#3a6aff]">Resumen del Pedido</h2>
-                            
+
                             <div className="space-y-4 mb-6">
                                 {paidGames.map((item) => (
                                     <div key={item.id} className="flex items-center gap-4 p-4 bg-[#333] rounded-lg">
@@ -489,11 +502,11 @@ export default function CheckoutPage() {
                             </div>
 
                             <hr className="border-gray-600 mb-4" />
-                            
+
                             <div className="flex justify-between text-2xl font-bold">
                                 <span>Total:</span>
                                 <span className="text-[#3a6aff]">
-                                     ${calculateTotal().toLocaleString("es-CO")}
+                                    ${calculateTotal().toLocaleString("es-CO")}
                                 </span>
                             </div>
                         </div>

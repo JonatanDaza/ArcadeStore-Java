@@ -1,56 +1,64 @@
 'use client';
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
+import { useEffect, useState, useCallback } from "react";
+import { toast, Toaster } from "react-hot-toast";
 import Header from "app/components/header";
 import Footer from "app/components/footer";
 import PublicGameService from "app/services/api/publicGames";
+import LibraryService from "app/services/api/library";
+import { FaDownload, FaExchangeAlt } from 'react-icons/fa';
 
 export default function GameDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const gameId = params?.id;
-  
+
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
+  const [isOwned, setIsOwned] = useState(false);
+  const [installing, setInstalling] = useState(false);
 
-  useEffect(() => {
-    if (gameId) {
-      loadGameDetails();
-    }
-  }, [gameId]);
 
-  const loadGameDetails = async () => {
+  const fetchGameDetails = useCallback(async () => {
+    if (!gameId) return;
+
     try {
       setLoading(true);
       setError(null);
-      
-      console.log('🎮 Cargando detalles del juego ID:', gameId);
+
       const gameData = await PublicGameService.getGameById(gameId);
-      console.log('🎮 Datos del juego recibidos:', gameData);
-      console.log('🔧 Requisitos mínimos del backend:', gameData.requisiteMinimum);
-      console.log('🔧 Requisitos recomendados del backend:', gameData.requisiteRecommended);
       setGame(gameData);
+
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        const libraryData = await LibraryService.getUserLibrary(token);
+        const ownedGameIds = new Set(libraryData.map(g => g.id.toString()));
+        setIsOwned(ownedGameIds.has(gameId.toString()));
+      }
     } catch (err) {
       setError(err.message || 'Error al cargar el juego');
-      console.error('Error loading game details:', err);
+      toast.error('Error al cargar el juego.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [gameId]);
 
-  const handleAddToCart = () => {
+  useEffect(() => {
+    fetchGameDetails();
+  }, [fetchGameDetails]);
+
+  const handleAddToCart = useCallback(() => {
     if (!game) return;
 
     try {
       const existingCart = JSON.parse(localStorage.getItem('shoppingCart') || '[]');
       const existingItemIndex = existingCart.findIndex(item => item.id === game.id);
-      
+
       if (existingItemIndex !== -1) {
-        existingCart[existingItemIndex].quantity += 1;
+        toast.success(`¡${game.title} ya está en el carrito!`);
       } else {
         const cartItem = {
           id: game.id,
@@ -61,22 +69,33 @@ export default function GameDetailsPage() {
           quantity: 1
         };
         existingCart.push(cartItem);
+        localStorage.setItem('shoppingCart', JSON.stringify(existingCart));
+        toast.success(`¡${game.title} añadido al carrito!`);
       }
-      
-      localStorage.setItem('shoppingCart', JSON.stringify(existingCart));
-      
-      if (game.price === 0) {
-        toast.success("¡Juego gratuito añadido a la biblioteca!");
-      } else {
-        toast.success("¡Juego agregado al carrito!");
-      }
-      
+
       // Redirigir al carrito
       router.push('/shoppingCart');
     } catch (error) {
       toast.error('Error al agregar al carrito');
       console.error('Error adding to cart:', error);
     }
+  }, [game, router]);
+
+  const handleInstallClick = async () => {
+    setInstalling(true);
+    toast.loading('Iniciando instalación...', { id: 'install-toast' });
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      toast.success(`¡${game.title} instalado correctamente!`, { id: 'install-toast' });
+    } catch (error) {
+      toast.error(`Error al instalar ${game.title}`, { id: 'install-toast' });
+    } finally {
+      setInstalling(false);
+    }
+  };
+
+  const handleExchangeClick = () => {
+    toast.info('La función de intercambio estará disponible próximamente.');
   };
 
   const handleImageError = () => {
@@ -130,8 +149,8 @@ export default function GameDetailsPage() {
     );
   }
 
-  const imageUrl = imageError 
-    ? '/images/default-game.png' 
+  const imageUrl = imageError
+    ? '/images/default-game.png'
     : PublicGameService.getImageUrl(game.imagePath);
 
   // Función para parsear requisitos de texto plano a estructura organizada
@@ -139,15 +158,15 @@ export default function GameDetailsPage() {
     if (!reqString || reqString.trim() === '') {
       return null;
     }
-    
+
     console.log('📋 Parseando requisitos:', reqString);
-    
+
     try {
       // Si ya es un objeto JSON, devolverlo
       if (typeof reqString === 'object') {
         return reqString;
       }
-      
+
       // Si es string, intentar parsearlo como JSON primero
       try {
         const parsed = JSON.parse(reqString);
@@ -157,17 +176,17 @@ export default function GameDetailsPage() {
       } catch (e) {
         // No es JSON válido, continuar con parsing de texto
       }
-      
+
       // Parsear como texto plano
       const lines = reqString.split('\n').filter(line => line.trim());
       const requirements = {};
-      
+
       lines.forEach(line => {
         const colonIndex = line.indexOf(':');
         if (colonIndex !== -1) {
           const key = line.substring(0, colonIndex).trim().toLowerCase();
           const value = line.substring(colonIndex + 1).trim();
-          
+
           if (key.includes('so') || key.includes('sistema') || key.includes('os') || key.includes('operating')) {
             requirements.os = value;
           } else if (key.includes('cpu') || key.includes('procesador') || key.includes('processor')) {
@@ -185,7 +204,7 @@ export default function GameDetailsPage() {
           }
         }
       });
-      
+
       console.log('📋 Requisitos parseados:', requirements);
       return Object.keys(requirements).length > 0 ? requirements : null;
     } catch (e) {
@@ -199,7 +218,7 @@ export default function GameDetailsPage() {
     if (!reqString || reqString.trim() === '') {
       return <p className="text-gray-400 italic">No especificado</p>;
     }
-    
+
     return (
       <div className="text-gray-400 text-sm whitespace-pre-line">
         {reqString}
@@ -271,7 +290,18 @@ export default function GameDetailsPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      
+      <Toaster
+        position="top-right"
+        containerStyle={{ top: '8rem' }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+        }}
+      />
+
       <main className="flex-1 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white font-sans flex items-center justify-center p-4">
         <div className="bg-[#3a3a3a] rounded-2xl shadow-2xl flex flex-col lg:flex-row w-full max-w-6xl min-h-[600px] overflow-hidden relative">
           <button
@@ -282,7 +312,7 @@ export default function GameDetailsPage() {
           >
             ×
           </button>
-          
+
           {/* Imagen del juego */}
           <div className="flex-shrink-0 flex items-center justify-center bg-black lg:w-[40%] w-full p-6">
             <img
@@ -292,37 +322,53 @@ export default function GameDetailsPage() {
               onError={handleImageError}
             />
           </div>
-          
+
           {/* Información del juego */}
           <div className="flex-1 p-8 flex flex-col">
             <h1 className="text-4xl font-extrabold mb-3 text-white">{game.title}</h1>
-            
+
             {game.category && (
               <span className="inline-block bg-[#3a6aff] text-white text-sm px-4 py-2 rounded-full mb-6 w-fit font-semibold">
                 {game.category.name}
               </span>
             )}
-            
+
             <p className="text-gray-300 mb-6 text-base leading-relaxed">
               {game.description || 'Sin descripción disponible'}
             </p>
-            
-            <div className="flex items-center gap-6 mb-8">
-              <button
-                className={`px-6 py-3 rounded-lg transition-colors font-semibold text-base ${
-                  game.price === 0 
-                    ? "bg-green-600 hover:bg-green-700" 
-                    : "bg-[#3a6aff] hover:bg-[#2952ff]"
-                }`}
-                onClick={handleAddToCart}
-              >
-                {game.price === 0 ? "Obtener gratis" : "Agregar al carrito"}
-              </button>
-              <span className="text-2xl font-bold text-[#3a6aff]">
-                {game.price === 0 ? "" : `$${game.price.toLocaleString("es-CO")}`}
-              </span>
-            </div>
-            
+
+            {isOwned ? (
+              <div className="flex items-center gap-4 mb-8">
+                <button
+                  onClick={handleInstallClick}
+                  disabled={installing}
+                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-colors font-semibold text-base w-full ${installing ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                >
+                  <FaDownload />
+                  {installing ? 'Instalando...' : 'Instalar'}
+                </button>
+                <button
+                  onClick={handleExchangeClick}
+                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-colors font-semibold text-base w-full bg-yellow-500 hover:bg-yellow-600 text-black"
+                >
+                  <FaExchangeAlt />
+                  Intercambiar
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-6 mb-8">
+                <button
+                  className={`px-6 py-3 rounded-lg transition-colors font-semibold text-base ${game.price === 0 ? "bg-green-600 hover:bg-green-700" : "bg-[#3a6aff] hover:bg-[#2952ff]"}`}
+                  onClick={handleAddToCart}
+                >
+                  {game.price === 0 ? "Obtener gratis" : "Agregar al carrito"}
+                </button>
+                <span className="text-2xl font-bold text-[#3a6aff]">
+                  {game.price === 0 ? "" : `$${game.price.toLocaleString("es-CO")}`}
+                </span>
+              </div>
+            )}
+
             {/* Requisitos del sistema - DATOS REALES DEL BACKEND */}
             {hasRequirements && (
               <div className="mt-4">
@@ -332,19 +378,19 @@ export default function GameDetailsPage() {
                   {game.requisiteMinimum && (
                     <div className="bg-[#2a2a3a] rounded-lg p-6">
                       <h3 className="font-bold mb-4 text-white text-lg">Mínimos</h3>
-                      {minRequirements ? 
-                        renderStructuredRequirements(minRequirements) : 
+                      {minRequirements ?
+                        renderStructuredRequirements(minRequirements) :
                         renderRequirementsText(game.requisiteMinimum)
                       }
                     </div>
                   )}
-                  
+
                   {/* Requisitos Recomendados */}
                   {game.requisiteRecommended && (
                     <div className="bg-[#2a2a3a] rounded-lg p-6">
                       <h3 className="font-bold mb-4 text-white text-lg">Recomendados</h3>
-                      {recRequirements ? 
-                        renderStructuredRequirements(recRequirements) : 
+                      {recRequirements ?
+                        renderStructuredRequirements(recRequirements) :
                         renderRequirementsText(game.requisiteRecommended)
                       }
                     </div>
@@ -367,7 +413,7 @@ export default function GameDetailsPage() {
           </div>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );

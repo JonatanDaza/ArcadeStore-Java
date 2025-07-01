@@ -1,18 +1,18 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Header from 'app/components/header';
 import Footer from 'app/components/footer';
 import GameGrid from 'app/components/GameGrid';
 import PublicGameService from 'app/services/api/publicGames';
 import CategoryService from 'app/services/api/categories';
+import LibraryService from 'app/services/api/library';
 
 export default function StorePage() {
   const router = useRouter();
   const [games, setGames] = useState([]);
-  const [featuredGames, setFeaturedGames] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,6 +21,7 @@ export default function StorePage() {
   const [connectionStatus, setConnectionStatus] = useState('checking');
   const [priceFilter, setPriceFilter] = useState("");
   const [filterType, setFilterType] = useState("masDe"); // "masDe" or "menosDe"
+  const [ownedGameIds, setOwnedGameIds] = useState(new Set());
 
   // Cargar juegos de pago (no gratuitos)
   const loadGames = useCallback(async () => {
@@ -47,12 +48,6 @@ export default function StorePage() {
       const paidGames = await PublicGameService.getPaidGames();
       console.log('💰 Juegos de pago recibidos:', paidGames);
       setGames(paidGames || []);
-
-      // Cargar juegos destacados (pueden incluir gratuitos)
-      console.log('🌟 Cargando juegos destacados...');
-      const featured = await PublicGameService.getFeaturedGames();
-      console.log('🌟 Juegos destacados recibidos:', featured);
-      setFeaturedGames(featured || []);
 
     } catch (err) {
       setConnectionStatus('error');
@@ -90,6 +85,22 @@ export default function StorePage() {
     setFilterType("masDe");
   }, [loadGames, loadCategories]);
 
+  useEffect(() => {
+    const fetchLibrary = async () => {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        try {
+          const libraryData = await LibraryService.getUserLibrary(token);
+          const ids = new Set(libraryData.map(game => game.id));
+          setOwnedGameIds(ids);
+        } catch (error) {
+          console.warn("No se pudo cargar la biblioteca del usuario", error);
+        }
+      }
+    };
+    fetchLibrary();
+  }, []);
+
   // Filtrar juegos
   const filteredGames = games.filter(game => {
     const matchesSearch = game.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -111,13 +122,13 @@ export default function StorePage() {
       const existingItemIndex = existingCart.findIndex(item => item.id === game.id);
 
       if (existingItemIndex !== -1) {
-        existingCart[existingItemIndex].quantity += 1;
+        // Si ya existe en el carrito, no hacer nada (limitar a una unidad)
       } else {
         const cartItem = {
           id: game.id,
           title: game.title,
           price: game.price,
-          image: game.imagePath,
+          image: PublicGameService.getImageUrl(game.imagePath),
           category: game.category?.name,
           quantity: 1
         };
@@ -126,21 +137,29 @@ export default function StorePage() {
 
       localStorage.setItem('shoppingCart', JSON.stringify(existingCart));
 
-      if (game.price === 0) {
-        toast.success('¡Juego gratuito añadido a la biblioteca!');
-      } else {
-        toast.success('¡Juego agregado al carrito!');
-      }
+      router.push('/shoppingCart');
+      toast.success(`¡${game.title} añadido al carrito!`);
 
     } catch (error) {
       toast.error('Error al agregar al carrito');
       console.error('Error adding to cart:', error);
     }
-  }, []);
+  }, [router]);
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
+      <Toaster
+        position="top-right"
+        containerStyle={{ top: '8rem' }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+        }}
+      />
 
       <main className="flex-1 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white">
         {/* Hero Section */}
@@ -234,24 +253,13 @@ export default function StorePage() {
           </div>
         </section>
 
-        {/* Featured Games */}
-        {featuredGames.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 mb-12">
-            <h2 className="text-3xl font-bold mb-6 text-[#3a6aff]">Juegos Destacados</h2>
-            <GameGrid
-              games={featuredGames}
-              onAddToCart={handleAddToCart}
-              loading={loading && featuredGames.length === 0}
-              error={error && featuredGames.length === 0 ? error : null}
-            />
-          </section>
-        )}
-
         {/* Paid Games */}
         <section className="max-w-7xl mx-auto px-4 pb-12">
+          <h2 className="text-3xl font-bold mb-6 text-[#3a6aff]">Juegos</h2>
           <GameGrid
             games={filteredGames}
             onAddToCart={handleAddToCart}
+            ownedGameIds={ownedGameIds}
             loading={loading}
             error={error}
           />

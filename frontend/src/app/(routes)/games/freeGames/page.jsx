@@ -1,24 +1,25 @@
 'use client';
 
 import { useState, useEffect, useCallback } from "react";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Header from "app/components/header";
 import Footer from "app/components/footer";
 import GameGrid from "app/components/GameGrid";
 import PublicGameService from "app/services/api/publicGames";
 import CategoryService from "app/services/api/categories";
+import LibraryService from "app/services/api/library";
 
 export default function FreeGamesPage() {
   const router = useRouter();
   const [freeGames, setFreeGames] = useState([]);
-  const [featuredGames, setFeaturedGames] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('checking');
+  const [ownedGameIds, setOwnedGameIds] = useState(new Set());
 
   // Cargar juegos gratuitos del backend
   const loadFreeGames = useCallback(async () => {
@@ -45,12 +46,6 @@ export default function FreeGamesPage() {
       const freeGamesData = await PublicGameService.getFreeGames();
       console.log('🆓 Juegos gratuitos recibidos:', freeGamesData);
       setFreeGames(freeGamesData || []);
-
-      // Cargar juegos destacados (pueden incluir gratuitos)
-      console.log('🌟 Cargando juegos destacados...');
-      const featured = await PublicGameService.getFeaturedGames();
-      console.log('🌟 Juegos destacados recibidos:', featured);
-      setFeaturedGames(featured || []);
 
     } catch (err) {
       setConnectionStatus('error');
@@ -86,6 +81,22 @@ export default function FreeGamesPage() {
     loadCategories();
   }, [loadFreeGames, loadCategories]);
 
+  useEffect(() => {
+    const fetchLibrary = async () => {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        try {
+          const libraryData = await LibraryService.getUserLibrary(token);
+          const ids = new Set(libraryData.map(game => game.id));
+          setOwnedGameIds(ids);
+        } catch (error) {
+          console.warn("No se pudo cargar la biblioteca del usuario", error);
+        }
+      }
+    };
+    fetchLibrary();
+  }, []);
+
   // Filtrar juegos gratuitos
   const filteredGames = freeGames.filter(game => {
     const matchesSearch = game.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,11 +130,9 @@ export default function FreeGamesPage() {
 
       localStorage.setItem('shoppingCart', JSON.stringify(existingCart));
 
-      if (game.price === 0) {
-        toast.success('¡Juego gratuito añadido a la biblioteca!');
-      } else {
-        toast.success('¡Juego agregado al carrito!');
-      }
+      router.push('/shoppingCart');
+      toast.success(`¡${game.title} añadido al carrito!`);
+
 
     } catch (error) {
       toast.error('Error al agregar al carrito');
@@ -134,6 +143,17 @@ export default function FreeGamesPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
+      <Toaster
+        position="top-right"
+        containerStyle={{ top: '8rem' }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+        }}
+      />
       <main className="flex-1 font-poppins text-white bg-gradient-to-b from-[#06174d] via-black to-[#06174d]">
 
         {/* Hero Section */}
@@ -206,25 +226,14 @@ export default function FreeGamesPage() {
           </div>
         </section>
 
-        {/* Featured Games */}
-        {featuredGames.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 mb-12">
-            <h2 className="text-3xl font-bold mb-6 text-[#3a6aff]">Juegos Destacados</h2>
-            <GameGrid
-              games={featuredGames}
-              onAddToCart={handleAddToCart}
-              loading={loading && featuredGames.length === 0}
-              error={error && featuredGames.length === 0 ? error : null}
-            />
-          </section>
-        )}
-
         {/* Paid Games */}
         <section className="max-w-7xl mx-auto px-4 pb-12">
+          <h2 className="text-3xl font-bold mb-6 text-[#3a6aff]">Juegos</h2>
           <GameGrid
             games={filteredGames}
             onAddToCart={handleAddToCart}
             loading={loading}
+            ownedGameIds={ownedGameIds}
             error={error}
           />
         </section>

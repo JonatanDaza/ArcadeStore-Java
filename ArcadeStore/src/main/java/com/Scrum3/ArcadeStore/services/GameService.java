@@ -54,7 +54,7 @@ public class GameService {
         return gameRepository.findById(id);
     }
 
-    // MÉTODO ACTUALIZADO: Incluir agreementId
+    // MÉTODO CREATE
     public Game createGame(
             MultipartFile imagen,
             String titulo,
@@ -63,7 +63,7 @@ public class GameService {
             String requisitosMinimos,
             String requisitosRecomendados,
             Long categoryId,
-            Long agreementId, // NUEVO: Parámetro para convenio
+            Long agreementId,
             Boolean active
     ) {
         try {
@@ -82,7 +82,7 @@ public class GameService {
             game.setCategory(category);
             System.out.println("✅ Categoría asignada: " + category.getName());
 
-            // NUEVO: Buscar y asignar convenio si se proporciona
+            // Buscar y asignar convenio si se proporciona
             if (agreementId != null) {
                 try {
                     Agreement agreement = getAgreementById(agreementId);
@@ -137,7 +137,7 @@ public class GameService {
             // Copiar archivo
             Files.copy(imagen.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
             
-            return fileName; // Solo devolver el nombre del archivo, no la ruta completa
+            return fileName; // Solo devolver el nombre del archivo
             
         } catch (IOException e) {
             throw new RuntimeException("Error al guardar la imagen: " + e.getMessage(), e);
@@ -158,7 +158,7 @@ public class GameService {
             if (gameDetails.getImagePath() != null) {
                 existingGame.setImagePath(gameDetails.getImagePath());
             }
-            // NUEVO: Actualizar convenio
+            // Actualizar convenio
             existingGame.setAgreement(gameDetails.getAgreement());
             return gameRepository.save(existingGame);
         } else {
@@ -166,7 +166,7 @@ public class GameService {
         }
     }
 
-    // MÉTODO ACTUALIZADO: Incluir agreementId
+    // MÉTODO UPDATE
     public Game updateGameWithMultipart(
             Long id,
             MultipartFile imagen,
@@ -176,7 +176,7 @@ public class GameService {
             String requisitosMinimos,
             String requisitosRecomendados,
             String categoryId,
-            String agreementId, // NUEVO: Parámetro para convenio
+            String agreementId,
             String active
     ) {
         try {
@@ -189,7 +189,7 @@ public class GameService {
 
             Game existingGame = optionalGame.get();
 
-            // Actualizar campos si se proporcionan
+            // Actualizar campos
             if (titulo != null) existingGame.setTitle(titulo);
             if (descripcion != null) existingGame.setDescription(descripcion);
             if (precio != null) existingGame.setPrice(Double.parseDouble(precio));
@@ -197,14 +197,14 @@ public class GameService {
             if (requisitosRecomendados != null) existingGame.setRequisiteRecommended(requisitosRecomendados);
             if (active != null) existingGame.setActive(Boolean.parseBoolean(active));
 
-            // Actualizar categoría si se proporciona
+            // Actualizar categoría
             if (categoryId != null) {
                 Category category = getCategoryById(Long.parseLong(categoryId));
                 existingGame.setCategory(category);
                 System.out.println("✅ Categoría actualizada: " + category.getName());
             }
 
-            // NUEVO: Actualizar convenio si se proporciona
+            // Actualizar convenio
             if (agreementId != null && !agreementId.trim().isEmpty() && !agreementId.equals("null") && !agreementId.equals("")) {
                 try {
                     Agreement agreement = getAgreementById(Long.parseLong(agreementId));
@@ -220,7 +220,7 @@ public class GameService {
                 System.out.println("ℹ️ Convenio removido del juego");
             }
 
-            // Actualizar imagen si se proporciona
+            // Actualizar imagen
             if (imagen != null && !imagen.isEmpty()) {
                 String imagePath = saveImage(imagen);
                 existingGame.setImagePath(imagePath);
@@ -244,13 +244,13 @@ public class GameService {
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + categoryId));
     }
 
-    // NUEVO: Método para obtener convenio por ID
+    // Método para obtener convenio por ID
     public Agreement getAgreementById(Long agreementId) {
         return agreementRepository.findById(agreementId)
                 .orElseThrow(() -> new RuntimeException("Convenio no encontrado con ID: " + agreementId));
     }
 
-    // CORREGIDO: Método para desactivar juegos - SIN RESTRICCIONES
+    // MÉTODO PATCH
     public boolean desactivarJuegoSINoTieneCategoriaActiva(Long id) {
         try {
             System.out.println("🔄 Desactivando juego ID: " + id);
@@ -261,9 +261,7 @@ public class GameService {
             System.out.println("🎮 Juego encontrado: " + game.getTitle());
             System.out.println("🏷️ Categoría del juego: " + (game.getCategory() != null ? game.getCategory().getName() : "null"));
             System.out.println("🏷️ Categoría activa: " + (game.getCategory() != null ? game.getCategory().isActive() : "null"));
-            
-            // CORREGIDO: Los juegos se pueden desactivar SIN RESTRICCIONES
-            // La restricción es solo para ACTIVAR juegos, no para desactivarlos
+
             System.out.println("✅ Desactivando juego sin restricciones");
             game.setActive(false);
             gameRepository.save(game);
@@ -277,7 +275,7 @@ public class GameService {
         }
     }
 
-    // CORREGIDO: Método para activar juegos - CON RESTRICCIÓN DE CATEGORÍA ACTIVA
+    // Método para activar juegos - CON RESTRICCIÓN DE CATEGORÍA ACTIVA
     public void activarJuego(Long id) {
         try {
             System.out.println("🔄 Intentando activar juego ID: " + id);
@@ -289,7 +287,7 @@ public class GameService {
             System.out.println("🏷️ Categoría del juego: " + (game.getCategory() != null ? game.getCategory().getName() : "null"));
             System.out.println("🏷️ Categoría activa: " + (game.getCategory() != null ? game.getCategory().isActive() : "null"));
             
-            // RESTRICCIÓN: Solo se puede activar un juego si su categoría está activa
+            // Solo se puede activar un juego si su categoría está activa
             if (game.getCategory() != null && !game.getCategory().isActive()) {
                 System.out.println("❌ No se puede activar el juego porque su categoría está inactiva");
                 throw new RuntimeException("No se puede activar el juego porque su categoría está inactiva");
@@ -307,7 +305,7 @@ public class GameService {
         }
     }
 
-    // NUEVO: Método para destacar/quitar destacado de un juego
+    // MÉTODO PARA DESTACAR JUEGO
     public boolean highlightGame(Long id, boolean highlighted, String token) {
         try {
             System.out.println("🔄 " + (highlighted ? "Destacando" : "Quitando destacado de") + " juego ID: " + id);
