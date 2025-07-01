@@ -44,7 +44,7 @@ public class Sale {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
+    @JoinColumn(name = "order_id", nullable = true)
     @JsonIgnore
     private Order order;
 

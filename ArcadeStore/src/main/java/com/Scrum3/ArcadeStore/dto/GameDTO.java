@@ -2,13 +2,16 @@ package com.Scrum3.ArcadeStore.dto;
 
 import com.Scrum3.ArcadeStore.entities.Game;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 
 @Data
 public class GameDTO { 
     private Long id;
     private String title;
     private String description;
-    private Double price;
+    private BigDecimal price;
     private String imagePath;
     private String requisiteMinimum;
     private String requisiteRecommended;
@@ -17,7 +20,7 @@ public class GameDTO {
     private CategoryDTO category;
     private AgreementDTO agreement; // CAMBIADO: Usar DTO en lugar de String
 
-    // Constructor vacío (requerido por Jackson)
+    // Constructor vacío
     public GameDTO() {}
 
     // Constructor con Game

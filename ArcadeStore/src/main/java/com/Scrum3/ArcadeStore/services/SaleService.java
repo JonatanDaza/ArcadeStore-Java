@@ -106,7 +106,7 @@ public class SaleService {
             Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new EntityNotFoundException("Juego no encontrado con ID: " + gameId));
             gamesInCart.add(game);
-            totalAmount = totalAmount.add(BigDecimal.valueOf(game.getPrice()));
+            totalAmount = totalAmount.add(game.getPrice());
         }
 
         // 2. Crear la Orden
@@ -133,9 +133,13 @@ public class SaleService {
             newSale.setGame(game);
             newSale.setOrder(savedOrder);
             newSale.setSaleDate(LocalDateTime.now());
-            newSale.setUnitPrice(BigDecimal.valueOf(game.getPrice()));
+            newSale.setUnitPrice(game.getPrice());
             newSale.setQuantity(1);
             newSale.setActive(true);
+
+            // ✅ AÑADIDO: Asignar el comprador como el nuevo dueño del juego
+            game.setUser(user);
+            gameRepository.save(game);
 
             createdSales.add(saleRepository.save(newSale));
         }

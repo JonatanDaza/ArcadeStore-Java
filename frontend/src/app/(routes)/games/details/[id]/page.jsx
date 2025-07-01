@@ -7,7 +7,7 @@ import Header from "app/components/header";
 import Footer from "app/components/footer";
 import PublicGameService from "app/services/api/publicGames";
 import LibraryService from "app/services/api/library";
-import { FaDownload, FaExchangeAlt } from 'react-icons/fa';
+import { FaDownload, FaExchangeAlt, FaShoppingCart } from 'react-icons/fa';
 
 export default function GameDetailsPage() {
   const params = useParams();
@@ -20,7 +20,9 @@ export default function GameDetailsPage() {
   const [imageError, setImageError] = useState(false);
   const [isOwned, setIsOwned] = useState(false);
   const [installing, setInstalling] = useState(false);
-
+   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasGamesToOffer, setHasGamesToOffer] = useState(false)
+  
 
   const fetchGameDetails = useCallback(async () => {
     if (!gameId) return;
@@ -34,9 +36,11 @@ export default function GameDetailsPage() {
 
       const token = localStorage.getItem('authToken');
       if (token) {
+        setIsAuthenticated(true);
         const libraryData = await LibraryService.getUserLibrary(token);
         const ownedGameIds = new Set(libraryData.map(g => g.id.toString()));
         setIsOwned(ownedGameIds.has(gameId.toString()));
+        setHasGamesToOffer(libraryData.some(libGame => libGame.id.toString() !== gameId));
       }
     } catch (err) {
       setError(err.message || 'Error al cargar el juego');
@@ -94,8 +98,8 @@ export default function GameDetailsPage() {
     }
   };
 
-  const handleExchangeClick = () => {
-    toast.info('La función de intercambio estará disponible próximamente.');
+  const handleExchange = () => {
+    router.push(`/exchange/select-game?requested=${gameId}`);
   };
 
   const handleImageError = () => {
@@ -336,39 +340,38 @@ export default function GameDetailsPage() {
             <p className="text-gray-300 mb-6 text-base leading-relaxed">
               {game.description || 'Sin descripción disponible'}
             </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              {isOwned ? (
+                  <button
+                    onClick={handleInstallClick}
+                    disabled={installing}
+                    className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-colors font-semibold text-base w-full ${installing ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                  >
+                    <FaDownload />
+                    {installing ? 'Instalando...' : 'Instalar'}
+                  </button>
+              ) : (
+                  <button
+                    className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-colors font-semibold text-base ${game.price === 0 ? "bg-green-600 hover:bg-green-700" : "bg-[#3a6aff] hover:bg-[#2952ff]"}`}
+                    onClick={handleAddToCart}
+                  >
+                    <FaShoppingCart className="mr-2" />
+                    {game.price === 0 ? "Obtener gratis" : "Agregar al carrito"}
+                  </button>
+              )}
 
-            {isOwned ? (
-              <div className="flex items-center gap-4 mb-8">
+              {isAuthenticated && !isOwned && hasGamesToOffer && (
                 <button
-                  onClick={handleInstallClick}
-                  disabled={installing}
-                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-colors font-semibold text-base w-full ${installing ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                  onClick={handleExchange}
+                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-colors font-semibold text-base bg-yellow-500 hover:bg-yellow-600 text-black"
                 >
-                  <FaDownload />
-                  {installing ? 'Instalando...' : 'Instalar'}
-                </button>
-                <button
-                  onClick={handleExchangeClick}
-                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-colors font-semibold text-base w-full bg-yellow-500 hover:bg-yellow-600 text-black"
-                >
-                  <FaExchangeAlt />
+                  <FaExchangeAlt className="mr-2" />
                   Intercambiar
                 </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-6 mb-8">
-                <button
-                  className={`px-6 py-3 rounded-lg transition-colors font-semibold text-base ${game.price === 0 ? "bg-green-600 hover:bg-green-700" : "bg-[#3a6aff] hover:bg-[#2952ff]"}`}
-                  onClick={handleAddToCart}
-                >
-                  {game.price === 0 ? "Obtener gratis" : "Agregar al carrito"}
-                </button>
-                <span className="text-2xl font-bold text-[#3a6aff]">
-                  {game.price === 0 ? "" : `$${game.price.toLocaleString("es-CO")}`}
-                </span>
-              </div>
-            )}
-
+              )}
+            </div>
+            
             {/* Requisitos del sistema - DATOS REALES DEL BACKEND */}
             {hasRequirements && (
               <div className="mt-4">

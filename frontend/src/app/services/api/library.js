@@ -20,6 +20,8 @@ const getUserLibrary = async (token) => {
     }
 };
 
-const LibraryService = { getUserLibrary };
+const LibraryService = {
+  getUserLibrary,
+};
 
 export default LibraryService;

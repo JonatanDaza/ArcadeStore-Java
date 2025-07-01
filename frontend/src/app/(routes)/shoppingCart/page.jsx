@@ -141,7 +141,7 @@ export default function ShoppingCartPage() {
                             <h2 className="text-2xl font-bold mb-4">Tu carrito está vacío</h2>
                             <p className="text-gray-300 mb-6">¡Explora nuestra tienda y encuentra juegos increíbles!</p>
                             <button
-                                onClick={() => router.push('/store')}
+                                onClick={() => router.push('/games')}
                                 className="bg-[#3a6aff] hover:bg-[#2952ff] px-6 py-3 rounded-lg transition-colors font-semibold"
                             >
                                 Explorar Juegos
