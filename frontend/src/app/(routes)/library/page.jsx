@@ -6,7 +6,7 @@ import Header from 'app/components/header';
 import Footer from 'app/components/footer';
 import LibraryService from 'app/services/api/library';
 import GameCard from 'app/components/GameCard';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function LibraryPage() {
     const [library, setLibrary] = useState([]);
@@ -41,6 +41,17 @@ export default function LibraryPage() {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
+            <Toaster
+                position="top-right"
+                containerStyle={{ top: '8rem' }}
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: '#333',
+                        color: '#fff',
+                    },
+                }}
+            />
             <main className="flex-1 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white">
                 <section className="py-12 px-4">
                     <div className="max-w-7xl mx-auto text-center">

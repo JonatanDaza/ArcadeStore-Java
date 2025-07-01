@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import { getAllUsers, cambiarRolUsuario } from "app/services/api/users";
+import { toast, Toaster } from "react-hot-toast";
 
 // Botón personalizado para cambiar rol
 function ButtonChangeRole({ onClick, children, disabled }) {
@@ -30,13 +31,20 @@ function cellCambiarRol({ row, reloadUsers }) {
   return (
     <ButtonChangeRole
       onClick={async () => {
-        if (isSelf) return; // Previene acción si es el mismo usuario
+        if (isSelf) return;
         try {
           const token = localStorage.getItem("authToken");
+          const nuevoRol = row.original.role?.name?.toLowerCase() === "admin" ? "Usuario" : "Administrador";
+
           await cambiarRolUsuario(row.original.id, token);
-          reloadUsers(); // Recarga la lista de usuarios
+          toast.success(`${row.original.username} se convirtió en ${nuevoRol}`, {
+            icon: "🔄",
+            duration: 5000,
+          });
+
+          reloadUsers();
         } catch (e) {
-          alert("No se pudo cambiar el rol");
+          toast.error("No se pudo cambiar el rol");
         }
       }}
       disabled={isSelf}
@@ -128,6 +136,17 @@ export default function UsersPage() {
       <Header />
       <div className="flex flex-1 min-h-0">
         <Sidebar />
+        <Toaster
+          position="top-right"
+          containerStyle={{ top: '8rem' }}
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#333',
+              color: '#fff',
+            },
+          }}
+        />
         <main className="flex-1 min-w-0 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-3 lg:p-5">
           <div className="w-auto h-auto pt-3">
             <h1 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 custom_heading">

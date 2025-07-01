@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PublicGameService from 'app/services/api/publicGames';
+import { Toaster } from 'react-hot-toast';
 
 export default function GameCard({ game, onAddToCart, isOwned }) {
   const router = useRouter();
@@ -39,6 +40,17 @@ export default function GameCard({ game, onAddToCart, isOwned }) {
 
   return (
     <div className="bg-[#222] rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer" onClick={handleViewDetails}>
+      <Toaster
+        position="top-right"
+        containerStyle={{ top: '8rem' }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+        }}
+      />
       <div className="relative">
         <img
           src={imageError ? '/images/default-game.png' : PublicGameService.getImageUrl(game.imagePath)}
@@ -77,38 +89,38 @@ export default function GameCard({ game, onAddToCart, isOwned }) {
         <div className="flex items-center justify-between">
           <span className="text-2xl font-bold text-[#3a6aff]" >
             {game.price === 0 ? 'Gratis' : `$${game.price.toLocaleString('es-CO')}`}
-          </span>          
+          </span>
         </div>
-          <div className="flex space-x-2 mt-4 gap-2">
-            {isOwned ? (
-              <>
-                <button
-                  onClick={handleViewDetails}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-                >
-                  Detalles
-                </button>
-                <button onClick={handleInstallClick} disabled={installing} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${installing ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white`}>
-                  {installing ? 'Instalando...' : 'Instalar'}
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={handleViewDetails}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-                >
-                  Detalles
-                </button>
-                <button
-                  onClick={handleAddToCartClick}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${game.price === 0 ? 'bg-green-600 hover:bg-green-700' : 'bg-[#3a6aff] hover:bg-[#2952ff]'} text-white`} 
-                >
-                  {game.price === 0 ? 'Obtener' : 'Agregar'}
-                </button>
-              </>
-            )}
-          </div>
+        <div className="flex space-x-2 mt-4 gap-2">
+          {isOwned ? (
+            <>
+              <button
+                onClick={handleViewDetails}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+              >
+                Detalles
+              </button>
+              <button onClick={handleInstallClick} disabled={installing} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${installing ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white`}>
+                {installing ? 'Instalando...' : 'Instalar'}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleViewDetails}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+              >
+                Detalles
+              </button>
+              <button
+                onClick={handleAddToCartClick}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${game.price === 0 ? 'bg-green-600 hover:bg-green-700' : 'bg-[#3a6aff] hover:bg-[#2952ff]'} text-white`}
+              >
+                {game.price === 0 ? 'Obtener' : 'Agregar'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

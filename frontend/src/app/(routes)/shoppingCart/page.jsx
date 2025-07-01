@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from 'app/components/header';
 import Footer from 'app/components/footer';
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import CheckoutService from "app/services/api/checkout";
 
 export default function ShoppingCartPage() {
@@ -109,6 +109,17 @@ export default function ShoppingCartPage() {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
+            <Toaster
+                position="top-right"
+                containerStyle={{ top: '8rem' }}
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: '#333',
+                        color: '#fff',
+                    },
+                }}
+            />
             <section className="flex-1 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white py-10">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <div className="flex items-center justify-between mb-8">

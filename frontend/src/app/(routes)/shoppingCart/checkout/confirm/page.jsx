@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Header from 'app/components/header';
 import Footer from 'app/components/footer';
 import SalesService from 'app/services/api/sales';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function OrderConfirmationPage() {
     const [orderData, setOrderData] = useState(null);
@@ -16,7 +16,7 @@ export default function OrderConfirmationPage() {
 
     useEffect(() => {
         const orderId = searchParams.get('orderId');
-        
+
         if (!orderId) {
             toast.error("No se encontró un ID de orden para mostrar.");
             router.push('/store');
@@ -85,6 +85,17 @@ export default function OrderConfirmationPage() {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
+            <Toaster
+                position="top-right"
+                containerStyle={{ top: '8rem' }}
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: '#333',
+                        color: '#fff',
+                    },
+                }}
+            />
             <section className="flex-1 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white py-10">
                 <div className="container mx-auto px-4 max-w-4xl">
                     <div className="bg-[#222] p-8 md:p-12 rounded-2xl shadow-2xl text-center">
@@ -99,7 +110,7 @@ export default function OrderConfirmationPage() {
                         <h1 className="text-4xl md:text-5xl font-bold text-green-400 mb-4">
                             ¡Pago Exitoso!
                         </h1>
-                        
+
                         <p className="text-xl text-gray-300 mb-8">
                             Tu pedido ha sido procesado correctamente
                         </p>
@@ -109,18 +120,18 @@ export default function OrderConfirmationPage() {
                             <h2 className="text-2xl font-bold text-[#3a6aff] mb-4 text-center">
                                 Detalles del Pedido
                             </h2>
-                            
+
                             <div className="space-y-3">
                                 <div className="flex justify-between">
                                     <span className="text-gray-300">Número de pedido:</span>
                                     <span className="font-bold text-[#3a6aff]">{orderData?.orderNumber || 'N/A'}</span>
                                 </div>
-                                
+
                                 <div className="flex justify-between">
                                     <span className="text-gray-300">Fecha:</span>
                                     <span className="font-semibold">{orderData?.createdAt ? new Date(orderData.createdAt).toLocaleDateString('es-CO') : 'N/A'}</span>
                                 </div>
-                                
+
                                 <div className="flex justify-between">
                                     <span className="text-gray-300">Estado:</span>
                                     <span className="font-semibold text-green-400">{orderData?.orderStatus || 'Confirmado'}</span>
@@ -173,14 +184,14 @@ export default function OrderConfirmationPage() {
                             >
                                 Seguir Comprando
                             </button>
-                            
+
                             <button
                                 onClick={() => router.push('/library')}
                                 className="bg-green-600 hover:bg-green-700 px-8 py-3 rounded-lg transition-colors font-semibold text-lg"
                             >
                                 Ver Mis Juegos
                             </button>
-                            
+
                             <button
                                 onClick={() => {
                                     const orderInfo = `Pedido: ${orderData?.orderNumber}\nFecha: ${new Date(orderData?.createdAt).toLocaleDateString('es-CO')}\nEstado: ${orderData?.orderStatus}`;

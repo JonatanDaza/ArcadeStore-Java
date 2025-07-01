@@ -4,6 +4,7 @@ import Footer from "app/components/footer";
 import Table from "app/components/Table";
 import { HiOutlineDocumentText } from "react-icons/hi2";
 import Sidebar from "app/components/sidebar";
+import { Toaster } from "react-hot-toast";
 
 // Botón PDF solo icono + texto
 function ButtonPDF({ onClick }) {
@@ -87,6 +88,17 @@ export default function ExchangesPage() {
       <Header />
       <div className="flex flex-1 min-h-0">
         <Sidebar />
+        <Toaster
+          position="top-right"
+          containerStyle={{ top: '8rem' }}
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#333',
+              color: '#fff',
+            },
+          }}
+        />
         <main className="flex-1 min-w-0 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-3 lg:p-5">
           <div
             className="w-auto h-auto pt-3"

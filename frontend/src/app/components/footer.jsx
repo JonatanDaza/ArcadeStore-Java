@@ -62,7 +62,7 @@ export default function Footer() {
           <p className=' text-[#000]'>
             &copy; <span>{currentYear}</span> Todos los derechos reservados por{' '}
             <a
-              href="https://html.design/"
+              href="https://github.com/JonatanDaza/ArcadeStore-Java"
               target="_blank"
               rel="noopener noreferrer"
               className=" text-[#000] hover:underline"

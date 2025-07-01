@@ -228,10 +228,11 @@ export default function DashboardPage() {
 
   // Datos para el gráfico de dona
   const donutData = [
+    { label: 'Gratuitos', value: stats.free_games },
     { label: 'De Pago', value: stats.paid_games },
-    { label: 'Gratuitos', value: stats.free_games }
+    { label: 'Total', value: stats.total_games - stats.free_games - stats.paid_games },
   ];
-  const donutColors = ['#3b82f6', '#10b981', '#f59e0b'];
+  const donutColors = ['purple', 'darkblue', '#10b981' ];
 
   return (
     <div className="flex flex-col min-h-screen">

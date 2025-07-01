@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Toaster } from "react-hot-toast";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -105,6 +106,17 @@ export default function RegisterPage() {
           </form>
         </div>
       </main>
+      <Toaster
+        position="top-right"
+        containerStyle={{ top: '8rem' }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+        }}
+      />
     </div>
   );
 }

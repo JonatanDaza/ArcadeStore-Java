@@ -7,7 +7,7 @@ import Sidebar from "app/components/sidebar";
 import AgreementService from "app/services/api/agreements";
 import CreateModal from "app/components/modalCreate";
 import { useState, useEffect, useCallback } from "react";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import ShowModal from "@/components/modalShow";
 import { jwtDecode } from 'jwt-decode';
@@ -129,7 +129,7 @@ export default function AgreementsPage() {
           );
           toast?.success('Acuerdo desactivado exitosamente');
         } catch (err) {
-          toast?.error('Error al desactivar acuerdo');
+          toast?.error('Error al desactivar acuerdo, existe un juego asociado a este acuerdo.');
         }
       } else {
         try {
@@ -481,6 +481,17 @@ export default function AgreementsPage() {
       <Header />
       <div className="flex flex-1 min-h-0">
         <Sidebar />
+        <Toaster
+          position="top-right"
+          containerStyle={{ top: '8rem' }}
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#333',
+              color: '#fff',
+            },
+          }}
+        />
         <main className="flex-1 min-w-0 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-3 lg:p-5">
           <div className="w-auto h-auto pt-3">
             <div className="flex justify-between items-center mb-4 lg:mb-6">

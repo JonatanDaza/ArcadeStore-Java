@@ -6,7 +6,7 @@ import Header from 'app/components/header';
 import Footer from 'app/components/footer';
 import LibraryService from 'app/services/api/library';
 import GameCard from 'app/components/GameCard';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function Orders() {
     const [library, setLibrary] = useState([]);
@@ -40,6 +40,17 @@ export default function Orders() {
 
     return (
         <div className="flex flex-col w-auto h-auto">
+            <Toaster
+                position="top-right"
+                containerStyle={{ top: '8rem' }}
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: '#333',
+                        color: '#fff',
+                    },
+                }}
+            />
             <main className="flex-1 text-white">
                 <section className="">
                     <div className="max-w-auto mx-auto text-center">

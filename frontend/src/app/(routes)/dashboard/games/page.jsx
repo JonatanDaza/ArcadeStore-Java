@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 import Header from "app/components/header";
 import Footer from "app/components/footer";
 import Table from "app/components/Table";
@@ -17,7 +17,7 @@ import AgreementService from "app/services/api/agreements";
 export default function GamesPage() {
   const [games, setGames] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [agreements, setAgreements] = useState([]); // NUEVO: Estado para convenios
+  const [agreements, setAgreements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('checking');
@@ -26,7 +26,7 @@ export default function GamesPage() {
   const [selectedGame, setSelectedGame] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
-  const [agreementsLoading, setAgreementsLoading] = useState(false); // NUEVO: Estado de carga para convenios
+  const [agreementsLoading, setAgreementsLoading] = useState(false);
 
   // Load categories for the dropdown
   const loadCategories = useCallback(async () => {
@@ -263,7 +263,9 @@ export default function GamesPage() {
               : game
           )
         );
-        toast?.success(`Juego ${newStatus ? 'activado' : 'desactivado'} exitosamente`);
+        toast?.success(`Juego ${newStatus ? 'activado' : 'desactivado'} exitosamente`, {
+          duration: 5000,
+        });
       } else {
         toast?.error("Error al cambiar estado del juego");
       }
@@ -345,14 +347,20 @@ export default function GamesPage() {
 
     // Verificar si las categorías están cargando
     if (categoriesLoading) {
-      toast.info('Cargando categorías, por favor espera...');
+      toast('Cargando categorías, por favor espera...', {
+        icon: '⏳',
+        duration: 4000,
+      });
       return;
     }
 
     // Si no hay categorías, intentar cargarlas primero
     if (categories.length === 0) {
       console.log('⚠️ No hay categorías, intentando cargar...');
-      toast.info('Cargando categorías...');
+      toast('Cargando categorías...', {
+        icon: 'ℹ️',
+        duration: 4000,
+      });
       loadCategories().then(() => {
         console.log('📂 Categorías cargadas, abriendo modal...');
         setSelectedGame(null);
@@ -569,6 +577,7 @@ export default function GamesPage() {
         <ToggleSwitch
           checked={Boolean(game.active)}
           onChange={() => handleStatusChange(game.id, game.active)}
+          toast={toast}
           title={game.active ? "Desactivar" : "Activar"}
         />
       </div>
@@ -823,6 +832,17 @@ export default function GamesPage() {
       <Header />
       <div className="flex flex-1 min-h-0">
         <Sidebar />
+        <Toaster
+          position="top-right"
+          containerStyle={{ top: '8rem' }}
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#333',
+              color: '#fff',
+            },
+          }}
+        />
         <main className="flex-1 min-w-0 bg-gradient-to-b from-[#06174d] via-black to-[#06174d] p-3 lg:p-5">
           <div className="w-auto h-auto pt-3">
             <div className="flex justify-between items-center mb-4 lg:mb-6">

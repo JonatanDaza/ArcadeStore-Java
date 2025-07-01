@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from "react";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Header from "app/components/header";
 import Footer from "app/components/footer";
@@ -82,20 +82,20 @@ export default function FreeGamesPage() {
   }, [loadFreeGames, loadCategories]);
 
   useEffect(() => {
-  const fetchLibrary = async () => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      try {
-        const libraryData = await LibraryService.getUserLibrary(token);
-        const ids = new Set(libraryData.map(game => game.id));
-        setOwnedGameIds(ids);
-      } catch (error) {
-        console.warn("No se pudo cargar la biblioteca del usuario", error);
+    const fetchLibrary = async () => {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        try {
+          const libraryData = await LibraryService.getUserLibrary(token);
+          const ids = new Set(libraryData.map(game => game.id));
+          setOwnedGameIds(ids);
+        } catch (error) {
+          console.warn("No se pudo cargar la biblioteca del usuario", error);
+        }
       }
-    }
-  };
-  fetchLibrary();
-}, []);
+    };
+    fetchLibrary();
+  }, []);
 
   // Filtrar juegos gratuitos
   const filteredGames = freeGames.filter(game => {
@@ -118,7 +118,7 @@ export default function FreeGamesPage() {
         existingCart[existingItemIndex].quantity += 1;
       } else {
         const cartItem = {
-          id: game.id, 
+          id: game.id,
           title: game.title,
           price: game.price,
           image: game.imagePath,
@@ -143,6 +143,17 @@ export default function FreeGamesPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
+      <Toaster
+        position="top-right"
+        containerStyle={{ top: '8rem' }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+        }}
+      />
       <main className="flex-1 font-poppins text-white bg-gradient-to-b from-[#06174d] via-black to-[#06174d]">
 
         {/* Hero Section */}

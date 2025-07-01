@@ -50,7 +50,7 @@ export default function Contact({ onClose }) {
                 required
                 value={form.nombre}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded bg-gray-300 text-white border border-black focus:outline-none focus:ring-2 focus:ring-[#3a6aff]"
+                className="w-full px-4 py-2 rounded bg-gray-300 text-black border border-black focus:outline-none focus:ring-2 focus:ring-[#3a6aff]"
               />
             </div>
             <div>
@@ -62,7 +62,7 @@ export default function Contact({ onClose }) {
                 required
                 value={form.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded bg-gray-300 text-white border border-black focus:outline-none focus:ring-2 focus:ring-[#3a6aff]"
+                className="w-full px-4 py-2 rounded bg-gray-300 text-black border border-black focus:outline-none focus:ring-2 focus:ring-[#3a6aff]"
               />
             </div>
             <div>
@@ -74,7 +74,7 @@ export default function Contact({ onClose }) {
                 required
                 value={form.asunto}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded bg-gray-300 text-white border border-black focus:outline-none focus:ring-2 focus:ring-[#3a6aff]"
+                className="w-full px-4 py-2 rounded bg-gray-300 text-black border border-black focus:outline-none focus:ring-2 focus:ring-[#3a6aff]"
               />
             </div>
             <div>
@@ -86,7 +86,7 @@ export default function Contact({ onClose }) {
                 required
                 value={form.mensaje}
                 onChange={handleChange}
-                className="w-full rounded bg-gray-300 text-white border border-black focus:outline-none focus:ring-2 focus:ring-[#3a6aff]"
+                className="w-full rounded bg-gray-300 text-black border border-black focus:outline-none focus:ring-2 focus:ring-[#3a6aff]"
               />
             </div>
             <button

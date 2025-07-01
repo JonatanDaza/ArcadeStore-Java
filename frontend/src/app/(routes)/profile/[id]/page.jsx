@@ -10,6 +10,7 @@ import SidebarPerfil from "app/components/sidebarPerfil";
 import LogoutModal from "app/components/logoutModal";
 // Corregir la ruta de importación
 import { getUserById, updateUser } from "app/services/api/users";
+import { Toaster } from "react-hot-toast";
 
 const sidebarOptions = [
   { key: "info", label: "Información personal" },
@@ -66,9 +67,9 @@ export default function ProfilePage() {
   useEffect(() => {
     const storedId = localStorage.getItem("id");
     const token = localStorage.getItem("authToken");
-    
+
     console.log("Auth check - storedId:", storedId, "urlUserId:", urlUserId, "hasToken:", !!token);
-    
+
     if (!token) {
       console.log("No token found, redirecting to login");
       router.replace("/login");
@@ -83,7 +84,7 @@ export default function ProfilePage() {
       router.replace(`/profile/${storedId}`);
       return;
     }
-    
+
     if (!storedId) {
       console.log("No stored ID, redirecting to login");
       router.replace("/login");
@@ -103,9 +104,9 @@ export default function ProfilePage() {
       try {
         setLoading(true);
         const token = localStorage.getItem("authToken");
-        
+
         console.log("Loading user data for ID:", urlUserId);
-        
+
         if (!token) {
           console.log("No token during data load, redirecting");
           router.replace("/login");
@@ -128,7 +129,7 @@ export default function ProfilePage() {
             createdAt: userData.createdAt || null,
             updatedAt: userData.updatedAt || null
           };
-          
+
           setUserInfo(safeUserData);
           setEditedInfo(safeUserData);
           setUserNotFound(false);
@@ -140,7 +141,7 @@ export default function ProfilePage() {
       } catch (error) {
         console.error("Error loading user data:", error);
         console.error("Error stack:", error.stack);
-        
+
         if (error.message.includes('401') || error.message.includes('403')) {
           console.log("Authentication error, clearing session");
           localStorage.removeItem("authToken");
@@ -168,7 +169,7 @@ export default function ProfilePage() {
     try {
       setSaveLoading(true);
       const token = localStorage.getItem("authToken");
-      
+
       if (!token) {
         router.replace("/login");
         return;
@@ -181,7 +182,7 @@ export default function ProfilePage() {
       };
 
       const updatedUser = await updateUser(urlUserId, editableData, token);
-      
+
       // Asegurar que la respuesta tenga valores seguros
       const safeUpdatedUser = {
         id: updatedUser.id || userInfo.id,
@@ -193,10 +194,10 @@ export default function ProfilePage() {
         createdAt: updatedUser.createdAt || userInfo.createdAt,
         updatedAt: updatedUser.updatedAt || userInfo.updatedAt
       };
-      
+
       setUserInfo(safeUpdatedUser);
       setIsEditing(false);
-      
+
       console.log("Perfil actualizado correctamente");
     } catch (error) {
       console.error("Error updating user:", error);
@@ -275,6 +276,17 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-[#06174d] via-black to-[#06174d] text-white font-sans relative">
+      <Toaster
+        position="top-right"
+        containerStyle={{ top: '8rem' }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+        }}
+      />
       <SidebarPerfil
         userName={userInfo.username || "Usuario"}
         sidebarOptions={sidebarOptions}

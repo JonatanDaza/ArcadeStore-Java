@@ -306,7 +306,7 @@ public class GameController {
             @RequestPart("requisitos_minimos") String requisitosMinimos,
             @RequestPart("requisitos_recomendados") String requisitosRecomendados,
             @RequestPart("categoryId") String categoryId,
-            @RequestPart(value = "agreementId", required = false) String agreementId, // NUEVO: Campo opcional para convenio
+            @RequestPart(value = "agreementId") String agreementId, // NUEVO: Campo opcional para convenio
             @RequestPart("active") String active
     ) {
         try {

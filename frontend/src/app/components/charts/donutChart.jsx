@@ -3,13 +3,23 @@ import React from 'react';
 const DonutChart = ({ data, colors, centerText, centerValue }) => {
   const total = data.reduce((sum, item) => sum + item.value, 0);
   let currentAngle = 0;
-  
+
+  if (total === 0) {
+    return (
+      <div className="relative w-48 h-48 mx-auto flex items-center justify-center flex-col">
+        <div className="text-2xl font-bold text-white">0</div>
+        <div className="text-sm text-white">{centerText}</div>
+        <p className="text-xs text-gray-400 mt-2">No hay datos para mostrar</p>
+      </div>
+    );
+  }
+
   const segments = data.map((item, index) => {
     const percentage = (item.value / total) * 100;
     const angle = (item.value / total) * 360;
     const startAngle = currentAngle;
     currentAngle += angle;
-    
+
     return {
       ...item,
       percentage,
@@ -26,17 +36,16 @@ const DonutChart = ({ data, colors, centerText, centerValue }) => {
           const startAngleRad = (segment.startAngle * Math.PI) / 180;
           const endAngleRad = ((segment.startAngle + segment.angle) * Math.PI) / 180;
           const largeArcFlag = segment.angle > 180 ? 1 : 0;
-          
+
           const x1 = 100 + 70 * Math.cos(startAngleRad);
           const y1 = 100 + 70 * Math.sin(startAngleRad);
           const x2 = 100 + 70 * Math.cos(endAngleRad);
           const y2 = 100 + 70 * Math.sin(endAngleRad);
-          
-          // Check if coordinates are valid numbers
+
           if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
-            return null; // Skip rendering this segment if coordinates are invalid
+            return null;
           }
-          
+
           const pathData = [
             `M 100 100`,
             `L ${x1} ${y1}`,
@@ -48,7 +57,7 @@ const DonutChart = ({ data, colors, centerText, centerValue }) => {
             <path
               key={index}
               d={pathData}
-              fill={segment.darkcolor}
+              fill={segment.color}
               stroke={segment.color}
               className="hover:opacity-80 transition-opacity duration-200"
               style={{
@@ -58,7 +67,7 @@ const DonutChart = ({ data, colors, centerText, centerValue }) => {
           );
         })}
       </svg>
-      
+
       {/* Centro del donut */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <div className="text-2xl font-bold text-white">{centerValue}</div>
