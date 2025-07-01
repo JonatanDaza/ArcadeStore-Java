@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 export default function Contact({ onClose }) {
   const [form, setForm] = useState({
@@ -16,9 +17,20 @@ export default function Contact({ onClose }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    setEnviado(true);
+
+    try {
+      const response = await axios.post("http://localhost:8085/api/contact", form);
+      if (response.status === 200) {
+        setEnviado(true);
+      } else {
+        alert("Error al enviar el mensaje.");
+      }
+    } catch (error) {
+      console.error("Error al enviar:", error);
+      alert("Error al enviar el mensaje: " + error.response?.data || error.message);
+    }
   };
 
   return (
