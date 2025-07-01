@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -59,7 +60,7 @@ public class GameService {
             MultipartFile imagen,
             String titulo,
             String descripcion,
-            Double precio,
+            BigDecimal precio,
             String requisitosMinimos,
             String requisitosRecomendados,
             Long categoryId,
@@ -192,7 +193,7 @@ public class GameService {
             // Actualizar campos si se proporcionan
             if (titulo != null) existingGame.setTitle(titulo);
             if (descripcion != null) existingGame.setDescription(descripcion);
-            if (precio != null) existingGame.setPrice(Double.parseDouble(precio));
+            if (precio != null) existingGame.setPrice(new BigDecimal(precio));
             if (requisitosMinimos != null) existingGame.setRequisiteMinimum(requisitosMinimos);
             if (requisitosRecomendados != null) existingGame.setRequisiteRecommended(requisitosRecomendados);
             if (active != null) existingGame.setActive(Boolean.parseBoolean(active));

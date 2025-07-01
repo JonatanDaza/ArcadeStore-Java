@@ -1,47 +1,56 @@
 package com.Scrum3.ArcadeStore.controller;
 
-import com.Scrum3.ArcadeStore.entities.Exchange;
-import com.Scrum3.ArcadeStore.services.ExchangeService;
+import com.Scrum3.ArcadeStore.dto.ExchangeRequest;
+import com.Scrum3.ArcadeStore.service.ExchangeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
+import com.Scrum3.ArcadeStore.dto.ExchangeResponse;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/exchanges")
+@CrossOrigin(
+    origins = {"http://localhost:3000", "http://127.0.0.1:3000"},
+    methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE, RequestMethod.OPTIONS},
+    allowedHeaders = {"Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"},
+    allowCredentials = "true",
+    maxAge = 3600
+)
 public class ExchangeController {
 
     @Autowired
     private ExchangeService exchangeService;
 
-    @GetMapping("list")
-    public ResponseEntity<List<Exchange>> getAllExchanges() {
-        List<Exchange> exchanges = exchangeService.getAllExchanges();
-        return new ResponseEntity<>(exchanges, HttpStatus.OK);
+    @PostMapping("/create")
+    @PreAuthorize("hasRole('USER')") // Solo usuarios autenticados pueden intercambiar
+    public ResponseEntity<?> createExchange(@RequestBody ExchangeRequest request, Authentication authentication) {
+        try {
+            ExchangeResponse newExchange = exchangeService.createExchange(request, authentication);
+            return ResponseEntity.ok(newExchange);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Exchange> getExchangeById(@PathVariable Long id) {
-        return exchangeService.getExchangeById(id)
-                .map(exchange -> new ResponseEntity<>(exchange, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ExchangeResponse>> getAllExchanges() {
+        List<ExchangeResponse> exchanges = exchangeService.getAllExchanges();
+        return ResponseEntity.ok(exchanges);
     }
 
-    @PostMapping
-    public ResponseEntity<Exchange> createExchange(@RequestBody Exchange exchange) {
-        Exchange createdExchange = exchangeService.createExchange(exchange);
-        return new ResponseEntity<>(createdExchange, HttpStatus.CREATED);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Exchange> updateExchange(@PathVariable Long id, @RequestBody Exchange exchangeDetails) {
-        Exchange updatedExchange = exchangeService.updateExchange(id, exchangeDetails);
-        if (updatedExchange != null) {
-            return new ResponseEntity<>(updatedExchange, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @exchangeSecurityService.isOwner(authentication, #id)")
+    public ResponseEntity<?> getExchangeById(@PathVariable Long id) {
+        try {
+            ExchangeResponse exchange = exchangeService.getExchangeById(id);
+            return ResponseEntity.ok(exchange);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 }

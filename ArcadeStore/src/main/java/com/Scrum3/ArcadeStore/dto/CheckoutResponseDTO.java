@@ -1,5 +1,6 @@
 package com.Scrum3.ArcadeStore.dto;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.Builder;
 import lombok.NoArgsConstructor;

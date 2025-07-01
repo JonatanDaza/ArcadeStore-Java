@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -132,7 +133,7 @@ public class GameController {
         try {
             System.out.println("💰 Buscando juegos de pago...");
             
-            List<GameDTO> paidGames = gameRepository.findByActiveTrueAndPriceGreaterThan(0.0).stream()
+            List<GameDTO> paidGames = gameRepository.findByActiveTrueAndPriceGreaterThan(BigDecimal.ZERO).stream()
                     .map(GameDTO::new)
                     .collect(Collectors.toList());
             
@@ -150,7 +151,7 @@ public class GameController {
         try {
             System.out.println("🆓 Buscando juegos gratuitos...");
             
-            List<GameDTO> freeGames = gameRepository.findByActiveTrueAndPrice(0.0).stream()
+            List<GameDTO> freeGames = gameRepository.findByActiveTrueAndPrice(BigDecimal.ZERO).stream()
                     .map(GameDTO::new)
                     .collect(Collectors.toList());
             
@@ -311,13 +312,13 @@ public class GameController {
     ) {
         try {
             // Validar y convertir parámetros
-            Double precioDouble;
+            BigDecimal precioBigDecimal;
             Long categoryIdLong;
             Long agreementIdLong = null; // NUEVO: Convenio opcional
             Boolean activeBoolean;
             
             try {
-                precioDouble = Double.parseDouble(precio);
+                precioBigDecimal = new BigDecimal(precio);
                 categoryIdLong = Long.parseLong(categoryId);
                 activeBoolean = Boolean.parseBoolean(active);
                 
@@ -349,7 +350,7 @@ public class GameController {
             }
 
             Game createdGame = gameService.createGame(
-                    imagen, titulo, descripcion, precioDouble,
+                    imagen, titulo, descripcion, precioBigDecimal,
                     requisitosMinimos, requisitosRecomendados, categoryIdLong, agreementIdLong, activeBoolean // NUEVO: Pasar agreementId
             );
             

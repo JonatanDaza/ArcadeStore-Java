@@ -4,6 +4,7 @@ import com.Scrum3.ArcadeStore.entities.Game;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
@@ -18,8 +19,8 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     List<Game> findByActiveTrue();
     List<Game> findByActiveTrueAndHighlightedTrue();
     List<Game> findByActiveTrueAndCategoryId(Long categoryId);
-    List<Game> findByActiveTrueAndPrice(Double price);
-    List<Game> findByActiveTrueAndPriceGreaterThan(Double price);
+    List<Game> findByActiveTrueAndPrice(BigDecimal price);
+    List<Game> findByActiveTrueAndPriceGreaterThan(BigDecimal price);
     List<Game> findTop6ByActiveTrueOrderByIdDesc();
 
     // Métodos adicionales para administración
