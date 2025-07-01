@@ -713,20 +713,26 @@ export default function GamesPage() {
         label: 'Requisitos Mínimos',
         type: 'textarea',
         required: false,
-        placeholder: 'Especifique los requisitos mínimos del sistema',
+        placeholder: 'Requisitos mínimos del sistema',
+        defaultValue: 'Software: \nProcesador: \nMemoria: \nGráficos: \nAlmacenamiento:', 
+        minValue: 'Software: \nProcesador: \nMemoria: \nGráficos: \nAlmacenamiento:',
+        readOnlyStructure: true,
         maxLength: 500,
-        rows: 3,
-        helpText: 'Requisitos mínimos del sistema (opcional)'
+        rows: 5,
+        helpText: 'Complete la información después de cada categoría. La estructura no se puede modificar.'
       },
       {
         name: 'requisitos_recomendados',
         label: 'Requisitos Recomendados',
         type: 'textarea',
         required: false,
-        placeholder: 'Especifique los requisitos recomendados del sistema',
+        placeholder: 'Requisitos mínimos del sistema',
+        defaultValue: 'Software: \nProcesador: \nMemoria: \nGráficos: \nAlmacenamiento:',
+        minValue: 'Software: \nProcesador: \nMemoria: \nGráficos: \nAlmacenamiento:',
+        readOnlyStructure: true,
         maxLength: 500,
-        rows: 3,
-        helpText: 'Requisitos recomendados del sistema (opcional)'
+        rows: 5,
+        helpText: 'Complete la información después de cada categoría. La estructura no se puede modificar.'
       },
       {
         name: 'categoryId',
