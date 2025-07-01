@@ -95,10 +95,12 @@ public class UserService {
             Role rolActual = user.getRole();
 
             if ("ADMIN".equalsIgnoreCase(rolActual.getName())) {
-                Role userRole = roleRepository.findByName("USER").orElseThrow(() -> new RuntimeException("Rol USER no encontrado"));
+                Role userRole = roleRepository.findByName("USER")
+                        .orElseThrow(() -> new RuntimeException("Rol USER no encontrado"));
                 user.setRole(userRole);
             } else {
-                Role adminRole = roleRepository.findByName("ADMIN").orElseThrow(() -> new RuntimeException("Rol ADMIN no encontrado"));
+                Role adminRole = roleRepository.findByName("ADMIN")
+                        .orElseThrow(() -> new RuntimeException("Rol ADMIN no encontrado"));
                 user.setRole(adminRole);
             }
             userRepository.save(user);
@@ -111,9 +113,15 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<GameDTO> getUserLibrary(User user) {
         return saleRepository.findByUser(user).stream()
-                .map(Sale::getGame)      // De cada venta, obtenemos el juego
-                .distinct()              // Nos aseguramos de que cada juego aparezca solo una vez
-                .map(GameDTO::new)       // Convertimos la entidad Game a GameDTO
+                .map(Sale::getGame) // De cada venta, obtenemos el juego
+                .distinct() // Nos aseguramos de que cada juego aparezca solo una vez
+                .map(GameDTO::new) // Convertimos la entidad Game a GameDTO
                 .collect(Collectors.toList());
+    }
+
+    public boolean isCurrentUser(Long userId, String userEmail) {
+        return getUserByEmail(userEmail)
+                .map(user -> user.getId().equals(userId))
+                .orElse(false);
     }
 }

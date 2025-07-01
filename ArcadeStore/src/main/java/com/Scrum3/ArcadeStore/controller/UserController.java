@@ -29,9 +29,8 @@ public class UserController {
     }
 
     @GetMapping("/{id}/show")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        // Este endpoint podría necesitar una autorización más específica (ej. admin o el propio usuario)
-        // Por ahora, lo dejamos accesible para usuarios autenticados para no romper otras funcionalidades.
+    @PreAuthorize("hasRole('ADMIN') or @userService.isCurrentUser(#id, authentication.name)")
+    public ResponseEntity<User> getUserById(@PathVariable Long id, Authentication authentication) {
         return userService.getUserById(id)
                 .map(user -> new ResponseEntity<>(user, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -45,8 +44,9 @@ public class UserController {
     }
 
     @PutMapping("/{id}/update")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+    @PreAuthorize("hasRole('ADMIN') or @userService.isCurrentUser(#id, authentication.name)")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails,
+            Authentication authentication) {
         User updatedUser = userService.updateUser(id, userDetails);
         if (updatedUser != null) {
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
@@ -85,7 +85,8 @@ public class UserController {
         }
     }
 
-    // ✅ NUEVO: Endpoint para obtener la biblioteca de juegos del usuario autenticado
+    // ✅ NUEVO: Endpoint para obtener la biblioteca de juegos del usuario
+    // autenticado
     @GetMapping("/library")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<List<GameDTO>> getUserLibrary() {

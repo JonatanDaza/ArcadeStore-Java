@@ -694,7 +694,7 @@ export default function GamesPage() {
         name: 'imagen',
         label: 'Imagen',
         type: 'file',
-        required: false,
+        required: true,
         accept: 'image/*',
         placeholder: 'Seleccionar imagen',
         helpText: 'Seleccione una imagen para el juego (JPG, PNG, GIF - máximo 5MB)'
@@ -734,7 +734,7 @@ export default function GamesPage() {
         name: 'agreementId', // NUEVO CAMPO
         label: 'Convenio',
         type: 'select',
-        required: false,
+        required: true,
         options: agreementOptions,
         helpText: agreements.length === 0
           ? 'No hay convenios disponibles. Este campo es opcional.'
