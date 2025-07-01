@@ -583,19 +583,17 @@ export default function SalesPage() {
 
             {/* Información adicional y estadísticas */}
             {!loading && !error && sales.length > 0 && (
-              <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="text-sm text-gray-300 bg-gray-800 p-4 rounded-lg">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
+                <div className="mt-4 text-sm text-gray-300">
                   <strong>Estadísticas Generales:</strong><br />
                   Total de ventas: {salesStats.total}<br />
-                  Activas: {salesStats.active}<br />
-                  Inactivas: {salesStats.inactive}
                 </div>
-                <div className="text-sm text-gray-300 bg-gray-800 p-4 rounded-lg">
+                <div className="mt-4 text-sm text-gray-300">
                   <strong>Ingresos:</strong><br />
                   Total: {formatCurrency(salesStats.totalRevenue)}<br />
                   Promedio por venta: {formatCurrency(salesStats.averageSale)}
                 </div>
-                <div className="text-sm text-gray-300 bg-gray-800 p-4 rounded-lg">
+                <div className="mt-4 text-sm text-gray-300">
                   <strong>Métodos de Pago:</strong><br />
                   Diferentes métodos: {salesStats.paymentMethods}<br />
                   Más común: {sales.length > 0 ?
