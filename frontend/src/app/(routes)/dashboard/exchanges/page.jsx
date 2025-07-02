@@ -24,14 +24,23 @@ function ButtonPDF({ onClick }) {
 
 // Acciones de la tabla
 function cellAcciones({ row }) {
+  const exchange = row.original;
+
   return (
     <ButtonPDF
-      onClick={() => {
-        // lógica para descargar/ver PDF
+      onClick={async () => {
+        try {
+          const token = localStorage.getItem("authToken");
+          await ExchangeService.downloadExchangeReport(row.original.id, token);
+          toast.success("PDF generado correctamente");
+        } catch (err) {
+          toast.error(err.message || "Error generando PDF");
+        }
       }}
     />
   );
 }
+
 
 // Columnas para intercambios
 const columns = [
@@ -41,7 +50,11 @@ const columns = [
   },
   {
     header: "Usuario",
-    accessorKey: "userName",
+    accessorKey: "user",
+    cell: info => {
+      const user = info.getValue();
+      return user ? user.username || user.name || 'Usuario' : 'Sin usuario';
+    },
   },
   {
     header: "Juego Solicitado",
@@ -76,6 +89,84 @@ const columns = [
     id: "acciones",
     cell: cellAcciones,
   },
+  //   {
+  //   header: "ID",
+  //   accessorKey: "id",
+  //   cell: info => info.getValue() || '-',
+  // },
+  // {
+  //   header: "Fecha de Venta",
+  //   accessorKey: "saleDate",
+  //   cell: info => {
+  //     const date = info.getValue();
+  //     try {
+  //       return date ? new Date(date).toLocaleString('es-ES') : '-';
+  //     } catch {
+  //       return '-';
+  //     }
+  //   },
+  // },
+  // {
+  //   header: "Usuario",
+  //   accessorKey: "user",
+  //   cell: info => {
+  //     const user = info.getValue();
+  //     return user ? user.username || user.name || 'Usuario' : 'Sin usuario';
+  //   },
+  // },
+  // {
+  //   header: "Juego",
+  //   accessorKey: "game",
+  //   cell: info => {
+  //     const game = info.getValue();
+  //     return game ? game.name || game.title || 'Juego' : 'Sin juego';
+  //   },
+  // },
+  // {
+  //   header: "Monto Total",
+  //   accessorKey: "totalAmount",
+  //   cell: info => formatCurrency(info.getValue()),
+  // },
+  // {
+  //   header: "Método de Pago",
+  //   accessorKey: "paymentMethod",
+  //   cell: info => {
+  //     const method = info.getValue();
+  //     return method || 'No especificado';
+  //   },
+  // },
+  // {
+  //   header: "Fecha Creación",
+  //   accessorKey: "createdAt",
+  //   cell: info => {
+  //     const date = info.getValue();
+  //     try {
+  //       return date ? new Date(date).toLocaleDateString('es-ES') : '-';
+  //     } catch {
+  //       return '-';
+  //     }
+  //   },
+  // },
+  // {
+  //   header: "Estado",
+  //   accessorKey: "active",
+  //   cell: info => (
+  //     info.getValue() ? (
+  //       <span className="inline-block px-4 py-1 text-xs font-semibold rounded-full bg-green-200/80 text-green-800 text-center min-w-[90px]">
+  //         Activo
+  //       </span>
+  //     ) : (
+  //       <span className="inline-block px-4 py-1 text-xs font-semibold rounded-full bg-red-200/80 text-red-700 text-center min-w-[90px]">
+  //         Inactivo
+  //       </span>
+  //     )
+  //   ),
+  // },
+  // {
+  //   header: "Acciones",
+  //   id: "acciones",
+  //   cell: cellAcciones,
+  // },
 ];
 
 export default function ExchangesPage() {
