@@ -45,8 +45,7 @@ public class Agreement {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    // CORREGIDO: Usar JsonIgnoreProperties para evitar serialización circular
+    
     @OneToMany(mappedBy = "agreement", fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"agreement", "category", "hibernateLazyInitializer", "handler"})
     private List<Game> games;

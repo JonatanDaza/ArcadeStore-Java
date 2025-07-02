@@ -1,5 +1,6 @@
 package com.Scrum3.ArcadeStore.services;
 
+import com.Scrum3.ArcadeStore.dto.AgreementDTO;
 import com.Scrum3.ArcadeStore.entities.Agreement;
 import  com.Scrum3.ArcadeStore.Repository.GameRepository;
 import com.Scrum3.ArcadeStore.Repository.AgreementRepository;
@@ -67,6 +68,12 @@ public class AgreementService<id> {
         Agreement agreement = agreementRepository.findById(id).orElseThrow();
         agreement.setActive(true);
         agreementRepository.save(agreement);
+    }
+
+    public List<AgreementDTO> getAllAgreementDTOs() {
+        return agreementRepository.findAll().stream()
+                .map(AgreementDTO::new)
+                .toList();
     }
 }
 

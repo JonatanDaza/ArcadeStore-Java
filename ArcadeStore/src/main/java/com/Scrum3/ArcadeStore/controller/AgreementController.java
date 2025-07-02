@@ -1,6 +1,7 @@
 package com.Scrum3.ArcadeStore.controller;
 
 import com.Scrum3.ArcadeStore.Repository.AgreementRepository;
+import com.Scrum3.ArcadeStore.dto.AgreementDTO;
 import com.Scrum3.ArcadeStore.entities.Agreement;
 import com.Scrum3.ArcadeStore.services.AgreementService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +19,9 @@ public class AgreementController {
     private AgreementService agreementService;
 
     @GetMapping("/all")
-    public ResponseEntity<List<Agreement>> getAllAgreements() {
-        List<Agreement> agreements = agreementService.getAllAgreements();
-        return new ResponseEntity<>(agreements, HttpStatus.OK);
+    public ResponseEntity<List<AgreementDTO>> getAllAgreements() {
+        List<AgreementDTO> agreementDTOs = agreementService.getAllAgreementDTOs();
+        return new ResponseEntity<>(agreementDTOs, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

@@ -10,95 +10,102 @@ export default function ShowModal({
 }) {
   if (!showModal) return null;
 
-  const formatValue = (field, value) => {
-    // Si no hay valor, mostrar valor por defecto
-    if (value === null || value === undefined || value === '') {
-      return field.emptyText || 'No especificado';
-    }
+const formatValue = (field, value) => {
+  if (value === null || value === undefined || value === '') {
+    return field.emptyText || 'No especificado';
+  }
 
-    // Formatear según el tipo de campo
-    switch (field.type) {
-      case 'boolean':
-      case 'checkbox':
-        return value ? (field.trueText || 'Sí') : (field.falseText || 'No');
-        
-      case 'date':
-        try {
-          return new Date(value).toLocaleDateString('es-ES');
-        } catch {
-          return value;
-        }
-        
-      case 'datetime':
-      case 'datetime-local':
-        try {
-          return new Date(value).toLocaleString('es-ES');
-        } catch {
-          return value;
-        }
-        
-      case 'number':
-      case 'currency':
-        if (field.type === 'currency') {
-          return new Intl.NumberFormat('es-ES', {
-            style: 'currency',
-            currency: field.currency || 'EUR'
-          }).format(value);
-        }
-        return value.toLocaleString('es-ES');
-        
-      case 'percentage':
-        return `${value}%`;
-        
-      case 'email':
-        return (
-          <a 
-            href={`mailto:${value}`} 
-            className="text-blue-600 hover:text-blue-800 underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {value}
-          </a>
-        );
-        
-      case 'url':
-        return (
-          <a 
-            href={value} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {value}
-          </a>
-        );
-        
-      case 'phone':
-        return (
-          <a 
-            href={`tel:${value}`} 
-            className="text-blue-600 hover:text-blue-800 underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {value}
-          </a>
-        );
-        
-      case 'text':
-      case 'textarea':
-      default:
-        // Truncar texto largo si es necesario
-        if (field.maxDisplayLength && value.length > field.maxDisplayLength) {
-          return (
-            <span title={value}>
-              {value.substring(0, field.maxDisplayLength)}...
-            </span>
-          );
-        }
+  switch (field.type) {
+    case 'boolean':
+    case 'checkbox':
+      return value ? (field.trueText || 'Sí') : (field.falseText || 'No');
+
+    case 'date':
+      try {
+        return new Date(value).toLocaleDateString('es-ES');
+      } catch {
         return value;
-    }
-  };
+      }
+
+    case 'datetime':
+    case 'datetime-local':
+      try {
+        return new Date(value).toLocaleString('es-ES');
+      } catch {
+        return value;
+      }
+
+    case 'number':
+    case 'currency':
+      if (field.type === 'currency') {
+        return new Intl.NumberFormat('es-ES', {
+          style: 'currency',
+          currency: field.currency || 'EUR'
+        }).format(value);
+      }
+      return value.toLocaleString('es-ES');
+
+    case 'percentage':
+      return `${value}%`;
+
+    case 'email':
+      return (
+        <a 
+          href={`mailto:${value}`} 
+          className="text-blue-600 hover:text-blue-800 underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {value}
+        </a>
+      );
+
+    case 'url':
+      return (
+        <a 
+          href={value} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {value}
+        </a>
+      );
+
+    case 'phone':
+      return (
+        <a 
+          href={`tel:${value}`} 
+          className="text-blue-600 hover:text-blue-800 underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {value}
+        </a>
+      );
+
+    case 'object':
+      if (typeof value === 'object' && value !== null) {
+        return (
+          value[field.displayKey] ||
+          value[field.fallbackKey] ||
+          'Sin información'
+        );
+      }
+      return 'Sin información';
+
+    case 'text':
+    case 'textarea':
+    default:
+      if (field.maxDisplayLength && value.length > field.maxDisplayLength) {
+        return (
+          <span title={value}>
+            {value.substring(0, field.maxDisplayLength)}...
+          </span>
+        );
+      }
+      return value;
+  }
+};
 
   const renderField = (field) => {
     const { 
