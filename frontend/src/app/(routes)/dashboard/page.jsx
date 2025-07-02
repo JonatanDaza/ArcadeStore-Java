@@ -17,6 +17,8 @@ import SalesService from 'app/services/api/sales';
 import GameService from 'app/services/api/games';
 import { getAllUsers } from 'app/services/api/users';
 import AgreementService from 'app/services/api/agreements';
+import { getAllAgreements } from 'app/services/api/agreements';
+import ExchangeService from 'app/services/api/exchangeService';
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -117,14 +119,23 @@ export default function DashboardPage() {
         console.error("Error fetching sales:", error);
       }
 
+      // Obtener intercambios reales (en tiempo real)
+      try {
+        const exchanges = await ExchangeService.getAllExchanges(token);
+        if (Array.isArray(exchanges)) {
+          newStats.total_intercambios = exchanges.length;
+        }
+        console.log("🔄 Intercambios (reales) fetched:", newStats.total_intercambios);
+      } catch (error) {
+        console.error("Error fetching exchanges:", error);
+      }
+
       // Obtener acuerdos/intercambios
       try {
         const agreements = await AgreementService.getAllAgreements(token);
         if (Array.isArray(agreements)) {
           newStats.total_agreements = agreements.length;
           newStats.active_agreements = agreements.filter(agreement => agreement.active !== false).length;
-          // Usar los acuerdos reales en lugar de estimación
-          newStats.total_intercambios = newStats.total_agreements;
         }
         console.log("🤝 Agreements fetched:", newStats.total_agreements, "Active:", newStats.active_agreements);
       } catch (error) {
