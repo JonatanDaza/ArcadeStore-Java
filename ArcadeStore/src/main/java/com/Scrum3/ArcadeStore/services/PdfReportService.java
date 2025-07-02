@@ -1,5 +1,6 @@
 package com.Scrum3.ArcadeStore.services;
 
+import com.Scrum3.ArcadeStore.entities.Exchange;
 import com.Scrum3.ArcadeStore.entities.Sale;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
@@ -268,4 +269,66 @@ public class PdfReportService {
             throw new RuntimeException("Error generando reporte de venta: " + e.getMessage(), e);
         }
     }
+
+    //Exchanges report Pdf
+    public byte[] generateExchangeReport(List<Exchange> exchanges) throws Exception {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4.rotate(), 20, 20, 30, 30);
+        PdfWriter.getInstance(document, baos);
+        document.open();
+
+        Paragraph title = new Paragraph("REPORTE DE INTERCAMBIOS", TITLE_FONT);
+        title.setAlignment(Element.ALIGN_CENTER);
+        title.setSpacingAfter(10);
+        document.add(title);
+
+        LocalDateTime now = LocalDateTime.now();
+        Paragraph info = new Paragraph("Generado el: " + now.format(dateTimeFormatter), NORMAL_FONT);
+        info.setAlignment(Element.ALIGN_RIGHT);
+        info.setSpacingAfter(10);
+        document.add(info);
+
+        if (exchanges.isEmpty()) {
+            document.add(new Paragraph("No hay intercambios registrados.", NORMAL_FONT));
+            document.close();
+            return baos.toByteArray();
+        }
+
+        PdfPTable table = new PdfPTable(7);
+        table.setWidthPercentage(100);
+        table.setSpacingBefore(10);
+        table.setWidths(new float[]{1f, 2f, 2f, 2.5f, 2.5f, 2f, 2f});
+
+        String[] headers = {"ID", "Solicitante", "Dueño", "Juego Ofrecido", "Juego Solicitado", "Estado", "Fecha"};
+        for (String header : headers) {
+            PdfPCell cell = new PdfPCell(new Phrase(header, BOLD_FONT));
+            cell.setBackgroundColor(Color.LIGHT_GRAY);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            table.addCell(cell);
+        }
+
+        for (Exchange ex : exchanges) {
+            table.addCell(createDataCell(String.valueOf(ex.getId())));
+            table.addCell(createDataCell(ex.getRequester().getUsername()));
+            table.addCell(createDataCell(ex.getOwner() != null ? ex.getOwner().getUsername() : "Tienda"));
+            table.addCell(createDataCell(ex.getOfferedGame().getTitle()));
+            table.addCell(createDataCell(ex.getRequestedGame().getTitle()));
+            table.addCell(createDataCell(ex.getStatus()));
+            table.addCell(createDataCell(ex.getExchangeDate().format(dateTimeFormatter)));
+        }
+
+        document.add(table);
+        document.close();
+        return baos.toByteArray();
+    }
+    public byte[] generateExchangeReport(Exchange exchange) {
+        try {
+            List<Exchange> exchanges = List.of(exchange);
+            return generateExchangeReport(exchanges);
+        } catch (Exception e) {
+            throw new RuntimeException("Error generando PDF: " + e.getMessage(), e);
+        }
+    }
+
 }

@@ -100,6 +100,35 @@ class ExchangeService {
       throw error.response?.data || new Error('Error al actualizar el estado del intercambio.');
     }
   }
+
+  /**
+ * Downloads the PDF report of a specific exchange by ID.
+ * @param {string|number} exchangeId - The ID of the exchange to download.
+ * @param {string} token - The user's auth token.
+ * @returns {Promise<void>}
+ */
+  async downloadExchangeReport(exchangeId, token) {
+    try {
+      const response = await axios.get(`${API_URL}/api/exchanges/${exchangeId}/report`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `intercambio_${exchangeId}.pdf`;
+      link.click();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(`Error al descargar PDF del intercambio ${exchangeId}:`, error);
+      throw new Error('No se pudo descargar el reporte PDF.');
+    }
+  }
+
 }
 
 export default new ExchangeService();
