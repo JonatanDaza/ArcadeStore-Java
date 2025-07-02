@@ -3,9 +3,10 @@ package com.Scrum3.ArcadeStore.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
-@Table(name = "exchanges")
+@Table(name = "exchange")
 @Data
 public class Exchange {
     @Id
@@ -33,4 +34,19 @@ public class Exchange {
 
     @Column(name = "exchange_date", nullable = false)
     private LocalDateTime exchangeDate;
+
+    @Column(name = "additional_cost", precision = 10, scale = 2)
+    private BigDecimal additionalCost;
+
+    public void setExchangeDate(LocalDateTime exchangeDate) {
+        this.exchangeDate = exchangeDate;
+    }
+
+    public BigDecimal getAdditionalCost() {
+        return additionalCost;
+    }
+
+    public void setAdditionalCost(BigDecimal additionalCost) {
+        this.additionalCost = additionalCost;
+    }
 }

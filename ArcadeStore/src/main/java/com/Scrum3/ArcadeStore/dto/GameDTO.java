@@ -3,11 +3,12 @@ package com.Scrum3.ArcadeStore.dto;
 import com.Scrum3.ArcadeStore.entities.Game;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 
 @Data
-public class GameDTO { 
+@NoArgsConstructor //Asegura que exista un constructor vacío
+public class GameDTO {
+
     private Long id;
     private String title;
     private String description;
@@ -18,12 +19,12 @@ public class GameDTO {
     private boolean active;
     private boolean highlighted;
     private CategoryDTO category;
-    private AgreementDTO agreement; // CAMBIADO: Usar DTO en lugar de String
+    private AgreementDTO agreement;
 
-    // Constructor vacío
-    public GameDTO() {}
-
-    // Constructor con Game
+    /**
+     * Constructor para convertir una entidad Game a un GameDTO.
+     * Este constructor se encarga de todo el mapeo.
+     */
     public GameDTO(Game game) {
         this.id = game.getId();
         this.title = game.getTitle();
@@ -34,13 +35,13 @@ public class GameDTO {
         this.requisiteRecommended = game.getRequisiteRecommended();
         this.active = game.isActive();
         this.highlighted = game.isHighlighted();
-        
-        // Mapear categoría de forma segura
+
+        // Mapear la categoría anidada si existe
         if (game.getCategory() != null) {
             this.category = new CategoryDTO(game.getCategory());
         }
-        
-        // CORREGIDO: Mapear agreement de forma segura usando DTO
+
+        // Mapear el convenio anidado si existe
         if (game.getAgreement() != null) {
             this.agreement = new AgreementDTO(game.getAgreement());
         }

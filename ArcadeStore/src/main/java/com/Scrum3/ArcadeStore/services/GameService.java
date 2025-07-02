@@ -1,63 +1,24 @@
-package com.Scrum3.ArcadeStore.services;
+package com.Scrum3.ArcadeStore.service;
 
-import com.Scrum3.ArcadeStore.Repository.AgreementRepository;
-import com.Scrum3.ArcadeStore.Repository.CategoryRepository;
-import com.Scrum3.ArcadeStore.entities.Agreement;
-import com.Scrum3.ArcadeStore.entities.Category;
-import com.Scrum3.ArcadeStore.entities.Game;
-import com.Scrum3.ArcadeStore.Repository.GameRepository;
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.Scrum3.ArcadeStore.dto.GameDTO;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
-@Service
-public class GameService {
+public interface GameService {
 
-    private final CategoryRepository categoryRepository;
-    private final GameRepository gameRepository;
-    private final AgreementRepository agreementRepository;
+    // Métodos para la tienda pública (devuelven DTOs)
+    List<GameDTO> findActiveGamesDTO();
+    List<GameDTO> findFreeGamesDTO();
+    List<GameDTO> findFeaturedGamesDTO();
+    List<GameDTO> findPaidGamesDTO();
+    List<GameDTO> findRecentGamesDTO();
+    GameDTO findGameDTOById(Long id);
 
-    // Directorio donde se guardarán las imágenes
-    private final String uploadDir = "uploads/games/";
-
-    public GameService(CategoryRepository categoryRepository, GameRepository gameRepository, AgreementRepository agreementRepository) {
-        this.categoryRepository = categoryRepository;
-        this.gameRepository = gameRepository;
-        this.agreementRepository = agreementRepository;
-        
-        // Crear directorio si no existe
-        try {
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("No se pudo crear el directorio de uploads", e);
-        }
-    }
-
-    public List<Game> getAllGames() {
-        return gameRepository.findAll();
-    }
-
-    public Optional<Game> getGameById(Long id) {
-        return gameRepository.findById(id);
-    }
-
-    // MÉTODO CREATE
-    public Game createGame(
-            MultipartFile imagen,
+    // Métodos para la administración (devuelven DTOs)
+    List<GameDTO> findAllGamesDTO();
+    GameDTO createGame(
             String titulo,
             String descripcion,
             BigDecimal precio,
@@ -65,266 +26,24 @@ public class GameService {
             String requisitosRecomendados,
             Long categoryId,
             Long agreementId,
-            Boolean active
-    ) {
-        try {
-            System.out.println("🎮 Creando juego con convenio ID: " + agreementId);
-            
-            Game game = new Game();
-            game.setTitle(titulo);
-            game.setDescription(descripcion);
-            game.setPrice(precio);
-            game.setRequisiteMinimum(requisitosMinimos);
-            game.setRequisiteRecommended(requisitosRecomendados);
-            game.setActive(active != null ? active : true);
+            Boolean active,
+            MultipartFile image
+    );
 
-            // Buscar y asignar categoría
-            Category category = getCategoryById(categoryId);
-            game.setCategory(category);
-            System.out.println("✅ Categoría asignada: " + category.getName());
-
-            // Buscar y asignar convenio si se proporciona
-            if (agreementId != null) {
-                try {
-                    Agreement agreement = getAgreementById(agreementId);
-                    game.setAgreement(agreement);
-                    System.out.println("✅ Convenio asignado: " + agreement.getCompanyName());
-                } catch (Exception e) {
-                    System.err.println("❌ Error al asignar convenio: " + e.getMessage());
-                    // No lanzar excepción, solo log del error ya que el convenio es opcional
-                }
-            } else {
-                System.out.println("ℹ️ No se proporcionó convenio (opcional)");
-            }
-
-            // Guardar imagen si se proporciona
-            if (imagen != null && !imagen.isEmpty()) {
-                String imagePath = saveImage(imagen);
-                game.setImagePath(imagePath);
-                System.out.println("✅ Imagen guardada: " + imagePath);
-            }
-
-            Game savedGame = gameRepository.save(game);
-            System.out.println("✅ Juego guardado con ID: " + savedGame.getId());
-            System.out.println("✅ Convenio final: " + (savedGame.getAgreement() != null ? savedGame.getAgreement().getCompanyName() : "Sin convenio"));
-            
-            return savedGame;
-        } catch (Exception e) {
-            System.err.println("❌ Error al crear el juego: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Error al crear el juego: " + e.getMessage(), e);
-        }
-    }
-
-    private String saveImage(MultipartFile imagen) {
-        try {
-            // Generar nombre único para el archivo
-            String originalFilename = imagen.getOriginalFilename();
-            String fileExtension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
-            
-            String fileName = UUID.randomUUID().toString() + fileExtension;
-            Path uploadPath = Paths.get(uploadDir);
-            
-            // Crear directorio si no existe
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-            
-            Path filePath = uploadPath.resolve(fileName);
-            
-            // Copiar archivo
-            Files.copy(imagen.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            
-            return fileName; // Solo devolver el nombre del archivo
-            
-        } catch (IOException e) {
-            throw new RuntimeException("Error al guardar la imagen: " + e.getMessage(), e);
-        }
-    }
-
-    public Game updateGame(Long id, Game gameDetails) {
-        Optional<Game> optionalGame = gameRepository.findById(id);
-        if (optionalGame.isPresent()) {
-            Game existingGame = optionalGame.get();
-            existingGame.setTitle(gameDetails.getTitle());
-            existingGame.setDescription(gameDetails.getDescription());
-            existingGame.setPrice(gameDetails.getPrice());
-            existingGame.setCategory(gameDetails.getCategory());
-            existingGame.setRequisiteMinimum(gameDetails.getRequisiteMinimum());
-            existingGame.setRequisiteRecommended(gameDetails.getRequisiteRecommended());
-            existingGame.setActive(gameDetails.isActive());
-            if (gameDetails.getImagePath() != null) {
-                existingGame.setImagePath(gameDetails.getImagePath());
-            }
-            // Actualizar convenio
-            existingGame.setAgreement(gameDetails.getAgreement());
-            return gameRepository.save(existingGame);
-        } else {
-            return null;
-        }
-    }
-
-    // MÉTODO UPDATE
-    public Game updateGameWithMultipart(
+    GameDTO updateGame(
             Long id,
-            MultipartFile imagen,
             String titulo,
             String descripcion,
-            String precio,
+            BigDecimal precio,
             String requisitosMinimos,
             String requisitosRecomendados,
-            String categoryId,
-            String agreementId,
-            String active
-    ) {
-        try {
-            System.out.println("🔄 Actualizando juego ID: " + id + " con convenio: " + agreementId);
-            
-            Optional<Game> optionalGame = gameRepository.findById(id);
-            if (!optionalGame.isPresent()) {
-                return null;
-            }
+            Long categoryId,
+            Long agreementId,
+            Boolean active,
+            MultipartFile image
+    );
 
-            Game existingGame = optionalGame.get();
-
-            // Actualizar campos
-            if (titulo != null) existingGame.setTitle(titulo);
-            if (descripcion != null) existingGame.setDescription(descripcion);
-            if (precio != null) existingGame.setPrice(new BigDecimal(precio));
-            if (requisitosMinimos != null) existingGame.setRequisiteMinimum(requisitosMinimos);
-            if (requisitosRecomendados != null) existingGame.setRequisiteRecommended(requisitosRecomendados);
-            if (active != null) existingGame.setActive(Boolean.parseBoolean(active));
-
-            // Actualizar categoría
-            if (categoryId != null) {
-                Category category = getCategoryById(Long.parseLong(categoryId));
-                existingGame.setCategory(category);
-                System.out.println("✅ Categoría actualizada: " + category.getName());
-            }
-
-            // Actualizar convenio
-            if (agreementId != null && !agreementId.trim().isEmpty() && !agreementId.equals("null") && !agreementId.equals("")) {
-                try {
-                    Agreement agreement = getAgreementById(Long.parseLong(agreementId));
-                    existingGame.setAgreement(agreement);
-                    System.out.println("✅ Convenio actualizado: " + agreement.getCompanyName());
-                } catch (Exception e) {
-                    System.err.println("❌ Error al actualizar convenio: " + e.getMessage());
-                    // No lanzar excepción, solo log del error
-                }
-            } else if (agreementId != null && (agreementId.trim().isEmpty() || agreementId.equals("null") || agreementId.equals(""))) {
-                // Si se envía vacío o null, remover el convenio
-                existingGame.setAgreement(null);
-                System.out.println("ℹ️ Convenio removido del juego");
-            }
-
-            // Actualizar imagen
-            if (imagen != null && !imagen.isEmpty()) {
-                String imagePath = saveImage(imagen);
-                existingGame.setImagePath(imagePath);
-                System.out.println("✅ Imagen actualizada: " + imagePath);
-            }
-
-            Game savedGame = gameRepository.save(existingGame);
-            System.out.println("✅ Juego actualizado exitosamente");
-            System.out.println("✅ Convenio final: " + (savedGame.getAgreement() != null ? savedGame.getAgreement().getCompanyName() : "Sin convenio"));
-            
-            return savedGame;
-        } catch (Exception e) {
-            System.err.println("❌ Error al actualizar el juego: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Error al actualizar el juego: " + e.getMessage(), e);
-        }
-    }
-
-    public Category getCategoryById(Long categoryId) {
-        return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + categoryId));
-    }
-
-    // Método para obtener convenio por ID
-    public Agreement getAgreementById(Long agreementId) {
-        return agreementRepository.findById(agreementId)
-                .orElseThrow(() -> new RuntimeException("Convenio no encontrado con ID: " + agreementId));
-    }
-
-    // MÉTODO PATCH
-    public boolean desactivarJuegoSINoTieneCategoriaActiva(Long id) {
-        try {
-            System.out.println("🔄 Desactivando juego ID: " + id);
-            
-            Game game = gameRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Juego no encontrado con ID: " + id));
-            
-            System.out.println("🎮 Juego encontrado: " + game.getTitle());
-            System.out.println("🏷️ Categoría del juego: " + (game.getCategory() != null ? game.getCategory().getName() : "null"));
-            System.out.println("🏷️ Categoría activa: " + (game.getCategory() != null ? game.getCategory().isActive() : "null"));
-
-            System.out.println("✅ Desactivando juego sin restricciones");
-            game.setActive(false);
-            gameRepository.save(game);
-            System.out.println("✅ Juego desactivado exitosamente");
-            return true;
-            
-        } catch (Exception e) {
-            System.err.println("❌ Error al desactivar juego: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Error al desactivar juego: " + e.getMessage(), e);
-        }
-    }
-
-    // Método para activar juegos - CON RESTRICCIÓN DE CATEGORÍA ACTIVA
-    public void activarJuego(Long id) {
-        try {
-            System.out.println("🔄 Intentando activar juego ID: " + id);
-            
-            Game game = gameRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Juego no encontrado con ID: " + id));
-            
-            System.out.println("🎮 Juego encontrado: " + game.getTitle());
-            System.out.println("🏷️ Categoría del juego: " + (game.getCategory() != null ? game.getCategory().getName() : "null"));
-            System.out.println("🏷️ Categoría activa: " + (game.getCategory() != null ? game.getCategory().isActive() : "null"));
-            
-            // Solo se puede activar un juego si su categoría está activa
-            if (game.getCategory() != null && !game.getCategory().isActive()) {
-                System.out.println("❌ No se puede activar el juego porque su categoría está inactiva");
-                throw new RuntimeException("No se puede activar el juego porque su categoría está inactiva");
-            }
-            
-            System.out.println("✅ Se puede activar el juego porque su categoría está activa");
-            game.setActive(true);
-            gameRepository.save(game);
-            System.out.println("✅ Juego activado exitosamente");
-            
-        } catch (Exception e) {
-            System.err.println("❌ Error al activar juego: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Error al activar juego: " + e.getMessage(), e);
-        }
-    }
-
-    // MÉTODO PARA DESTACAR JUEGO
-    public boolean highlightGame(Long id, boolean highlighted, String token) {
-        try {
-            System.out.println("🔄 " + (highlighted ? "Destacando" : "Quitando destacado de") + " juego ID: " + id);
-            
-            Game game = gameRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Juego no encontrado con ID: " + id));
-            
-            System.out.println("🎮 Juego encontrado: " + game.getTitle());
-            
-            game.setHighlighted(highlighted);
-            gameRepository.save(game);
-            
-            System.out.println("✅ Juego " + (highlighted ? "destacado" : "quitado de destacados") + " exitosamente");
-            return true;
-        } catch (Exception e) {
-            System.err.println("❌ Error al cambiar estado de destacado: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Error al cambiar estado de destacado: " + e.getMessage(), e);
-        }
-    }
+    // Métodos para acciones específicas
+    void changeGameStatus(Long id, boolean active);
+    void highlightGame(Long id, boolean highlighted);
 }

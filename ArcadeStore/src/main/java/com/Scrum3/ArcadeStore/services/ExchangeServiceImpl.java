@@ -1,7 +1,8 @@
 package com.Scrum3.ArcadeStore.services;
 
+import com.Scrum3.ArcadeStore.dto.ExchangeCost;
+import com.Scrum3.ArcadeStore.dto.ExchangeDTO;
 import com.Scrum3.ArcadeStore.dto.ExchangeRequest;
-import com.Scrum3.ArcadeStore.dto.ExchangeResponse;
 import com.Scrum3.ArcadeStore.service.ExchangeService;
 import com.Scrum3.ArcadeStore.entities.Exchange;
 import com.Scrum3.ArcadeStore.entities.Game;
@@ -38,7 +39,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 
     @Override
     @Transactional
-    public ExchangeResponse createExchange(ExchangeRequest request, Authentication authentication) {
+    public ExchangeDTO createExchange(ExchangeRequest request, Authentication authentication) {
         String userEmail = authentication.getName();
         User requester = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -72,21 +73,26 @@ public class ExchangeServiceImpl implements ExchangeService {
         exchange.setRequestedGame(requestedGame);
         exchange.setStatus("PENDING");
         exchange.setExchangeDate(LocalDateTime.now());
+        exchange.setAdditionalCost(exchangeCost.getAdditionalCost());
 
-        // Si hay costo adicional, validar que el usuario tenga suficiente saldo
-        // (Aquí podrías implementar un sistema de saldo si lo tienes)
-        if (exchangeCost.getAdditionalCost().compareTo(BigDecimal.ZERO) > 0) {
-            // Por ahora, asumimos que el pago se manejará externamente
-            // El intercambio se marca como PENDING hasta que se complete el pago
+        // Si no hay costo adicional, procesar inmediatamente.
+        // Si hay costo, se queda en PENDING hasta que se confirme el pago.
+        // La confirmación del pago debería llamar a otro método para procesar el intercambio.
+        if (exchangeCost.getAdditionalCost().compareTo(BigDecimal.ZERO) <= 0) {
+            processExchange(exchange, exchangeCost);
         }
 
-        // Procesar el intercambio
-        processExchange(exchange, exchangeCost);
-
         Exchange savedExchange = exchangeRepository.save(exchange);
-        return convertToResponse(savedExchange, exchangeCost);
+        return convertToDTO(savedExchange, exchangeCost);
     }
 
+    /**
+     * Calcula el costo de un intercambio basado en la diferencia de precios.
+     * La regla es: se cobra una comisión del 10% del valor del juego OFRECIDO,
+     * a menos que el juego SOLICITADO sea más barato que el juego OFRECIDO.
+     * Si el juego solicitado es más caro, se paga la diferencia + la comisión.
+     * Si el juego solicitado es más barato, el intercambio es gratis (no se devuelve dinero).
+     */
     private ExchangeCost calculateExchangeCost(Game offeredGame, Game requestedGame) {
         BigDecimal offeredPrice = offeredGame.getPrice();
         BigDecimal requestedPrice = requestedGame.getPrice();
@@ -94,31 +100,29 @@ public class ExchangeServiceImpl implements ExchangeService {
         // Calcular la diferencia de precios
         BigDecimal priceDifference = requestedPrice.subtract(offeredPrice);
         
-        // Calcular el 10% del precio del juego ofrecido
-        BigDecimal tenPercentOfOffered = offeredPrice.multiply(new BigDecimal("0.10"));
-        
         ExchangeCost cost = new ExchangeCost();
         cost.setOfferedGamePrice(offeredPrice);
         cost.setRequestedGamePrice(requestedPrice);
         cost.setPriceDifference(priceDifference);
         
-        // Si el precio del juego solicitado es menor un 10% o más del precio del juego ofrecido
-        // (es decir, la diferencia es menor o igual al 10% del juego ofrecido), el intercambio es gratis
-        if (priceDifference.compareTo(tenPercentOfOffered) <= 0) {
+        // Si el juego solicitado es más barato o de igual precio que el ofrecido, el intercambio es gratis.
+        if (priceDifference.compareTo(BigDecimal.ZERO) <= 0) {
             cost.setAdditionalCost(BigDecimal.ZERO);
-            cost.setIsFree(true);
-            cost.setReason("El precio del juego solicitado está dentro del 10% del precio del juego ofrecido");
+            cost.setReason("El juego solicitado es de menor o igual valor. No hay costo adicional.");
         } else {
-            // Si no, el costo adicional es el 10% del juego ofrecido
-            cost.setAdditionalCost(tenPercentOfOffered);
-            cost.setIsFree(false);
-            cost.setReason("Costo adicional del 10% del juego ofrecido");
+            // Si el juego solicitado es más caro, se paga la diferencia más una comisión del 10% sobre el juego OFRECIDO.
+            BigDecimal commission = offeredPrice.multiply(new BigDecimal("0.10"));
+            BigDecimal totalAdditionalCost = priceDifference.add(commission);
+            cost.setAdditionalCost(totalAdditionalCost);
+            cost.setReason("Se paga la diferencia de precio más una comisión del 10% sobre el juego ofrecido.");
         }
         
         return cost;
     }
 
     @Transactional
+    // Este método ahora es privado y se llama internamente cuando no hay costo.
+    // Para intercambios con costo, se necesitará un endpoint público que llame a este método.
     private void processExchange(Exchange exchange, ExchangeCost cost) {
         User requester = exchange.getRequester();
         Game offeredGame = exchange.getOfferedGame();
@@ -154,77 +158,48 @@ public class ExchangeServiceImpl implements ExchangeService {
     }
 
     @Override
-    public List<ExchangeResponse> getAllExchanges() {
+    public List<ExchangeDTO> getAllExchanges() {
         return exchangeRepository.findAll().stream()
-                .map(exchange -> convertToResponse(exchange, null))
+                .map(exchange -> convertToDTO(exchange, null))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public ExchangeResponse getExchangeById(Long id) {
+    public ExchangeDTO getExchangeById(Long id) {
         Exchange exchange = exchangeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Intercambio no encontrado"));
-        return convertToResponse(exchange, null);
+        return convertToDTO(exchange, null);
     }
 
     @Override
-    public List<ExchangeResponse> getUserExchanges(Authentication authentication) {
+    public List<ExchangeDTO> getUserExchanges(Authentication authentication) {
         String userEmail = authentication.getName();
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         return exchangeRepository.findByRequesterOrOwner(user, user).stream()
-                .map(exchange -> convertToResponse(exchange, null))
+                .map(exchange -> convertToDTO(exchange, null))
                 .collect(Collectors.toList());
     }
 
-    private ExchangeResponse convertToResponse(Exchange exchange, ExchangeCost cost) {
-        ExchangeResponse response = new ExchangeResponse();
-        response.setId(exchange.getId());
-        response.setRequesterId(exchange.getRequester().getId());
-        response.setOwnerId(exchange.getOwner() != null ? exchange.getOwner().getId() : null);
-        response.setOfferedGameId(exchange.getOfferedGame().getId());
-        response.setOfferedGameTitle(exchange.getOfferedGame().getTitle());
-        response.setRequestedGameId(exchange.getRequestedGame().getId());
-        response.setRequestedGameTitle(exchange.getRequestedGame().getTitle());
-        response.setStatus(exchange.getStatus());
-        response.setExchangeDate(exchange.getExchangeDate());
-        
-        // Si tenemos información del costo, la agregamos
-        if (cost != null) {
-            response.setAdditionalCost(cost.getAdditionalCost());
-            response.setCostReason(cost.getReason());
+    private ExchangeDTO convertToDTO(Exchange exchange, ExchangeCost cost) {
+        ExchangeDTO dto = new ExchangeDTO();
+        dto.setId(exchange.getId());
+        if (exchange.getRequester() != null) {
+            dto.setRequesterId(exchange.getRequester().getId());
+            dto.setRequesterUsername(exchange.getRequester().getUsername());
         }
-        
-        return response;
+        dto.setOfferedGameId(exchange.getOfferedGame().getId());
+        dto.setOfferedGameTitle(exchange.getOfferedGame().getTitle());
+        dto.setRequestedGameId(exchange.getRequestedGame().getId());
+        dto.setRequestedGameTitle(exchange.getRequestedGame().getTitle());
+        dto.setStatus(exchange.getStatus());
+        dto.setExchangeDate(exchange.getExchangeDate());
+        dto.setAdditionalCost(exchange.getAdditionalCost());
+        if (cost != null) {
+            dto.setCostReason(cost.getReason());
+        }
+        return dto;
     }
 
-    // Clase interna para manejar los cálculos de costo
-    private static class ExchangeCost {
-        private BigDecimal offeredGamePrice;
-        private BigDecimal requestedGamePrice;
-        private BigDecimal priceDifference;
-        private BigDecimal additionalCost;
-        private boolean isFree;
-        private String reason;
-
-        // Getters y setters
-        public BigDecimal getOfferedGamePrice() { return offeredGamePrice; }
-        public void setOfferedGamePrice(BigDecimal offeredGamePrice) { this.offeredGamePrice = offeredGamePrice; }
-
-        public BigDecimal getRequestedGamePrice() { return requestedGamePrice; }
-        public void setRequestedGamePrice(BigDecimal requestedGamePrice) { this.requestedGamePrice = requestedGamePrice; }
-
-        public BigDecimal getPriceDifference() { return priceDifference; }
-        public void setPriceDifference(BigDecimal priceDifference) { this.priceDifference = priceDifference; }
-
-        public BigDecimal getAdditionalCost() { return additionalCost; }
-        public void setAdditionalCost(BigDecimal additionalCost) { this.additionalCost = additionalCost; }
-
-        public boolean getIsFree() { return isFree; }
-        public void setIsFree(boolean isFree) { this.isFree = isFree; }
-
-        public String getReason() { return reason; }
-        public void setReason(String reason) { this.reason = reason; }
-    }
 }
