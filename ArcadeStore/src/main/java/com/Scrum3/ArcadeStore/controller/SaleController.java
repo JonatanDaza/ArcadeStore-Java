@@ -160,5 +160,38 @@ public class SaleController {
         }
     }
 
-    // ... (resto de endpoints de reportes sin cambios)
+    @GetMapping("/report/pdf/{saleId}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<byte[]> generatePdfReportBySaleId(@PathVariable Long saleId, HttpServletRequest request) {
+        try {
+            String token = request.getHeader("Authorization");
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+
+            Sale sale = saleService.getSaleById(saleId)
+                    .orElseThrow(() -> new EntityNotFoundException("Venta no encontrada con ID: " + saleId));
+
+            byte[] pdfBytes = pdfReportService.generateSaleReport(sale);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "reporte-venta-" + saleId + ".pdf");
+            headers.setContentLength(pdfBytes.length);
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(pdfBytes);
+
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(("Venta no encontrada: " + e.getMessage()).getBytes());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(("Error generando reporte: " + e.getMessage()).getBytes());
+        }
+    }
 }

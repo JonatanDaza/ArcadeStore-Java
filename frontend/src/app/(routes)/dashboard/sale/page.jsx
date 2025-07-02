@@ -97,6 +97,11 @@ export default function SalesPage() {
       setLoading(false);
     }
   }, [loadSales, router]);
+  useEffect(() => {
+    if (!loading && sales.length === 0) {
+      toast('No hay ventas disponibles para mostrar', { icon: 'ℹ️' });
+    }
+  }, [loading, sales]);
 
   // Verificar conexión al montar el componente
   useEffect(() => {
@@ -117,6 +122,11 @@ export default function SalesPage() {
 
   // Función para generar y descargar reporte PDF
   const handleGenerateReport = useCallback(async () => {
+    if (loading) {
+      toast.error('Los datos aún se están cargando. Por favor espera...');
+      return;
+    }
+
     try {
       setIsGeneratingReport(true);
       const token = localStorage.getItem("authToken");
@@ -130,8 +140,10 @@ export default function SalesPage() {
         toast.error('No se puede generar el PDF porque no existen ventas registradas.');
         return;
       }
-      // Llamar al servicio para obtener el PDF como blob
-      const response = await fetch('http://localhost:8085/api/sales/report/pdf', {
+
+      const query = buildFilterQuery(filters);
+
+      const response = await fetch(`http://localhost:8085/api/sales/report/pdf?${query}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -142,34 +154,25 @@ export default function SalesPage() {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
-      // Convertir la respuesta a blob
       const blob = await response.blob();
-
-      // Crear URL temporal para el blob
       const url = window.URL.createObjectURL(blob);
-
-      // Crear elemento de descarga temporal
       const link = document.createElement('a');
-      link.href = url;
 
-      // Generar nombre del archivo con fecha actual
       const now = new Date();
-      const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
-      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
+      const dateStr = now.toISOString().split('T')[0];
+      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+      link.href = url;
       link.download = `reporte-ventas-${dateStr}-${timeStr}.pdf`;
 
-      // Añadir al DOM temporalmente y hacer click
       document.body.appendChild(link);
       link.click();
-
-      // Limpiar
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
       toast.success('Reporte PDF descargado exitosamente');
     } catch (err) {
       let errorMessage = 'Error desconocido al generar reporte';
-      if (err.message && err.message.includes("Forbidden")) {
+      if (err.message?.includes("Forbidden")) {
         errorMessage = 'Acceso denegado: No tienes permiso para generar reportes.';
         toast.error(errorMessage);
         localStorage.removeItem("authToken");
@@ -182,7 +185,28 @@ export default function SalesPage() {
     } finally {
       setIsGeneratingReport(false);
     }
-  }, [router]);
+  }, [router, loading, sales]);
+
+  const buildFilterQuery = (filters) => {
+    const query = new URLSearchParams();
+    for (const key in filters) {
+      if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
+        query.append(key, filters[key]);
+      }
+    }
+    return query.toString();
+  };
+
+  const [filters, setFilters] = useState({
+    active: '',       // "true" o "false"
+    username: '',
+    gameName: '',
+    paymentMethod: '',
+    startDate: '',
+    endDate: '',
+    minAmount: '',
+    maxAmount: '',
+  });
 
   // Función para convertir datos a CSV
   const convertToCSV = (data) => {
@@ -273,6 +297,76 @@ export default function SalesPage() {
     }
   }, [sales]);
 
+  const handleDownloadSalePdf = useCallback(async (saleId) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (isTokenExpired(token)) {
+        toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        localStorage.removeItem("authToken");
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:8085/api/sales/report/pdf/${saleId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          toast.error(`La venta con ID ${saleId} no fue encontrada`);
+        } else if (response.status === 403) {
+          toast.error("No tienes permisos para generar el reporte");
+          localStorage.removeItem("authToken");
+          router.push("/login");
+        } else {
+          toast.error(`Error ${response.status}: ${response.statusText}`);
+        }
+        return;
+      }
+
+      const contentType = response.headers.get("Content-Type");
+      const blob = await response.blob();
+
+      // Validación: si NO es PDF, lee el texto y lanza error
+      if (!response.ok || !contentType?.includes("application/pdf")) {
+        const errorText = await blob.text();
+        console.error("Error al descargar PDF:", errorText);
+        toast.error("No se pudo generar el PDF: " + errorText);
+        return;
+      }
+
+      // Crear enlace de descarga
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+      link.href = url;
+      link.download = `reporte-venta-${saleId}-${dateStr}-${timeStr}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Reporte descargado exitosamente");
+
+      link.href = url;
+      link.download = `reporte-venta-${saleId}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`Reporte PDF de la venta ${saleId} descargado`);
+    } catch (err) {
+      toast.error("Error al generar el reporte individual");
+      console.error("Error generando PDF individual:", err);
+    }
+  }, [router]);
   // Función para formatear moneda
   const formatCurrency = (amount) => {
     if (!amount) return '$0.00';
@@ -293,9 +387,16 @@ export default function SalesPage() {
           title="Ver detalles"
           onClick={() => handleViewSale(sale)}
         />
+        <button
+          onClick={() => handleDownloadSalePdf(sale.id)}
+          className="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded text-xs"
+          title="Descargar PDF"
+        >
+          📄 PDF
+        </button>
       </div>
     );
-  }, [handleViewSale]);
+  }, [handleViewSale, handleDownloadSalePdf]);
 
   // Configuración de columnas
   const columns = [
@@ -515,22 +616,24 @@ export default function SalesPage() {
                 >
                   📄 Descargar Tabla (CSV)
                 </button>
-                <button
-                  onClick={handleGenerateReport}
-                  disabled={isGeneratingReport || loading || !sales.length}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {isGeneratingReport ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Generando...
-                    </>
-                  ) : (
-                    <>
-                      📋 Generar Reporte PDF
-                    </>
-                  )}
-                </button>
+                {!loading && sales.length > 0 && (
+                  <button
+                    onClick={handleGenerateReport}
+                    disabled={isGeneratingReport}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+                  >
+                    {isGeneratingReport ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Generando...
+                      </>
+                    ) : (
+                      <>
+                        📋 Generar Reporte PDF
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
 
