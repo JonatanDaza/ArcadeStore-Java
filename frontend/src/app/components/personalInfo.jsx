@@ -25,16 +25,16 @@ export default function PersonalInfo({
         )}
       </div>
       {isEditing ? (
-        <div className="space-y-6 flex flex-col-1">
-          <div className="space-y-4">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-300">
                 Nombre completo
               </label>
               <input
                 type="text"
-                value={editedInfo.name}
-                onChange={(e) => setEditedInfo({ ...editedInfo, name: e.target.value })}
+                value={editedInfo.username}
+                onChange={(e) => setEditedInfo({ ...editedInfo, username: e.target.value })}
                 className="w-full px-4 py-3 bg-[#333] border border-[#555] rounded-lg text-white focus:outline-none focus:border-[#3a6aff]"
               />
             </div>
@@ -47,28 +47,6 @@ export default function PersonalInfo({
                 value={editedInfo.email}
                 onChange={(e) => setEditedInfo({ ...editedInfo, email: e.target.value })}
                 className="w-full px-4 py-3 bg-[#333] border border-[#555] rounded-lg text-white focus:outline-none focus:border-[#3a6aff]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-300">
-                Teléfono
-              </label>
-              <input
-                type="tel"
-                value={editedInfo.phone}
-                onChange={(e) => setEditedInfo({ ...editedInfo, phone: e.target.value })}
-                className="w-full px-4 py-3 bg-[#333] border border-[#555] rounded-lg text-white focus:outline-none focus:border-[#3a6aff]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-300">
-                Dirección
-              </label>
-              <textarea
-                value={editedInfo.address}
-                onChange={(e) => setEditedInfo({ ...editedInfo, address: e.target.value })}
-                rows={3}
-                className="w-full px-4 py-3 bg-[#333] border border-[#555] rounded-lg text-white focus:outline-none focus:border-[#3a6aff] resize-none"
               />
             </div>
           </div>
@@ -93,7 +71,7 @@ export default function PersonalInfo({
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-[#333] p-6 rounded-lg">
-              <div className="flex items-center gap-3 mb-3">
+              <div className="block text-sm font-medium mb-2 text-gray-300">
                 <User className="text-[#3a6aff]" size={20} />
                 <h3 className="font-semibold text-lg">Nombre</h3>
               </div>
