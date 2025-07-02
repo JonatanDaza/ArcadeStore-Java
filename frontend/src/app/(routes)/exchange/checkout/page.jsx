@@ -14,7 +14,7 @@ export default function CheckoutPage() {
         items: [],
         total: 0,
         isExchange: false,
-        exchangeInfo: null,
+        exchangeId: null,
     });
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
@@ -67,12 +67,17 @@ export default function CheckoutPage() {
         if (paymentIntentString) {
             // --- Flow for an EXCHANGE with a price difference ---
             const paymentDetails = JSON.parse(paymentIntentString);
-            dataToSet = {
-                items: paymentDetails.items,
-                total: paymentDetails.total,
-                isExchange: true,
-                exchangeInfo: paymentDetails.exchangeInfo,
-            };
+            // ✅ CORREGIDO: Asegurarse de que es un checkout de intercambio y tiene el ID
+            if (paymentDetails.isExchange && paymentDetails.exchangeId) {
+                dataToSet = {
+                    items: paymentDetails.items,
+                    total: paymentDetails.total,
+                    isExchange: true,
+                    exchangeId: paymentDetails.exchangeId, // ✅ Usar el ID del intercambio
+                };
+            } else {
+                // Si no es un intercambio, se trata como una compra normal (código existente)
+            }
         } else {
             // --- Flow for a NORMAL PURCHASE from the shopping cart ---
             const savedCart = JSON.parse(localStorage.getItem('shoppingCart') || '[]');
@@ -89,7 +94,7 @@ export default function CheckoutPage() {
                 items: paidItems,
                 total: paidItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0),
                 isExchange: false,
-                exchangeInfo: null,
+                exchangeId: null,
             };
         }
 
@@ -279,17 +284,19 @@ export default function CheckoutPage() {
         try {
             if (checkoutData.isExchange) {
                 // --- LOGIC FOR EXCHANGE PAYMENT ---
-                toast.loading('Processing surplus payment...', { id: toastId });
+                toast.loading('Procesando pago y finalizando intercambio...', { id: toastId });
                 // Simulate payment gateway logic here
                 await new Promise(resolve => setTimeout(resolve, 1500));
 
-                // Once payment is successful, register the exchange
-                await ExchangeService.createExchange(checkoutData.exchangeInfo, token);
+                // ✅ CORREGIDO: Una vez que el pago es exitoso, COMPLETAR el intercambio existente.
+                // No se crea uno nuevo.
+                await ExchangeService.completeExchange(checkoutData.exchangeId, token);
                 
-                toast.success('Exchange and payment completed successfully!', { id: toastId });
+                toast.success('¡Intercambio completado con éxito!', { id: toastId });
                 
                 localStorage.removeItem('paymentIntent');
-                router.push('/library');
+                // Redirigir al recibo para una mejor experiencia de usuario
+                router.push(`/exchange/receipt/${checkoutData.exchangeId}`);
 
             } else {
                 // --- LOGIC FOR NORMAL PURCHASE ---
@@ -313,6 +320,7 @@ export default function CheckoutPage() {
                 const remainingItems = cart.filter(item => item.price === 0);
                 localStorage.setItem('shoppingCart', JSON.stringify(remainingItems));
     
+                // Redirigir a la página de confirmación de compra normal
                 router.push(`/shoppingCart/checkout/confirm?orderId=${response.orderId}`);
             }
         } catch (error) {
@@ -323,6 +331,7 @@ export default function CheckoutPage() {
             setProcessing(false);
         }
     };
+    
     
     if (loading) {
         return (

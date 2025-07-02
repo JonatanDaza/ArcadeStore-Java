@@ -85,50 +85,40 @@ class ExchangeService {
   }
 
   /**
-   * Updates the status of an existing exchange.
-   * @param {string|number} exchangeId - The ID of the exchange to update.
-   * @param {string} status - The new status (e.g., 'COMPLETED', 'CANCELLED').
-   * @param {string} token - The user's auth token.
-   * @returns {Promise<object>} The updated exchange object.
-   */
-  async updateExchangeStatus(exchangeId, status, token) {
-    try {
-      const response = await axios.patch(`${API_URL}/api/exchanges/${exchangeId}/status`, { status }, authHeaders(token));
-      return response.data;
-    } catch (error) {
-      console.error(`Error updating status for exchange ${exchangeId}:`, error.response || error);
-      throw error.response?.data || new Error('Error al actualizar el estado del intercambio.');
+     * Completes an existing exchange. This should be called after a successful payment for an exchange with cost,
+     * or directly for a free exchange.
+     * @param {string|number} exchangeId - The ID of the exchange to complete.
+     * @param {string} token - The user's auth token.
+     * @returns {Promise<void>}
+     */
+    async completeExchange(exchangeId, token) {
+        try {
+            // The body is null because the backend only needs the ID from the path
+            await axios.post(`${API_URL}/api/exchanges/${exchangeId}/complete`, null, authHeaders(token));
+        } catch (error) {
+            console.error(`Error completing exchange ${exchangeId}:`, error.response || error);
+            const apiError = error.response?.data;
+            const errorMessage = apiError?.message || 'Ocurrió un error al finalizar el intercambio.';
+            throw new Error(errorMessage);
+        }
     }
-  }
 
   /**
- * Downloads the PDF report of a specific exchange by ID.
- * @param {string|number} exchangeId - The ID of the exchange to download.
- * @param {string} token - The user's auth token.
- * @returns {Promise<void>}
- */
-  async downloadExchangeReport(exchangeId, token) {
+   * Fetches all exchanges for the currently authenticated user.
+   * @param {string} token - The user's auth token.
+   * @returns {Promise<Array>} A list of the user's exchanges.
+   */
+  async getUserExchanges(token) {
     try {
-      const response = await axios.get(`${API_URL}/api/exchanges/${exchangeId}/report`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob',
-      });
-
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `intercambio_${exchangeId}.pdf`;
-      link.click();
-
-      window.URL.revokeObjectURL(url);
+      const response = await axios.get(`${API_URL}/api/exchanges/user`, authHeaders(token));
+      return response.data;
     } catch (error) {
-      console.error(`Error al descargar PDF del intercambio ${exchangeId}:`, error);
-      throw new Error('No se pudo descargar el reporte PDF.');
+      console.error("Error fetching user exchanges:", error.response || error);
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.message || 'Ocurrió un error al obtener tus intercambios.';
+      throw new Error(errorMessage);
     }
   }
-
 }
 
 export default new ExchangeService();

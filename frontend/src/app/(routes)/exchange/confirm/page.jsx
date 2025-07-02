@@ -109,49 +109,46 @@ function ExchangeConfirmationContent() {
             return;
         }
 
-        if (finalAmount > 0) {
-            // 1. Preparamos los datos para la página de pago.
-            const paymentDetails = {
-                isExchange: true, // Identificador para el flujo de intercambio
-                items: [{
-                    id: `exchange-${requestedGameId}-for-${offeredGameId}`,
-                    title: `Excedente por Intercambio: ${requestedGame.title}`,
-                    price: finalAmount,
-                    image: PublicGameService.getImageUrl(requestedGame.imagePath),
-                    quantity: 1,
-                }],
-                total: finalAmount,
-                exchangeInfo: { // Guardamos info extra sobre el intercambio
-                    requestedGameId,
-                    offeredGameId,
-                }
-            };
+        const toastId = toast.loading('Iniciando intercambio...');
+      try {
+        // Paso 1: Crear el intercambio para obtener su ID y el costo real del backend.
+        const exchangeDetails = { requestedGameId, offeredGameId };
+        const createdExchange = await ExchangeService.createExchange(exchangeDetails, token);
+        
+        toast.dismiss(toastId);
 
-            // 2. Guardamos los detalles en localStorage para que la página de checkout los lea.
-            localStorage.setItem('paymentIntent', JSON.stringify(paymentDetails));
-
-            // 3. Redirigimos a la página de checkout.
-            toast.loading('Redirigiendo al pago...');
-            router.push('/exchange/checkout');
+        // Paso 2: Decidir el siguiente paso basado en el costo.
+        if (createdExchange.additionalCost > 0) {
+          // Hay un costo, redirigir a la página de pago.
+          const paymentDetails = {
+            isExchange: true,
+            exchangeId: createdExchange.id, // ✅ Guardamos el ID del intercambio
+            items: [{
+              id: `exchange-${createdExchange.id}`,
+              title: `Excedente por Intercambio: ${createdExchange.requestedGameTitle}`,
+              price: createdExchange.additionalCost,
+              image: PublicGameService.getImageUrl(requestedGame.imagePath),
+              quantity: 1,
+            }],
+            total: createdExchange.additionalCost,
+          };
+          localStorage.setItem('paymentIntent', JSON.stringify(paymentDetails));
+          toast.loading('Redirigiendo al pago...');
+          router.push('/exchange/checkout');
 
         } else {
-            // --- Lógica para registrar el intercambio directamente si no hay costo ---
-            const toastId = toast.loading('Registrando intercambio...');
-            try {
-                const exchangeDetails = {
-                    requestedGameId,
-                    offeredGameId,
-                };
-                await ExchangeService.createExchange(exchangeDetails, token);
+          // No hay costo, completar el intercambio inmediatamente.
+          const completeToastId = toast.loading('Confirmando intercambio gratuito...');
+          await ExchangeService.completeExchange(createdExchange.id, token);
+          toast.success('¡Intercambio realizado con éxito!', { id: completeToastId });
+          router.push(`/exchange/receipt/${createdExchange.id}`);
+        }
 
-                toast.success('¡Intercambio realizado con éxito!', { id: toastId });
-                // Forzar recarga completa para asegurar que la biblioteca se actualice
-                // router.push('/library');
-                window.location.href = '/library';
-            } catch (error) {
-                console.error("Error creating free exchange:", error);
-                toast.error(error.message || 'No se pudo completar el intercambio.', { id: toastId });
-            }
+      } catch (error) {
+        toast.dismiss(toastId);
+        console.error("Error durante el proceso de intercambio:", error);
+        const errorMessage = error.response?.data?.message || error.message || 'No se pudo iniciar el intercambio.';
+        toast.error(errorMessage);
         }
     };
 
