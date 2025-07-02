@@ -15,14 +15,29 @@ export default function Table({ columns, data, onAdd, showAddButton = false }) {
   const [filter, setFilter] = useState("");
 
   // Filtrado simple por texto (puedes mejorarlo según tus necesidades)
-  const filteredData = filter
-    ? data.filter((row) =>
-        Object.values(row)
-          .join(" ")
-          .toLowerCase()
-          .includes(filter.toLowerCase())
-      )
-    : data;
+function extractValues(obj) {
+  const values = [];
+  for (const key in obj) {
+    const value = obj[key];
+    if (value === null || value === undefined) continue;
+    if (typeof value === "object") {
+      values.push(...extractValues(value)); // recursivo para anidados
+    } else {
+      values.push(String(value)); // convierte números, booleanos, etc.
+    }
+  }
+  return values;
+}
+
+const filteredData = filter
+  ? data.filter((row) =>
+      extractValues(row)
+        .join(" ")
+        .toLowerCase()
+        .includes(filter.toLowerCase())
+    )
+  : data;
+
 
   const table = useReactTable({
     data: filteredData,

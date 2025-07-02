@@ -5,7 +5,6 @@ import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
 import org.springframework.stereotype.Service;
 
-
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -26,117 +25,98 @@ public class PdfReportService {
     private static final Font SMALL_FONT = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.BLACK);
     private static final Font BOLD_FONT = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.BLACK);
 
+    private final DecimalFormat currencyFormat = new DecimalFormat("#,##0.00");
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
     public byte[] generateSalesReport(List<Sale> sales) throws Exception {
+        return generateCustomSalesReport(sales, "REPORTE DE VENTAS", null);
+    }
+
+    public byte[] generateCustomSalesReport(List<Sale> sales, String title, Map<String, Object> filters) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         try {
-            // Crear documento PDF en formato horizontal para más columnas
             Document document = new Document(PageSize.A4.rotate(), 20, 20, 30, 30);
-            PdfWriter writer = PdfWriter.getInstance(document, baos);
-
+            PdfWriter.getInstance(document, baos);
             document.open();
 
-            // Título del reporte
-            Paragraph title = new Paragraph("REPORTE DE VENTAS", TITLE_FONT);
-            title.setAlignment(Element.ALIGN_CENTER);
-            title.setSpacingAfter(20);
-            document.add(title);
+            // Título del documento
+            Paragraph titleParagraph = new Paragraph(title.toUpperCase(), TITLE_FONT);
+            titleParagraph.setAlignment(Element.ALIGN_CENTER);
+            titleParagraph.setSpacingAfter(10);
+            document.add(titleParagraph);
 
-            // Información del reporte
+            // Mostrar filtros
+            if (filters != null && !filters.isEmpty()) {
+                addFiltersInfo(document, filters);
+            }
+
+            // Fecha de generación
             LocalDateTime now = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-
-            Paragraph info = new Paragraph("Generado el: " + now.format(formatter), NORMAL_FONT);
+            Paragraph info = new Paragraph("Generado el: " + now.format(dateTimeFormatter), NORMAL_FONT);
             info.setAlignment(Element.ALIGN_RIGHT);
             info.setSpacingAfter(10);
             document.add(info);
 
-            // Estadísticas generales
+            // Si no hay ventas
+            if (sales.isEmpty()) {
+                Paragraph noData = new Paragraph("No se encontraron ventas para los criterios seleccionados.", NORMAL_FONT);
+                noData.setSpacingBefore(20);
+                document.add(noData);
+                document.close();
+                return baos.toByteArray();
+            }
+
             addStatistics(document, sales);
 
-            // Crear tabla con todas las columnas
-            PdfPTable table = new PdfPTable(8);
-            table.setWidthPercentage(100);
-            table.setWidths(new float[]{1f, 2f, 2f, 2f, 2f, 2f, 2f, 1.5f});
-            table.setSpacingBefore(10);
-
-            // Headers de la tabla
-            String[] headers = {"ID", "Fecha de Venta", "Usuario", "Juego",
-                    "Monto Total", "Método de Pago", "Fecha Creación", "Estado"};
-
-            for (String header : headers) {
-                PdfPCell headerCell = new PdfPCell(new Phrase(header, BOLD_FONT));
-                headerCell.setBackgroundColor(Color.LIGHT_GRAY);
-                headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                headerCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-                headerCell.setPadding(5);
-                table.addCell(headerCell);
-            }
-
-            // Agregar filas de datos
-            DecimalFormat currencyFormat = new DecimalFormat("#,##0.00");
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
-            for (Sale sale : sales) {
-                // ID
-                table.addCell(createDataCell(
-                        sale.getId() != null ? sale.getId().toString() : "-"));
-
-                // Fecha de Venta
-                String saleDate = sale.getSaleDate() != null ?
-                        sale.getSaleDate().format(dateTimeFormatter) : "-";
-                table.addCell(createDataCell(saleDate));
-
-                // Usuario
-                String username = (sale.getUser() != null && sale.getUser().getUsername() != null) ?
-                        sale.getUser().getUsername() : "Sin usuario";
-                table.addCell(createDataCell(username));
-
-                // Juego
-                String gameName = (sale.getGame() != null && sale.getGame().getTitle() != null) ?
-                        sale.getGame().getTitle() : "Sin juego";
-                table.addCell(createDataCell(gameName));
-
-                // Monto Total
-                String amount = sale.getTotalAmount() != null ?
-                        "$" + currencyFormat.format(sale.getTotalAmount()) : "$0.00";
-                table.addCell(createDataCell(amount));
-
-                // Método de Pago
-                String paymentMethod = sale.getPaymentMethod() != null ?
-                        sale.getPaymentMethod() : "No especificado";
-                table.addCell(createDataCell(paymentMethod));
-
-                // Fecha Creación
-                String createdAt = sale.getCreatedAt() != null ?
-                        sale.getCreatedAt().format(dateFormatter) : "-";
-                table.addCell(createDataCell(createdAt));
-
-                // Estado
-                String status = sale.isActive() ? "Activo" : "Inactivo";
-                PdfPCell statusCell = createDataCell(status);
-                if (sale.isActive()) {
-                    statusCell.setBackgroundColor(new Color(220, 252, 231)); // Verde claro
-                } else {
-                    statusCell.setBackgroundColor(new Color(254, 226, 226)); // Rojo claro
-                }
-                table.addCell(statusCell);
-            }
-
+            PdfPTable table = createSalesTable(sales);
             document.add(table);
 
-            // Pie de página con totales
             addFooterTotals(document, sales);
 
             document.close();
-
         } catch (Exception e) {
-            e.printStackTrace();
             throw new Exception("Error generando PDF: " + e.getMessage());
         }
 
         return baos.toByteArray();
+    }
+
+    private PdfPTable createSalesTable(List<Sale> sales) throws DocumentException {
+        PdfPTable table = new PdfPTable(8);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{1f, 2f, 2f, 2f, 2f, 2f, 2f, 1.5f});
+        table.setSpacingBefore(10);
+        table.setHeaderRows(1); // Repite encabezados
+
+        String[] headers = {"ID", "Fecha de Venta", "Usuario", "Juego",
+                "Monto Total", "Método de Pago", "Fecha Creación", "Estado"};
+
+        for (String header : headers) {
+            PdfPCell headerCell = new PdfPCell(new Phrase(header, BOLD_FONT));
+            headerCell.setBackgroundColor(Color.LIGHT_GRAY);
+            headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            headerCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            headerCell.setPadding(5);
+            table.addCell(headerCell);
+        }
+
+        for (Sale sale : sales) {
+            table.addCell(createDataCell(sale.getId() != null ? sale.getId().toString() : "-"));
+            table.addCell(createDataCell(sale.getSaleDate() != null ? sale.getSaleDate().format(dateTimeFormatter) : "-"));
+            table.addCell(createDataCell((sale.getUser() != null && sale.getUser().getUsername() != null) ? sale.getUser().getUsername() : "Sin usuario"));
+            table.addCell(createDataCell((sale.getGame() != null && sale.getGame().getTitle() != null) ? sale.getGame().getTitle() : "Sin juego"));
+            table.addCell(createDataCell(sale.getTotalAmount() != null ? "$" + currencyFormat.format(sale.getTotalAmount()) : "$0.00"));
+            table.addCell(createDataCell(sale.getPaymentMethod() != null ? sale.getPaymentMethod() : "No especificado"));
+            table.addCell(createDataCell(sale.getCreatedAt() != null ? sale.getCreatedAt().format(dateFormatter) : "-"));
+
+            PdfPCell statusCell = createDataCell(sale.isActive() ? "Activo" : "Inactivo");
+            statusCell.setBackgroundColor(sale.isActive() ? new Color(220, 252, 231) : new Color(254, 226, 226));
+            table.addCell(statusCell);
+        }
+
+        return table;
     }
 
     private PdfPCell createDataCell(String content) {
@@ -148,55 +128,20 @@ public class PdfReportService {
     }
 
     private void addStatistics(Document document, List<Sale> sales) throws DocumentException {
-        // Calcular estadísticas
         int totalSales = sales.size();
         int activeSales = (int) sales.stream().filter(Sale::isActive).count();
         int inactiveSales = totalSales - activeSales;
 
         BigDecimal totalRevenue = sales.stream()
-                .filter(sale -> sale.getTotalAmount() != null)
+                .filter(s -> s.getTotalAmount() != null)
                 .map(Sale::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal averageSale = totalSales > 0 ?
-                totalRevenue.divide(BigDecimal.valueOf(totalSales), 2, RoundingMode.HALF_UP) :
-                BigDecimal.ZERO;
+                totalRevenue.divide(BigDecimal.valueOf(totalSales), 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
 
-        // Crear tabla de estadísticas
-        PdfPTable statsTable = new PdfPTable(3);
-        statsTable.setWidthPercentage(100);
-        statsTable.setSpacingAfter(20);
-
-        DecimalFormat currencyFormat = new DecimalFormat("#,##0.00");
-
-        // Columna 1: Resumen de ventas
-        PdfPCell cell1 = new PdfPCell();
-        cell1.setPadding(10);
-        cell1.setBackgroundColor(new Color(240, 248, 255));
-
-        Paragraph p1 = new Paragraph();
-        p1.add(new Phrase("RESUMEN DE VENTAS\n", HEADER_FONT));
-        p1.add(new Phrase("Total de ventas: " + totalSales + "\n", NORMAL_FONT));
-        p1.add(new Phrase("Ventas activas: " + activeSales + "\n", NORMAL_FONT));
-        p1.add(new Phrase("Ventas inactivas: " + inactiveSales, NORMAL_FONT));
-        cell1.addElement(p1);
-        statsTable.addCell(cell1);
-
-        // Columna 2: Ingresos
-        PdfPCell cell2 = new PdfPCell();
-        cell2.setPadding(10);
-        cell2.setBackgroundColor(new Color(240, 255, 240));
-
-        Paragraph p2 = new Paragraph();
-        p2.add(new Phrase("INGRESOS\n", HEADER_FONT));
-        p2.add(new Phrase("Total: $" + currencyFormat.format(totalRevenue) + "\n", NORMAL_FONT));
-        p2.add(new Phrase("Promedio: $" + currencyFormat.format(averageSale), NORMAL_FONT));
-        cell2.addElement(p2);
-        statsTable.addCell(cell2);
-
-        // Columna 3: Métodos de pago más comunes
         Map<String, Long> paymentMethodCount = sales.stream()
-                .filter(sale -> sale.getPaymentMethod() != null)
+                .filter(s -> s.getPaymentMethod() != null)
                 .collect(Collectors.groupingBy(Sale::getPaymentMethod, Collectors.counting()));
 
         String mostCommonPayment = paymentMethodCount.entrySet().stream()
@@ -204,29 +149,48 @@ public class PdfReportService {
                 .map(Map.Entry::getKey)
                 .orElse("N/A");
 
-        PdfPCell cell3 = new PdfPCell();
-        cell3.setPadding(10);
-        cell3.setBackgroundColor(new Color(255, 248, 240));
+        PdfPTable statsTable = new PdfPTable(3);
+        statsTable.setWidthPercentage(100);
+        statsTable.setSpacingAfter(20);
 
-        Paragraph p3 = new Paragraph();
-        p3.add(new Phrase("MÉTODOS DE PAGO\n", HEADER_FONT));
-        p3.add(new Phrase("Diferentes métodos: " + paymentMethodCount.size() + "\n", NORMAL_FONT));
-        p3.add(new Phrase("Más común: " + mostCommonPayment, NORMAL_FONT));
-        cell3.addElement(p3);
-        statsTable.addCell(cell3);
+        statsTable.addCell(createStatsCell("RESUMEN DE VENTAS",
+                "Total de ventas: " + totalSales + "\n" +
+                        "Ventas activas: " + activeSales + "\n" +
+                        "Ventas inactivas: " + inactiveSales,
+                new Color(240, 248, 255)));
+
+        statsTable.addCell(createStatsCell("INGRESOS",
+                "Total: $" + currencyFormat.format(totalRevenue) + "\n" +
+                        "Promedio: $" + currencyFormat.format(averageSale),
+                new Color(240, 255, 240)));
+
+        statsTable.addCell(createStatsCell("MÉTODOS DE PAGO",
+                "Diferentes métodos: " + paymentMethodCount.size() + "\n" +
+                        "Más común: " + mostCommonPayment,
+                new Color(255, 248, 240)));
 
         document.add(statsTable);
     }
 
+    private PdfPCell createStatsCell(String title, String content, Color bgColor) {
+        PdfPCell cell = new PdfPCell();
+        cell.setPadding(10);
+        cell.setBackgroundColor(bgColor);
+
+        Paragraph p = new Paragraph();
+        p.add(new Phrase(title + "\n", HEADER_FONT));
+        p.add(new Phrase(content, NORMAL_FONT));
+
+        cell.addElement(p);
+        return cell;
+    }
+
     private void addFooterTotals(Document document, List<Sale> sales) throws DocumentException {
         BigDecimal totalRevenue = sales.stream()
-                .filter(sale -> sale.getTotalAmount() != null)
+                .filter(s -> s.getTotalAmount() != null)
                 .map(Sale::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        DecimalFormat currencyFormat = new DecimalFormat("#,##0.00");
-
-        // Crear tabla para el footer
         PdfPTable footerTable = new PdfPTable(1);
         footerTable.setWidthPercentage(100);
         footerTable.setSpacingBefore(20);
@@ -249,119 +213,12 @@ public class PdfReportService {
         document.add(footerTable);
     }
 
-    /**
-     * Genera reporte PDF personalizado con filtros aplicados
-     */
-    public byte[] generateCustomSalesReport(List<Sale> sales, String title, Map<String, Object> filters) throws Exception {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        try {
-            Document document = new Document(PageSize.A4.rotate(), 20, 20, 30, 30);
-            PdfWriter.getInstance(document, baos);
-            document.open();
-
-            // Título personalizado
-            Paragraph titleParagraph = new Paragraph(title.toUpperCase(), TITLE_FONT);
-            titleParagraph.setAlignment(Element.ALIGN_CENTER);
-            titleParagraph.setSpacingAfter(10);
-            document.add(titleParagraph);
-
-            // Mostrar filtros aplicados
-            if (filters != null && !filters.isEmpty()) {
-                addFiltersInfo(document, filters);
-            }
-
-            // Resto del reporte igual que el método principal
-            LocalDateTime now = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-
-            Paragraph info = new Paragraph("Generado el: " + now.format(formatter), NORMAL_FONT);
-            info.setAlignment(Element.ALIGN_RIGHT);
-            info.setSpacingAfter(10);
-            document.add(info);
-
-            addStatistics(document, sales);
-
-            // Crear tabla (mismo código que antes)
-            PdfPTable table = new PdfPTable(8);
-            table.setWidthPercentage(100);
-            table.setWidths(new float[]{1f, 2f, 2f, 2f, 2f, 2f, 2f, 1.5f});
-            table.setSpacingBefore(10);
-
-            // Headers
-            String[] headers = {"ID", "Fecha de Venta", "Usuario", "Juego",
-                    "Monto Total", "Método de Pago", "Fecha Creación", "Estado"};
-
-            for (String header : headers) {
-                PdfPCell headerCell = new PdfPCell(new Phrase(header, BOLD_FONT));
-                headerCell.setBackgroundColor(Color.LIGHT_GRAY);
-                headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                headerCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-                headerCell.setPadding(5);
-                table.addCell(headerCell);
-            }
-
-            // Datos (mismo código que antes)
-            DecimalFormat currencyFormat = new DecimalFormat("#,##0.00");
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
-            for (Sale sale : sales) {
-                table.addCell(createDataCell(sale.getId() != null ? sale.getId().toString() : "-"));
-
-                String saleDate = sale.getSaleDate() != null ?
-                        sale.getSaleDate().format(dateTimeFormatter) : "-";
-                table.addCell(createDataCell(saleDate));
-
-                String username = (sale.getUser() != null && sale.getUser().getUsername() != null) ?
-                        sale.getUser().getUsername() : "Sin usuario";
-                table.addCell(createDataCell(username));
-
-                String gameName = (sale.getGame() != null && sale.getGame().getTitle() != null) ?
-                        sale.getGame().getTitle() : "Sin juego";
-                table.addCell(createDataCell(gameName));
-
-                String amount = sale.getTotalAmount() != null ?
-                        "$" + currencyFormat.format(sale.getTotalAmount()) : "$0.00";
-                table.addCell(createDataCell(amount));
-
-                String paymentMethod = sale.getPaymentMethod() != null ?
-                        sale.getPaymentMethod() : "No especificado";
-                table.addCell(createDataCell(paymentMethod));
-
-                String createdAt = sale.getCreatedAt() != null ?
-                        sale.getCreatedAt().format(dateFormatter) : "-";
-                table.addCell(createDataCell(createdAt));
-
-                String status = sale.isActive() ? "Activo" : "Inactivo";
-                PdfPCell statusCell = createDataCell(status);
-                if (sale.isActive()) {
-                    statusCell.setBackgroundColor(new Color(220, 252, 231));
-                } else {
-                    statusCell.setBackgroundColor(new Color(254, 226, 226));
-                }
-                table.addCell(statusCell);
-            }
-
-            document.add(table);
-            addFooterTotals(document, sales);
-            document.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new Exception("Error generando PDF personalizado: " + e.getMessage());
-        }
-
-        return baos.toByteArray();
-    }
-
     private void addFiltersInfo(Document document, Map<String, Object> filters) throws DocumentException {
         Paragraph filtersTitle = new Paragraph("Filtros aplicados:", BOLD_FONT);
         filtersTitle.setSpacingAfter(5);
         document.add(filtersTitle);
 
-        // Use com.lowagie.text.List instead of java.util.List
-        com.lowagie.text.List filtersList = new com.lowagie.text.List(false, 10); // false = unordered list, 10 = indent
+        com.lowagie.text.List filtersList = new com.lowagie.text.List(false, 10);
         filtersList.setListSymbol(new Chunk("• ", FontFactory.getFont(FontFactory.HELVETICA, 12)));
 
         filters.forEach((key, value) -> {
@@ -372,7 +229,7 @@ public class PdfReportService {
         });
 
         if (!filtersList.isEmpty()) {
-            document.add(filtersList); // Remove the (Element) cast as it's not needed
+            document.add(filtersList);
         }
 
         Paragraph separator = new Paragraph(" ");
@@ -400,6 +257,15 @@ public class PdfReportService {
                 return "Monto máximo: $" + value;
             default:
                 return key + ": " + value;
+        }
+    }
+
+    public byte[] generateSaleReport(Sale sale) {
+        try {
+            List<Sale> sales = List.of(sale); // Convertir a lista para reutilizar el método
+            return generateCustomSalesReport(sales, "DETALLE DE VENTA", null);
+        } catch (Exception e) {
+            throw new RuntimeException("Error generando reporte de venta: " + e.getMessage(), e);
         }
     }
 }
