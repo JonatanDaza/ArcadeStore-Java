@@ -94,7 +94,7 @@ public class GameController {
 
     @PostMapping(value = "/create", consumes = {"multipart/form-data"})
     public ResponseEntity<?> createGame(
-            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestPart(value = "imagen", required = false) MultipartFile imagen,
             @RequestPart("titulo") String titulo,
             @RequestPart("descripcion") String descripcion,
             @RequestPart("precio") String precioStr,
@@ -113,7 +113,7 @@ public class GameController {
 
             GameDTO createdGame = gameService.createGame(
                     titulo, descripcion, precio, requisitosMinimos, requisitosRecomendados, 
-                    categoryId, agreementId, active, image
+                    categoryId, agreementId, active, imagen
             );
             return new ResponseEntity<>(createdGame, HttpStatus.CREATED);
         } catch (NumberFormatException e) {
@@ -127,7 +127,7 @@ public class GameController {
     @PutMapping(value = "/{id}/update", consumes = {"multipart/form-data"})
     public ResponseEntity<?> updateGame(
             @PathVariable Long id,
-            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestPart(value = "imagen", required = false) MultipartFile imagen,
             @RequestPart(value = "titulo", required = false) String titulo,
             @RequestPart(value = "descripcion", required = false) String descripcion,
             @RequestPart(value = "precio", required = false) String precioStr,
@@ -151,7 +151,7 @@ public class GameController {
 
             GameDTO updatedGame = gameService.updateGame(
                 id, titulo, descripcion, precio, requisitosMinimos, requisitosRecomendados,
-                categoryId, agreementId, active, image
+                categoryId, agreementId, active, imagen
             );
 
             return new ResponseEntity<>(updatedGame, HttpStatus.OK);
