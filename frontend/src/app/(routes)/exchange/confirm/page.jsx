@@ -145,7 +145,9 @@ function ExchangeConfirmationContent() {
                 await ExchangeService.createExchange(exchangeDetails, token);
 
                 toast.success('¡Intercambio realizado con éxito!', { id: toastId });
-                router.push('/library');
+                // Forzar recarga completa para asegurar que la biblioteca se actualice
+                // router.push('/library');
+                window.location.href = '/library';
             } catch (error) {
                 console.error("Error creating free exchange:", error);
                 toast.error(error.message || 'No se pudo completar el intercambio.', { id: toastId });

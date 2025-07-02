@@ -112,7 +112,7 @@ public class UserService {
     // ✅ NUEVO: Obtener la biblioteca de juegos de un usuario
     @Transactional(readOnly = true)
     public List<GameDTO> getUserLibrary(User user) {
-        return saleRepository.findByUser(user).stream()
+        return saleRepository.findByUserAndActiveTrue(user).stream()
                 .map(Sale::getGame) // De cada venta, obtenemos el juego
                 .distinct() // Nos aseguramos de que cada juego aparezca solo una vez
                 .map(GameDTO::new) // Convertimos la entidad Game a GameDTO

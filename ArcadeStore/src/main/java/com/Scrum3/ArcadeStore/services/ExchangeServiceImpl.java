@@ -124,13 +124,17 @@ public class ExchangeServiceImpl implements ExchangeService {
         Game offeredGame = exchange.getOfferedGame();
         Game requestedGame = exchange.getRequestedGame();
 
-        // Desactivar la venta del juego ofrecido (marcar como inactiva en lugar de eliminar)
+        // 1. Desactivar la venta del juego ofrecido (marcar como inactiva en lugar de eliminar)
         Sale userOfferedGameSale = saleRepository.findByUserAndGameAndActiveTrue(requester, offeredGame)
                 .orElseThrow(() -> new RuntimeException("Error al procesar intercambio: venta del juego ofrecido no encontrada"));
         userOfferedGameSale.setActive(false);
         saleRepository.save(userOfferedGameSale);
 
-        // Crear una nueva venta para el juego solicitado
+        // 2. Liberar el juego ofrecido, quitando al dueño para que vuelva a la tienda.
+        offeredGame.setUser(null);
+        gameRepository.save(offeredGame);
+
+        // 3. Crear una nueva venta para el juego solicitado
         Sale newSale = new Sale();
         newSale.setUser(requester);
         newSale.setGame(requestedGame);
@@ -138,10 +142,14 @@ public class ExchangeServiceImpl implements ExchangeService {
         newSale.setUnitPrice(requestedGame.getPrice());
         newSale.setQuantity(1);
         newSale.setActive(true);
-        // No asignamos order porque es un intercambio, no una compra normal
+        // No se asigna 'order' porque es un intercambio, no una compra directa.
         saleRepository.save(newSale);
 
-        // Actualizar el estado del intercambio
+        // 4. Asignar el nuevo juego al usuario.
+        requestedGame.setUser(requester);
+        gameRepository.save(requestedGame);
+
+        // 5. Actualizar el estado del intercambio a completado
         exchange.setStatus("COMPLETED");
     }
 
