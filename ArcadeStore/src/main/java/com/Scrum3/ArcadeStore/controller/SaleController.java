@@ -3,6 +3,7 @@ package com.Scrum3.ArcadeStore.controller;
 import com.Scrum3.ArcadeStore.dto.SaleDTO;
 import com.Scrum3.ArcadeStore.dto.CheckoutRequestDTO;
 import com.Scrum3.ArcadeStore.dto.CheckoutResponseDTO;
+import com.Scrum3.ArcadeStore.dto.SaleFilterDTO;
 import com.Scrum3.ArcadeStore.entities.Sale;
 import com.Scrum3.ArcadeStore.entities.User;
 import com.Scrum3.ArcadeStore.entities.Game;
@@ -192,6 +193,21 @@ public class SaleController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.TEXT_PLAIN)
                     .body(("Error generando reporte: " + e.getMessage()).getBytes());
+        }
+    }
+
+    @PostMapping("/report/pdf")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<byte[]> generateFilteredPdf(@RequestBody SaleFilterDTO filters) {
+        try {
+            byte[] pdfBytes = saleService.generateSalesReportWithFilters(filters);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ventas_filtradas.pdf")
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.Scrum3.ArcadeStore.controller;
 
+import com.Scrum3.ArcadeStore.Repository.ExchangeRepository;
 import com.Scrum3.ArcadeStore.dto.ExchangeDTO;
 import com.Scrum3.ArcadeStore.dto.ExchangeRequest;
 import com.Scrum3.ArcadeStore.entities.Exchange;
@@ -7,7 +8,8 @@ import com.Scrum3.ArcadeStore.service.ExchangeService;
 import com.Scrum3.ArcadeStore.services.PdfReportService;
 import com.Scrum3.ArcadeStore.Repository.ExchangeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,5 +60,26 @@ public class ExchangeController {
         }
         List<ExchangeDTO> exchanges = exchangeService.getUserExchanges(authentication);
         return ResponseEntity.ok(exchanges);
+    }
+
+    @GetMapping("/{id}/report")
+    @PreAuthorize("hasRole('ADMIN') or @exchangeSecurityService.isOwner(authentication, #id)")
+    public ResponseEntity<?> downloadExchangeReportById(@PathVariable Long id) {
+        try {
+            Exchange exchange = exchangeRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Intercambio no encontrado"));
+
+            byte[] pdfBytes = pdfReportService.generateExchangeReport(exchange);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(ContentDisposition.inline()
+                    .filename("reporte_intercambio_" + id + ".pdf").build());
+
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error generando el PDF del intercambio: " + e.getMessage());
+        }
     }
 }
