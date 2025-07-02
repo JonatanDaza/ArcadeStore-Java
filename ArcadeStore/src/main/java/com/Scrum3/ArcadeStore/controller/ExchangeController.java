@@ -2,7 +2,9 @@ package com.Scrum3.ArcadeStore.controller;
 
 import com.Scrum3.ArcadeStore.dto.ExchangeDTO;
 import com.Scrum3.ArcadeStore.dto.ExchangeRequest;
+import com.Scrum3.ArcadeStore.entities.Exchange;
 import com.Scrum3.ArcadeStore.service.ExchangeService;
+import com.Scrum3.ArcadeStore.services.PdfReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,6 +18,10 @@ public class ExchangeController {
 
     @Autowired
     private ExchangeService exchangeService;
+    @Autowired
+    private PdfReportService pdfReportService;
+    @Autowired
+    private ExchangeRepository exchangeRepository;
 
     @PostMapping("/create")
     public ResponseEntity<ExchangeDTO> createExchange(@RequestBody ExchangeRequest request, Authentication authentication) {
