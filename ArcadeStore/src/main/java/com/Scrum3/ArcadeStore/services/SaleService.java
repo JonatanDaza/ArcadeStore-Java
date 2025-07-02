@@ -7,6 +7,7 @@ import com.Scrum3.ArcadeStore.dto.SaleDTO;
 import com.Scrum3.ArcadeStore.dto.CheckoutRequestDTO;
 import com.Scrum3.ArcadeStore.dto.CheckoutResponseDTO;
 import com.Scrum3.ArcadeStore.dto.GameDTO;
+import com.Scrum3.ArcadeStore.dto.SaleFilterDTO;
 import com.Scrum3.ArcadeStore.entities.Game;
 import com.Scrum3.ArcadeStore.entities.Order;
 import com.Scrum3.ArcadeStore.entities.Payment;
@@ -191,5 +192,9 @@ public class SaleService {
             .message("Detalles de la compra recuperados exitosamente")
             .success(true)
             .build();
+    }
+
+    public byte[] generateSalesReportWithFilters(SaleFilterDTO filters) throws Exception {
+        return null;
     }
 }

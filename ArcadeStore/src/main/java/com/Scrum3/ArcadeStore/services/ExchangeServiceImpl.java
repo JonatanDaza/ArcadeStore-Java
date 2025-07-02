@@ -121,8 +121,6 @@ public class ExchangeServiceImpl implements ExchangeService {
     }
 
     @Transactional
-    // Este método ahora es privado y se llama internamente cuando no hay costo.
-    // Para intercambios con costo, se necesitará un endpoint público que llame a este método.
     private void processExchange(Exchange exchange, ExchangeCost cost) {
         User requester = exchange.getRequester();
         Game offeredGame = exchange.getOfferedGame();
