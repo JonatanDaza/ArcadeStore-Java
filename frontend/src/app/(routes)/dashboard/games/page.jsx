@@ -27,6 +27,10 @@ export default function GamesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [agreementsLoading, setAgreementsLoading] = useState(false);
+  const [fieldFilters, setFieldFilters] = useState({
+    "user.username": "",
+    "game.name": "",
+  });
 
   // Load categories for the dropdown
   const loadCategories = useCallback(async () => {

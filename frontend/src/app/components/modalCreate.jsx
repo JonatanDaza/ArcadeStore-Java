@@ -358,7 +358,12 @@ export default function CreateModal({
 
   return (
     <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#23292e] rounded-lg max-w-2xl w-full max-h-[70vh] overflow-y-auto shadow-xl shadow-black">
+      <div className="bg-[#23292e] rounded-lg max-w-2xl w-full max-h-[70vh] overflow-y-auto shadow-xl shadow-black"
+      style={{ scrollbarWidth: "none",
+        msOverflowStyle: "none",
+      }}>
+        <style jsx>{`div::-webkit-scrollbar {
+          display: none;`}</style>
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-white">{title}</h2>

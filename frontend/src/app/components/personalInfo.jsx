@@ -14,15 +14,15 @@ export default function PersonalInfo({
     <div className="max-w-auto">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-3xl font-bold">Información personal</h2>
-        {!isEditing && (
-          <button
-            onClick={handleEdit}
-            className="flex items-center gap-2 bg-[#3a6aff] hover:bg-[#2952ff] px-4 py-2 rounded-lg transition-colors"
-          >
-            <Edit2 size={16} />
-            Editar
-          </button>
-        )}
+        {/* {!isEditing && (
+          // <button
+          //   onClick={handleEdit}
+          //   className="flex items-center gap-2 bg-[#3a6aff] hover:bg-[#2952ff] px-4 py-2 rounded-lg transition-colors"
+          // >
+          //   <Edit2 size={16} />
+          //   Editar
+          // </button>
+        )} */}
       </div>
       {isEditing ? (
         <div className="space-y-6">
