@@ -7,6 +7,7 @@ import { HiOutlineDocumentText } from "react-icons/hi2";
 import Sidebar from "app/components/sidebar";
 import { toast } from "react-hot-toast";
 import ExchangeService from "@/services/api/exchangeService";
+import { Toaster } from "react-hot-toast";
 
 // Botón PDF solo icono + texto
 function ButtonPDF({ onClick }) {
