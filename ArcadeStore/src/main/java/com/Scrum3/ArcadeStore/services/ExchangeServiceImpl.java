@@ -25,17 +25,22 @@ import java.util.stream.Collectors;
 @Service
 public class ExchangeServiceImpl implements ExchangeService {
 
-    @Autowired
-    private ExchangeRepository exchangeRepository;
+    private static final BigDecimal EXCHANGE_COMMISSION_RATE = new BigDecimal("0.10");
+    private static final String STATUS_PENDING = "PENDING";
+    private static final String STATUS_COMPLETED = "COMPLETED";
+
+    private final ExchangeRepository exchangeRepository;
+    private final UserRepository userRepository;
+    private final GameRepository gameRepository;
+    private final SaleRepository saleRepository;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private GameRepository gameRepository;
-
-    @Autowired
-    private SaleRepository saleRepository;
+    public ExchangeServiceImpl(ExchangeRepository exchangeRepository, UserRepository userRepository, GameRepository gameRepository, SaleRepository saleRepository) {
+        this.exchangeRepository = exchangeRepository;
+        this.userRepository = userRepository;
+        this.gameRepository = gameRepository;
+        this.saleRepository = saleRepository;
+    }
 
     @Override
     @Transactional
@@ -71,16 +76,9 @@ public class ExchangeServiceImpl implements ExchangeService {
         exchange.setOwner(null); // Es intercambio con la tienda
         exchange.setOfferedGame(offeredGame);
         exchange.setRequestedGame(requestedGame);
-        exchange.setStatus("PENDING");
+        exchange.setStatus(STATUS_PENDING);
         exchange.setExchangeDate(LocalDateTime.now());
         exchange.setAdditionalCost(exchangeCost.getAdditionalCost());
-
-        // Si no hay costo adicional, procesar inmediatamente.
-        // Si hay costo, se queda en PENDING hasta que se confirme el pago.
-        // La confirmación del pago debería llamar a otro método para procesar el intercambio.
-        if (exchangeCost.getAdditionalCost().compareTo(BigDecimal.ZERO) <= 0) {
-            processExchange(exchange, exchangeCost);
-        }
 
         Exchange savedExchange = exchangeRepository.save(exchange);
         return convertToDTO(savedExchange, exchangeCost);
@@ -111,7 +109,7 @@ public class ExchangeServiceImpl implements ExchangeService {
             cost.setReason("El juego solicitado es de menor o igual valor. No hay costo adicional.");
         } else {
             // Si el juego solicitado es más caro, se paga la diferencia más una comisión del 10% sobre el juego OFRECIDO.
-            BigDecimal commission = offeredPrice.multiply(new BigDecimal("0.10"));
+            BigDecimal commission = offeredPrice.multiply(EXCHANGE_COMMISSION_RATE);
             BigDecimal totalAdditionalCost = priceDifference.add(commission);
             cost.setAdditionalCost(totalAdditionalCost);
             cost.setReason("Se paga la diferencia de precio más una comisión del 10% sobre el juego ofrecido.");
@@ -121,8 +119,22 @@ public class ExchangeServiceImpl implements ExchangeService {
     }
 
     @Transactional
-    private void processExchange(Exchange exchange, ExchangeCost cost) {
-        User requester = exchange.getRequester();
+    public void completeExchange(Long exchangeId, Authentication authentication) {
+        String userEmail = authentication.getName();
+        User requester = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Usuario no autenticado"));
+
+        Exchange exchange = exchangeRepository.findById(exchangeId)
+                .orElseThrow(() -> new RuntimeException("Intercambio no encontrado con ID: " + exchangeId));
+
+        if (!exchange.getRequester().getId().equals(requester.getId())) {
+            throw new SecurityException("No tienes permiso para completar este intercambio.");
+        }
+
+        if (STATUS_COMPLETED.equals(exchange.getStatus())) {
+            return; // El intercambio ya está completado, no hacer nada.
+        }
+
         Game offeredGame = exchange.getOfferedGame();
         Game requestedGame = exchange.getRequestedGame();
 
@@ -152,7 +164,7 @@ public class ExchangeServiceImpl implements ExchangeService {
         gameRepository.save(requestedGame);
 
         // 5. Actualizar el estado del intercambio a completado
-        exchange.setStatus("COMPLETED");
+        exchange.setStatus(STATUS_COMPLETED);
     }
 
     @Override

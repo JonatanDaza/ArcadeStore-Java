@@ -6,6 +6,7 @@ import com.Scrum3.ArcadeStore.dto.ExchangeRequest;
 import com.Scrum3.ArcadeStore.entities.Exchange;
 import com.Scrum3.ArcadeStore.service.ExchangeService;
 import com.Scrum3.ArcadeStore.services.PdfReportService;
+import com.Scrum3.ArcadeStore.Repository.ExchangeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,6 +30,12 @@ public class ExchangeController {
     public ResponseEntity<ExchangeDTO> createExchange(@RequestBody ExchangeRequest request, Authentication authentication) {
         ExchangeDTO createdExchange = exchangeService.createExchange(request, authentication);
         return ResponseEntity.ok(createdExchange);
+    }
+
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<Void> completeExchange(@PathVariable Long id, Authentication authentication) {
+        exchangeService.completeExchange(id, authentication);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/all")

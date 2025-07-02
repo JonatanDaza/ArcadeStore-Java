@@ -15,4 +15,6 @@ public interface ExchangeService {
     ExchangeDTO getExchangeById(Long id);
 
     List<ExchangeDTO> getUserExchanges(Authentication authentication);
+    
+    void completeExchange(Long exchangeId, Authentication authentication);
 }
