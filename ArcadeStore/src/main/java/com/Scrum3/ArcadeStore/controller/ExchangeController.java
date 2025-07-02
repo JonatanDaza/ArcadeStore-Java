@@ -26,7 +26,7 @@ public class ExchangeController {
     private ExchangeService exchangeService;
 
     @PostMapping("/create")
-    @PreAuthorize("hasRole('USER')") // Solo usuarios autenticados pueden intercambiar
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> createExchange(@RequestBody ExchangeRequest request, Authentication authentication) {
         try {
             ExchangeResponse newExchange = exchangeService.createExchange(request, authentication);
@@ -43,7 +43,7 @@ public class ExchangeController {
         return ResponseEntity.ok(exchanges);
     }
 
-     @GetMapping("/{id}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @exchangeSecurityService.isOwner(authentication, #id)")
     public ResponseEntity<?> getExchangeById(@PathVariable Long id) {
         try {
@@ -51,6 +51,17 @@ public class ExchangeController {
             return ResponseEntity.ok(exchange);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/my-exchanges")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> getUserExchanges(Authentication authentication) {
+        try {
+            List<ExchangeResponse> exchanges = exchangeService.getUserExchanges(authentication);
+            return ResponseEntity.ok(exchanges);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

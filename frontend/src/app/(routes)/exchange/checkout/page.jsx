@@ -7,7 +7,6 @@ import { toast } from 'react-hot-toast';
 import Header from 'app/components/header';
 import Footer from 'app/components/footer';
 import CheckoutService from 'app/services/api/checkout';
-// TODO: You must create this service to register the exchange in the backend
 import ExchangeService from 'app/services/api/exchangeService';
 
 export default function CheckoutPage() {

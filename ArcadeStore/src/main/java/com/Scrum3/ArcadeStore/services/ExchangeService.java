@@ -9,4 +9,5 @@ public interface ExchangeService {
     ExchangeResponse createExchange(ExchangeRequest request, Authentication authentication);
     List<ExchangeResponse> getAllExchanges();
     ExchangeResponse getExchangeById(Long id);
+    List<ExchangeResponse> getUserExchanges(Authentication authentication);
 }
